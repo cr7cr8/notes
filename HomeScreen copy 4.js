@@ -142,6 +142,20 @@ class SinglePanel extends React.Component {
 
 function SinglePanel_({ setMainEnabled, setListRefEnabled, mainRef, listRef }) {
 
+  const list = [
+    {
+      name: 'Amy Farha',
+      avatar_url: 'https://s3.amazonaws.com/uifaces/faces/twitter/ladylexy/128.jpg',
+      subtitle: 'Vice President'
+    },
+    {
+      name: 'Chris Jackson',
+      avatar_url: 'https://s3.amazonaws.com/uifaces/faces/twitter/adhamdannaway/128.jpg',
+      subtitle: 'Vice Chairman'
+    },
+    //  ... // more items
+  ]
+
 
 
 
@@ -260,8 +274,8 @@ function SinglePanel_({ setMainEnabled, setListRefEnabled, mainRef, listRef }) {
           >
             <SvgUri width={60} height={60} svgXmlData={multiavatar(Math.random())} />
             <ListItem.Content >
-              <ListItem.Title>{"Amy Farha"}</ListItem.Title>
-              <ListItem.Subtitle>{"Vice President"}</ListItem.Subtitle>
+              <ListItem.Title>{list[0].name}</ListItem.Title>
+              <ListItem.Subtitle>{list[0].subtitle}</ListItem.Subtitle>
             </ListItem.Content>
 
 

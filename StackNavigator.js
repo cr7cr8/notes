@@ -18,7 +18,7 @@ export default function StackNavigator() {
 
   const screenOptions = function ({ navigation, route }) {
 
-console.log(route)
+//console.log(route)
 
     return {
       headerShown: true,//route.name==="Home",//true,
