@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 
 import { createSharedElementStackNavigator } from 'react-navigation-shared-element';
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
@@ -39,38 +39,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Icon } from 'react-native-elements';
 
 
-const list = [
-  { name: "a", description: "fewfas", key: Math.random() },
-  { name: "b", description: "fewf的话就开始as", key: Math.random() },
-  { name: "c", description: "fewfas", key: Math.random() },
-  { name: "d", description: "fewfas", key: Math.random() },
-  { name: "e", description: "fewfas", key: Math.random() },
-  { name: "f", description: "fewfas", key: Math.random() },
-  { name: "g", description: "fewfas", key: Math.random() },
-  { name: "h", description: "as是as", key: Math.random() },
-  { name: "i", description: "fewfas", key: Math.random() },
-  { name: "j", description: "fewfas", key: Math.random() },
-  { name: "k", description: "fewfas", key: Math.random() },
-  { name: "l", description: "fewfas", key: Math.random() },
-  { name: "m", description: "fewfas", key: Math.random() },
-  { name: "n", description: "s ewfas", key: Math.random() },
-  { name: "o", description: "fewd fas", key: Math.random() },
-  { name: "p", description: "feds wfas", key: Math.random() },
-  { name: "q", description: "few dfas", key: Math.random() },
-  // { name: "r", description: "s ewfas", key: Math.random() },
-  // { name: "s", description: "fewd fas", key: Math.random() },
-  // { name: "t", description: "feds wfas", key: Math.random() },
-  // { name: "u", description: "few dfas", key: Math.random() },
-  // { name: "v", description: "feds wfas", key: Math.random() },
-  // { name: "w", description: "few dfas", key: Math.random() },
-  // { name: "x", description: "s ewfas", key: Math.random() },
-  // { name: "y", description: "fewd fas", key: Math.random() },
-  // { name: "z", description: "feds wfas", key: Math.random() },
-  // { name: "A", description: "few dfas", key: Math.random() },
+import { SharedElement } from 'react-navigation-shared-element';
+import { Context } from "./ContextProvider";
 
-]
 
 export function HomeScreen({ navigation, route }) {
+
+
+  const { peopleList, setPeopleList } = useContext(Context)
+
 
   const [mainEnabled, setMainEnabled] = useState(true)
 
@@ -84,9 +61,6 @@ export function HomeScreen({ navigation, route }) {
   const listRef2 = useRef()
   const listRef3 = useRef()
 
-  const [listRef1Enabled, setListRef1Enabled] = useState(true)
-  const [listRef2Enabled, setListRef2Enabled] = useState(true)
-  const [listRef3Enabled, setListRef3Enabled] = useState(true)
 
   const allPanelArr = useRef([])
 
@@ -94,15 +68,8 @@ export function HomeScreen({ navigation, route }) {
 
   const [refresh, setRefresh] = useState(true)
 
+  useEffect(function () { setRefresh(pre => !pre) }, [])
 
-  const [peoplelist, setPeopleList] = useState(list)
-
-
-
-  useEffect(function () {
-    setRefresh(pre => !pre)
-
-  }, [])
 
 
 
@@ -111,45 +78,36 @@ export function HomeScreen({ navigation, route }) {
 
     <ScrollView
       //contentOffset={{x:100,y:0}}
+      ref={mainRef}
       scrollEnabled={mainEnabled}
       decelerationRate={"fast"}
       snapToInterval={width}
       horizontal={true}
-      ref={mainRef}
+
 
     >
 
 
       <ScrollView
-
-
         ref={listRef1}
-
         scrollEnabled={mainEnabled}
-        //        enabled={false}
-        contentContainerStyle={{ width, backgroundColor: "wheat",minHeight:height-60 }}
-
-        onScroll={function (e) {
-          scrollY.value = e.nativeEvent.contentOffset.y;
-          //console.log(scrollY.value) 
-        }}
-
-
+        contentContainerStyle={{ width, backgroundColor: "wheat", minHeight: height - 60 }}
+        onScroll={function (e) { scrollY.value = e.nativeEvent.contentOffset.y; }}
       >
 
-
-        {peoplelist.map((item, index) => {
-
+        {peopleList.map((item, index) => {
           return (
             <SinglePanel
               key={item.key}
               item={item}
+
               mainEnabled={mainEnabled}
               setMainEnabled={setMainEnabled}
-              setListRefEnabled={setListRef1Enabled}
+
               mainRef={mainRef}
               listRef={listRef1}
               allPanelArr={allPanelArr}
+
               scrollY={scrollY}
               index={index}
               setPeopleList={setPeopleList}
@@ -157,6 +115,8 @@ export function HomeScreen({ navigation, route }) {
               inMoving={inMoving}
               setInMoving={setInMoving}
 
+              navigation={navigation}
+              route={route}
 
             />
           )
@@ -169,9 +129,13 @@ export function HomeScreen({ navigation, route }) {
       </ScrollView>
 
 
+
+
+
+
+
       <ScrollView ref={listRef2} scrollEnabled={mainEnabled} style={{ width, backgroundColor: "skyblue" }}>
         <Text>asdf</Text>
-
       </ScrollView>
       {/* 
 
@@ -199,7 +163,7 @@ class SinglePanel extends React.Component {
     this.state = {
       panelTransY: 0,
       panelIndex: this.props.index,
-      enabled: true,
+
     }
 
 
@@ -283,6 +247,11 @@ class SinglePanel extends React.Component {
         inMoving={this.props.inMoving}
         setInMoving={this.props.setInMoving}
 
+
+        navigation={this.props.navigation}
+        route={this.props.route}
+
+
       />
 
 
@@ -303,6 +272,9 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
   self,
   setPeopleList,
+
+  navigation,
+  route,
 
   inMoving,
   setInMoving,
@@ -448,7 +420,7 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
       setMainEnabled(true)
       setInMoving(false)
       setPeopleList(newList)
-    
+
     }, 200);
 
 
@@ -562,54 +534,37 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
     <PanGestureHandler
 
       maxPointers={1}
-      //  onGestureEvent={self.state.enabled ? gestureHandler : null}
-      shouldCancelWhenOutside={false}
-      // enabled={!mainEnabled}
-      enabled={(inMoving === false || inMoving === panelKey)}
-      //enabled={true}
-      //enabled={enabled.value}
-      simultaneousHandlers={[mainRef, listRef]}
       onGestureEvent={gestureHandler}
+      shouldCancelWhenOutside={false}
 
-    //simultaneousHandlers={[mainRef, listRef]}
+      enabled={(inMoving === false || inMoving === panelKey)}
 
-    //  waitFor={listRef}
-    // simultaneousHandlers={mainRef}
+      simultaneousHandlers={[mainRef, listRef]}
+
+
+
 
     >
       <View style={[panelStyle]}>
         <TouchableOpacity activeOpacity={0.5}
           style={{ zIndex: zIndex.value }}
+
+
+          onPress={function () {
+
+            navigation.navigate('Chat', { item: self.props.item })
+          }}
+
           onLongPress={function () {
 
 
-            // enabled.value = true
-
-            //   mainEnabled && setMainEnabled(false)
             setMainEnabled(false)
 
             setInMoving(panelKey)
 
-            // allPanelArr.current.forEach(panel => {
-
-            //   if (panel.panelKey !== panelKey) {
-            //     panel.setState({ enabled: false })
-            //   }
-
-            // })
-
             panelScale.value = withTiming(0.8)
             elevation.value = withTiming(10)
 
-
-
-
-            //  panelScale.value =withDelay(100, withTiming(0.8,100))
-            //  elevation.value = withDelay(100, withTiming(15,100))
-
-
-
-            //  panelScale.value = 0.8
           }}
 
 
@@ -617,8 +572,22 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
           <View style={[frameStyle, { borderBottomWidth: 1, borderBottomColor: "#DDD" }]}  >
 
-            <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
-            <Text>{item.name}</Text>
+
+            <SharedElement id={item.name}  >
+              <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+
+              {/* <Image
+                source={{ uri: "https://picsum.photos/200/300" }}
+                style={{ width: 60, height: 60, resizeMode: "contain", }}
+
+              /> */}
+
+            </SharedElement>
+
+            <SharedElement id={"555"} style={{ transform: [{ scale: 3 }] }}  >
+              <Text>{item.name}</Text>
+            </SharedElement>
+
             {/* <ListItem
             bottomDivider={true}
             containerStyle={[{ elevation: 0, padding: 10, },]}
@@ -644,6 +613,13 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
 }
+
+
+
+
+
+
+
 
 
 

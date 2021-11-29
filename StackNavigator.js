@@ -6,7 +6,8 @@ import { createStackNavigator, CardStyleInterpolators, TransitionPresets, Header
 
 import { StyleSheet, Text, View, Button, Image, } from 'react-native';
 
-import { HomeScreen, DetailScreen } from "./HomeScreen";
+import { HomeScreen } from "./HomeScreen";
+import { ChatScreen } from "./ChatScreen";
 
 
 const Stack = createSharedElementStackNavigator();
@@ -18,10 +19,10 @@ export default function StackNavigator() {
 
   const screenOptions = function ({ navigation, route }) {
 
-//console.log(route)
+    //console.log(route)
 
     return {
-      headerShown: true,//route.name==="Home",//true,
+      headerShown: true,//route.name!=="Chat",//true,//route.name==="Home",//true,
       gestureEnabled: true,
       gestureDirection: "horizontal",
       headerTitleAlign: 'center',
@@ -66,9 +67,9 @@ export default function StackNavigator() {
       />
 
 
-      <Stack.Screen name="Detail"
+      <Stack.Screen name="Chat"
 
-        component={DetailScreen}
+        component={ChatScreen}
         options={function () {
 
           return {
