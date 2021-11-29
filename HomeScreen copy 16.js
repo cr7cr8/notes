@@ -439,20 +439,23 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
     allPanelArr.current = moveArr(allPanelArr.current, from, to)
-    const newList = []
-    allPanelArr.current.forEach((panel, index) => {
+    // const newList = []
+    // allPanelArr.current.forEach((panel, index) => {
 
-      newList.push({ name: panel.name, description: panel.description, key: Math.random() })
+    //   newList.push({ name: panel.name, description: panel.description, key: Math.random() })
 
-    })
-    allPanelArr.current = []
+    // })
+    // allPanelArr.current = []
+
+    peoplelist = moveArr(peoplelist, from, to)
 
 
 
     setTimeout(() => {
       setMainEnabled(true)
       setInMoving(false)
-      setPeopleList(newList)
+     // setPeopleList(newList)
+     setPeopleList(peoplelist)
     }, 200);
 
 
@@ -478,11 +481,6 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
       //   if (enabled.value) {
       runOnJS(settingMovePermission)()
       //   }
-
-
-
-
-
     },
     onActive: (event, obj) => {
       if (panelScale.value !== 0.8) return
