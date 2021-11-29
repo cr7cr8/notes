@@ -36,7 +36,7 @@ export default function App() {
     return {
       width: withTiming(scrollY.value),
       height: 300,
-      backgroundColor: "pink"
+   //   backgroundColor: "pink"
     }
   })
 

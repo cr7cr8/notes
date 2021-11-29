@@ -57,16 +57,16 @@ const list = [
   { name: "o", description: "fewd fas", key: Math.random() },
   { name: "p", description: "feds wfas", key: Math.random() },
   { name: "q", description: "few dfas", key: Math.random() },
-  { name: "r", description: "s ewfas", key: Math.random() },
-  { name: "s", description: "fewd fas", key: Math.random() },
-  { name: "t", description: "feds wfas", key: Math.random() },
-  { name: "u", description: "few dfas", key: Math.random() },
-  { name: "v", description: "feds wfas", key: Math.random() },
-  { name: "w", description: "few dfas", key: Math.random() },
-  { name: "x", description: "s ewfas", key: Math.random() },
-  { name: "y", description: "fewd fas", key: Math.random() },
-  { name: "z", description: "feds wfas", key: Math.random() },
-  { name: "A", description: "few dfas", key: Math.random() },
+  // { name: "r", description: "s ewfas", key: Math.random() },
+  // { name: "s", description: "fewd fas", key: Math.random() },
+  // { name: "t", description: "feds wfas", key: Math.random() },
+  // { name: "u", description: "few dfas", key: Math.random() },
+  // { name: "v", description: "feds wfas", key: Math.random() },
+  // { name: "w", description: "few dfas", key: Math.random() },
+  // { name: "x", description: "s ewfas", key: Math.random() },
+  // { name: "y", description: "fewd fas", key: Math.random() },
+  // { name: "z", description: "feds wfas", key: Math.random() },
+  // { name: "A", description: "few dfas", key: Math.random() },
 
 ]
 
@@ -127,7 +127,7 @@ export function HomeScreen({ navigation, route }) {
 
         scrollEnabled={mainEnabled}
         //        enabled={false}
-        style={{ width, backgroundColor: "pink" }}
+        contentContainerStyle={{ width, backgroundColor: "wheat",minHeight:height-60 }}
 
         onScroll={function (e) {
           scrollY.value = e.nativeEvent.contentOffset.y;
@@ -430,13 +430,10 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
   function reSortList() {
 
 
-
     const panelIndex = getPanelIndex()
 
     const from = panelIndex
     const to = panelIndex + Math.min((allPanelArr.current.length - (panelIndex + 1)), Math.max(-panelIndex, Math.round(transY.value / 80)))
-
-
 
     allPanelArr.current = moveArr(allPanelArr.current, from, to)
     const newList = []
@@ -447,15 +444,11 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
     })
     allPanelArr.current = []
 
-    //peoplelist = moveArr(peoplelist, from, to)
-
-
-
     setTimeout(() => {
       setMainEnabled(true)
       setInMoving(false)
       setPeopleList(newList)
-     //setPeopleList(peoplelist)
+    
     }, 200);
 
 
