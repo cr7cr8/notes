@@ -53,20 +53,20 @@ const list = [
   { name: "k", description: "fewfas", key: Math.random() },
   { name: "l", description: "fewfas", key: Math.random() },
   { name: "m", description: "fewfas", key: Math.random() },
-  // { name: "n", description: "s ewfas", key: Math.random() },
-  // { name: "o", description: "fewd fas", key: Math.random() },
-  // { name: "p", description: "feds wfas", key: Math.random() },
-  // { name: "q", description: "few dfas", key: Math.random() },
-  // { name: "r", description: "s ewfas", key: Math.random() },
-  // { name: "s", description: "fewd fas", key: Math.random() },
-  // { name: "t", description: "feds wfas", key: Math.random() },
-  // { name: "u", description: "few dfas", key: Math.random() },
-  // { name: "v", description: "feds wfas", key: Math.random() },
-  // { name: "w", description: "few dfas", key: Math.random() },
-  // { name: "x", description: "s ewfas", key: Math.random() },
-  // { name: "y", description: "fewd fas", key: Math.random() },
-  // { name: "z", description: "feds wfas", key: Math.random() },
-  // { name: "A", description: "few dfas", key: Math.random() },
+  { name: "n", description: "s ewfas", key: Math.random() },
+  { name: "o", description: "fewd fas", key: Math.random() },
+  { name: "p", description: "feds wfas", key: Math.random() },
+  { name: "q", description: "few dfas", key: Math.random() },
+  { name: "r", description: "s ewfas", key: Math.random() },
+  { name: "s", description: "fewd fas", key: Math.random() },
+  { name: "t", description: "feds wfas", key: Math.random() },
+  { name: "u", description: "few dfas", key: Math.random() },
+  { name: "v", description: "feds wfas", key: Math.random() },
+  { name: "w", description: "few dfas", key: Math.random() },
+  { name: "x", description: "s ewfas", key: Math.random() },
+  { name: "y", description: "fewd fas", key: Math.random() },
+  { name: "z", description: "feds wfas", key: Math.random() },
+  { name: "A", description: "few dfas", key: Math.random() },
 
 ]
 
@@ -122,12 +122,12 @@ export function HomeScreen({ navigation, route }) {
 
       <ScrollView
 
-    
+
         ref={listRef1}
 
         scrollEnabled={mainEnabled}
         //        enabled={false}
-        contentContainerStyle={{ width, backgroundColor: "pink",minHeight:height-60 }}
+        style={{ width, backgroundColor: "pink" }}
 
         onScroll={function (e) {
           scrollY.value = e.nativeEvent.contentOffset.y;
@@ -199,7 +199,7 @@ class SinglePanel extends React.Component {
     this.state = {
       panelTransY: 0,
       panelIndex: this.props.index,
-   //   enabled: true,
+      enabled: true,
     }
 
 
@@ -447,12 +447,15 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
     })
     allPanelArr.current = []
 
+    //peoplelist = moveArr(peoplelist, from, to)
+
 
 
     setTimeout(() => {
       setMainEnabled(true)
       setInMoving(false)
       setPeopleList(newList)
+     //setPeopleList(peoplelist)
     }, 200);
 
 
@@ -478,11 +481,6 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
       //   if (enabled.value) {
       runOnJS(settingMovePermission)()
       //   }
-
-
-
-
-
     },
     onActive: (event, obj) => {
       if (panelScale.value !== 0.8) return
