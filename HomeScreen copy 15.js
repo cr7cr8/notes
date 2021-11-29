@@ -55,18 +55,18 @@ const list = [
   { name: "m", description: "fewfas", key: Math.random() },
   { name: "n", description: "s ewfas", key: Math.random() },
   { name: "o", description: "fewd fas", key: Math.random() },
-  { name: "p", description: "feds wfas", key: Math.random() },
-  { name: "q", description: "few dfas", key: Math.random() },
-  { name: "r", description: "s ewfas", key: Math.random() },
-  { name: "s", description: "fewd fas", key: Math.random() },
-  { name: "t", description: "feds wfas", key: Math.random() },
-  { name: "u", description: "few dfas", key: Math.random() },
-  { name: "v", description: "feds wfas", key: Math.random() },
-  { name: "w", description: "few dfas", key: Math.random() },
-  { name: "x", description: "s ewfas", key: Math.random() },
-  { name: "y", description: "fewd fas", key: Math.random() },
-  { name: "z", description: "feds wfas", key: Math.random() },
-  { name: "A", description: "few dfas", key: Math.random() },
+  // { name: "p", description: "feds wfas", key: Math.random() },
+  // { name: "q", description: "few dfas", key: Math.random() },
+  // { name: "r", description: "s ewfas", key: Math.random() },
+  // { name: "s", description: "fewd fas", key: Math.random() },
+  // { name: "t", description: "feds wfas", key: Math.random() },
+  // { name: "u", description: "few dfas", key: Math.random() },
+  // { name: "v", description: "feds wfas", key: Math.random() },
+  // { name: "w", description: "few dfas", key: Math.random() },
+  // { name: "x", description: "s ewfas", key: Math.random() },
+  // { name: "y", description: "fewd fas", key: Math.random() },
+  // { name: "z", description: "feds wfas", key: Math.random() },
+  // { name: "A", description: "few dfas", key: Math.random() },
 
 ]
 
@@ -74,7 +74,7 @@ export function HomeScreen({ navigation, route }) {
 
   const [mainEnabled, setMainEnabled] = useState(true)
 
-  const [inMoving, setInMoving] = useState(false)
+
 
   const mainRef = useRef()
 
@@ -111,7 +111,7 @@ export function HomeScreen({ navigation, route }) {
 
     <ScrollView
       //contentOffset={{x:100,y:0}}
-      scrollEnabled={mainEnabled}
+      enabled={mainEnabled}
       decelerationRate={"fast"}
       snapToInterval={width}
       horizontal={true}
@@ -119,14 +119,13 @@ export function HomeScreen({ navigation, route }) {
 
     >
 
-
       <ScrollView
 
 
         ref={listRef1}
 
-        scrollEnabled={mainEnabled}
-        //        enabled={false}
+
+        enabled={mainEnabled}
         style={{ width, backgroundColor: "pink" }}
 
         onScroll={function (e) {
@@ -153,11 +152,6 @@ export function HomeScreen({ navigation, route }) {
               scrollY={scrollY}
               index={index}
               setPeopleList={setPeopleList}
-
-              inMoving={inMoving}
-              setInMoving={setInMoving}
-
-
             />
           )
 
@@ -169,7 +163,7 @@ export function HomeScreen({ navigation, route }) {
       </ScrollView>
 
 
-      <ScrollView ref={listRef2} scrollEnabled={mainEnabled} style={{ width, backgroundColor: "skyblue" }}>
+      <ScrollView ref={listRef2} enabled={mainEnabled} style={{ width, backgroundColor: "skyblue" }}>
         <Text>asdf</Text>
 
       </ScrollView>
@@ -279,10 +273,6 @@ class SinglePanel extends React.Component {
 
         setPeopleList={this.props.setPeopleList}
         self={this}
-
-        inMoving={this.props.inMoving}
-        setInMoving={this.props.setInMoving}
-
       />
 
 
@@ -303,10 +293,6 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
   self,
   setPeopleList,
-
-  inMoving,
-  setInMoving,
-
 }) {
 
 
@@ -451,7 +437,6 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
     setTimeout(() => {
       setMainEnabled(true)
-      setInMoving(false)
       setPeopleList(newList)
     }, 200);
 
@@ -490,7 +475,7 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
       //show(obj.offsetY)
-      //show(event.translationY)
+      show(event.translationY)
 
       if (event.absoluteY <= movingUpLine) {
         if (!enableAutoMoving.value) {
@@ -571,17 +556,13 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
     <PanGestureHandler
 
       maxPointers={1}
-      //  onGestureEvent={self.state.enabled ? gestureHandler : null}
+      onGestureEvent={self.state.enabled ? gestureHandler : null}
       shouldCancelWhenOutside={false}
       // enabled={!mainEnabled}
-      enabled={(inMoving === false || inMoving === panelKey)}
-      //enabled={true}
+      //enabled={self.state.enabled}
+       enabled={true}
       //enabled={enabled.value}
-      simultaneousHandlers={[mainRef, listRef]}
-      onGestureEvent={gestureHandler}
-
-    //simultaneousHandlers={[mainRef, listRef]}
-
+      simultaneousHandlers={self.state.enabled ? [mainRef, listRef] : []}
     //  waitFor={listRef}
     // simultaneousHandlers={mainRef}
 
@@ -597,8 +578,6 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
             //   mainEnabled && setMainEnabled(false)
             setMainEnabled(false)
 
-            setInMoving(panelKey)
-
             // allPanelArr.current.forEach(panel => {
 
             //   if (panel.panelKey !== panelKey) {
@@ -607,10 +586,10 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
             // })
 
+
+
             panelScale.value = withTiming(0.8)
             elevation.value = withTiming(10)
-
-
 
 
             //  panelScale.value =withDelay(100, withTiming(0.8,100))

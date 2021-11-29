@@ -74,7 +74,7 @@ export function HomeScreen({ navigation, route }) {
 
   const [mainEnabled, setMainEnabled] = useState(true)
 
-  const [inMoving, setInMoving] = useState(false)
+
 
   const mainRef = useRef()
 
@@ -111,7 +111,7 @@ export function HomeScreen({ navigation, route }) {
 
     <ScrollView
       //contentOffset={{x:100,y:0}}
-      scrollEnabled={mainEnabled}
+      enabled={mainEnabled}
       decelerationRate={"fast"}
       snapToInterval={width}
       horizontal={true}
@@ -119,14 +119,13 @@ export function HomeScreen({ navigation, route }) {
 
     >
 
-
       <ScrollView
 
 
         ref={listRef1}
 
-        scrollEnabled={mainEnabled}
-        //        enabled={false}
+
+        enabled={mainEnabled}
         style={{ width, backgroundColor: "pink" }}
 
         onScroll={function (e) {
@@ -153,11 +152,6 @@ export function HomeScreen({ navigation, route }) {
               scrollY={scrollY}
               index={index}
               setPeopleList={setPeopleList}
-
-              inMoving={inMoving}
-              setInMoving={setInMoving}
-
-
             />
           )
 
@@ -169,7 +163,7 @@ export function HomeScreen({ navigation, route }) {
       </ScrollView>
 
 
-      <ScrollView ref={listRef2} scrollEnabled={mainEnabled} style={{ width, backgroundColor: "skyblue" }}>
+      <ScrollView ref={listRef2} enabled={mainEnabled} style={{ width, backgroundColor: "skyblue" }}>
         <Text>asdf</Text>
 
       </ScrollView>
@@ -198,8 +192,7 @@ class SinglePanel extends React.Component {
 
     this.state = {
       panelTransY: 0,
-      panelIndex: this.props.index,
-      enabled: true,
+      panelIndex: this.props.index
     }
 
 
@@ -278,10 +271,6 @@ class SinglePanel extends React.Component {
         allPanelArr={this.props.allPanelArr}
 
         setPeopleList={this.props.setPeopleList}
-        self={this}
-
-        inMoving={this.props.inMoving}
-        setInMoving={this.props.setInMoving}
 
       />
 
@@ -301,12 +290,7 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
   panelTransY,
   allPanelArr,
 
-  self,
   setPeopleList,
-
-  inMoving,
-  setInMoving,
-
 }) {
 
 
@@ -451,7 +435,6 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
     setTimeout(() => {
       setMainEnabled(true)
-      setInMoving(false)
       setPeopleList(newList)
     }, 200);
 
@@ -466,7 +449,7 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
   const enableAutoMoving = useSharedValue(false)
 
-  //const enabled = useSharedValue(false)
+  const enabled = useSharedValue(false)
 
   const gestureHandler = useAnimatedGestureHandler({
 
@@ -490,7 +473,7 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
       //show(obj.offsetY)
-      //show(event.translationY)
+      show(event.translationY)
 
       if (event.absoluteY <= movingUpLine) {
         if (!enableAutoMoving.value) {
@@ -565,23 +548,21 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
 
+
+
   return (
 
 
     <PanGestureHandler
 
       maxPointers={1}
-      //  onGestureEvent={self.state.enabled ? gestureHandler : null}
+      onGestureEvent={gestureHandler}
       shouldCancelWhenOutside={false}
       // enabled={!mainEnabled}
-      enabled={(inMoving === false || inMoving === panelKey)}
+      
       //enabled={true}
-      //enabled={enabled.value}
+      enabled={enabled.value}
       simultaneousHandlers={[mainRef, listRef]}
-      onGestureEvent={gestureHandler}
-
-    //simultaneousHandlers={[mainRef, listRef]}
-
     //  waitFor={listRef}
     // simultaneousHandlers={mainRef}
 
@@ -592,25 +573,17 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
           onLongPress={function () {
 
 
-            // enabled.value = true
+            enabled.value = true
 
-            //   mainEnabled && setMainEnabled(false)
-            setMainEnabled(false)
+            mainEnabled && setMainEnabled(pre => {
 
-            setInMoving(panelKey)
 
-            // allPanelArr.current.forEach(panel => {
+              return false
 
-            //   if (panel.panelKey !== panelKey) {
-            //     panel.setState({ enabled: false })
-            //   }
-
-            // })
+            })
 
             panelScale.value = withTiming(0.8)
             elevation.value = withTiming(10)
-
-
 
 
             //  panelScale.value =withDelay(100, withTiming(0.8,100))

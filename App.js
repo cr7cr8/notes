@@ -24,6 +24,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import StackNavigator from "./StackNavigator";
 import multiavatar from '@multiavatar/multiavatar';
 
+
+import { HomeScreen, DetailScreen } from "./HomeScreen";
+
+
 export default function App() {
 
   const scrollY = useSharedValue(300)
@@ -43,7 +47,6 @@ export default function App() {
           <StackNavigator />
       </NavigationContainer>
     </ContextProvider>
-
 
 
   )
