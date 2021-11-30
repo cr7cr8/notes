@@ -66,7 +66,7 @@ export function ChatScreen({ navigation, route, ...props }) {
     setMessages([
 
       {
-        _id: 1,
+        _id: Math.random(),
         text: '1111',
         createdAt: Date.now() + 1000 * 60,
         user: {
@@ -78,7 +78,7 @@ export function ChatScreen({ navigation, route, ...props }) {
       },
 
       {
-        _id: 2,
+        _id: Math.random(),
         text: '22222',
         createdAt: Date.now() + 1000 * 60 + 100,
         user: {
@@ -134,47 +134,6 @@ export function ChatScreen({ navigation, route, ...props }) {
       </View >
 
 
-      {/* <MessageContainer messages={[{ _id: 1, text: "11111", user: { _id: 1 } }, { _id: 2, text: "2222", user: { _id: 1 } }]}
-        loadEarlier={true}
-        alignTop={true}
-     //   inverted={true}
-        renderLoadEarlier={function (props) {
-       //   console.log(props)
-        }}
-
-        
-
-        renderMessage={function (props) {
-
-
-          return <Message {...props} containerStyle={{
-
-            left: {
-              backgroundColor: "skyblue",
-              alignItems: "flex-start",
-              alignSelf: "flex-start",
-              padding: 0,
-              margin: 0,
-              width,
-              display: "flex",
-              transform: [{ translateX: -8 }]
-            },
-            // right: {
-            //   backgroundColor: "green",
-            //   alignItems: "flex-start",
-            //   alignSelf: "flex-start",
-            //   padding: 0,
-            //   margin: 0,
-            //   width,
-            //   display: "flex"
-            // }
-          }}
-
-          />
-
-        }}
-
-      /> */}
 
 
 
