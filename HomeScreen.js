@@ -4,7 +4,7 @@ import { createSharedElementStackNavigator } from 'react-navigation-shared-eleme
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
 
 
-import { StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, } from 'react-native';
+import { StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Pressable, TouchableHighlight, TouchableWithoutFeedback } from 'react-native';
 
 import ReAnimated, {
   useAnimatedStyle, useSharedValue, useDerivedValue,
@@ -24,7 +24,7 @@ import ReAnimated, {
 } from 'react-native-reanimated';
 //import Svg, { Circle, Rect, SvgUri } from 'react-native-svg';
 import SvgUri from 'react-native-svg-uri';
-const { View, Text, Image, ScrollView: ScrollV } = ReAnimated
+const { View, Text, Image, ScrollView: ScrollV, } = ReAnimated
 
 import multiavatar from '@multiavatar/multiavatar';
 
@@ -91,7 +91,10 @@ export function HomeScreen({ navigation, route }) {
       <ScrollView
         ref={listRef1}
         scrollEnabled={mainEnabled}
-        contentContainerStyle={{ width, backgroundColor: "wheat", minHeight: height - 60 }}
+        contentContainerStyle={{
+          width,// backgroundColor: "wheat",
+          minHeight: height - 60
+        }}
         onScroll={function (e) { scrollY.value = e.nativeEvent.contentOffset.y; }}
       >
 
@@ -228,7 +231,7 @@ class SinglePanel extends React.Component {
         scrollY={this.props.scrollY}
         mainEnabled={this.props.mainEnabled}
 
-        bgColor={this.bgColor}
+        // bgColor={this.bgColor}
 
 
         // panelIndex={this.panelIndex}
@@ -261,7 +264,8 @@ class SinglePanel extends React.Component {
 }
 
 
-function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRef, scrollY, mainEnabled, bgColor,
+function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRef, scrollY, mainEnabled,
+  //bgColor,
 
   // panelIndex,
   panelKey,
@@ -282,6 +286,7 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 }) {
 
 
+  const avatarString = multiavatar(item.name)
 
 
 
@@ -289,7 +294,7 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
   const transY = useDerivedValue(() => (withTiming(panelTransY)))
 
 
-
+  //const [holding,setHolding] = useState(false)
 
   const zIndex = useSharedValue(0)
 
@@ -299,9 +304,27 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
 
+
+  const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
+  //const hilightColor = hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0])
+
+
+  // const bgColor = useDerivedValue(()=>{
+
+  //  return panelScale.value===1?"white": hilightColor
+
+
+  // })
+  // const bgColor = hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0])
+
+
+
+
   const panelStyle = useAnimatedStyle(() => {
     return {
+      //  ...holding&&{backgroundColor:"wheat"},
 
+      backgroundColor: bgColor,
       transform: [
 
         { translateY: transY.value },
@@ -315,11 +338,28 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
   const frameStyle = useAnimatedStyle(() => {
+
+    let color=""
+
+  //  if(elevation.value!==0){color="white"}
+    if(mainEnabled&&elevation.value===0){color="white"}
+    
+    else if(!mainEnabled&&elevation.value===0){color="white"}
+    else if(mainEnabled&&elevation.value!==0){color=bgColor}
+
+    else if(!mainEnabled&&elevation.value!==0){color=bgColor}
+
+
     return {
 
       width,
       height: 80,
-      backgroundColor: "white",
+
+      //backgroundColor: bgColor,
+
+      backgroundColor:color,
+      // ...holding&&{backgroundColor:"wheat"},
+      //  backgroundColor: bgColor.value,
       display: "flex",
       justifyContent: "flex-start",
 
@@ -358,10 +398,6 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
     }
   }
-
-
-
-
 
   function settingMovePermission() {
 
@@ -545,9 +581,14 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
     >
-      <View style={[panelStyle]}>
-        <TouchableOpacity activeOpacity={0.5}
-          style={{ zIndex: zIndex.value }}
+      <View style={[panelStyle]} >
+        <TouchableOpacity    // style={{backgroundColor:"yellow"}}
+          // style={{ backgroundColor: "white" }}
+          //   ...holding&&{backgroundColor:"wheat"},
+
+
+          activeOpacity={0.5}
+
 
 
           onPress={function () {
@@ -584,9 +625,9 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
             </SharedElement>
 
-       
-              <Text style={{fontSize:20}}>{item.name}</Text>
-           
+
+            <Text style={{ fontSize: 20 }}>{item.name}</Text>
+
 
             {/* <ListItem
             bottomDivider={true}
@@ -662,3 +703,30 @@ function moveArr(arr, old_index, new_index) {
 
 
 /* <LinearProgress color="primary" style={{position:"absolute"}}/> */
+function hexToRgbA(hex) {
+  var c;
+  if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+    c = hex.substring(1).split('');
+    if (c.length == 3) {
+      c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+    }
+    c = '0x' + c.join('');
+    return 'rgba(' + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',') + ',0.3)';
+  }
+  throw new Error('Bad Hex');
+}
+function hexify(color) {
+  var values = color
+    .replace(/rgba?\(/, '')
+    .replace(/\)/, '')
+    .replace(/[\s+]/g, '')
+    .split(',');
+  var a = parseFloat(values[3] || 1),
+    r = Math.floor(a * parseInt(values[0]) + (1 - a) * 255),
+    g = Math.floor(a * parseInt(values[1]) + (1 - a) * 255),
+    b = Math.floor(a * parseInt(values[2]) + (1 - a) * 255);
+  return "#" +
+    ("0" + r.toString(16)).slice(-2) +
+    ("0" + g.toString(16)).slice(-2) +
+    ("0" + b.toString(16)).slice(-2);
+}

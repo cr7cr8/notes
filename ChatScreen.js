@@ -72,7 +72,7 @@ export function ChatScreen({ navigation, route, ...props }) {
         user: {
           _id: 3,
           name: 'React Native',
-          avatar: () => (<SvgUri style={{ position: "relative", }} width={50} height={50} svgXmlData={avatarString} />),//'https://placeimg.com/140/140/any',
+          avatar: () => (<SvgUri style={{ position: "relative", }} width={60} height={60} svgXmlData={multiavatar(item.name, true)} />),//'https://placeimg.com/140/140/any',
         },
         //  video: 'https://vimeo.com/311983548',
       },
@@ -84,7 +84,7 @@ export function ChatScreen({ navigation, route, ...props }) {
         user: {
           _id: 1,
           name: 'React Native',
-          avatar: () => (<SvgUri style={{ position: "relative", }} width={50} height={50} svgXmlData={avatarString} />),//'https://placeimg.com/140/140/any',
+          avatar: () => (<SvgUri style={{ position: "relative", }} width={60} height={60} svgXmlData={avatarString} />),//'https://placeimg.com/140/140/any',
         },
         //  video: 'https://vimeo.com/311983548',
       },
@@ -101,10 +101,6 @@ export function ChatScreen({ navigation, route, ...props }) {
     setMessages(previousMessages => {
 
 
-      //console.log(messages)
-      //  GiftedChat.append(previousMessages, messages
-      //return [...messages,...previousMessages]
-
       return GiftedChat.prepend(previousMessages, messages)
 
 
@@ -113,6 +109,8 @@ export function ChatScreen({ navigation, route, ...props }) {
     }
     )
   }
+
+
 
 
 
@@ -155,13 +153,14 @@ export function ChatScreen({ navigation, route, ...props }) {
         inverted={false}
         keyboardShouldPersistTaps={"never"}
 
-        renderMessageText={function (props) {
-          return <MessageText {...props} />
-        }}
+        // renderMessageText={function (props) {
+        //   return <MessageText {...props} customTextStyle={{color:"red"}}  />
+        // }}
 
 
         messagesContainerStyle={{
-          backgroundColor: "yellow", display: "flex", justifyContent: "flex-start",
+          //backgroundColor: "yellow",
+          display: "flex", justifyContent: "flex-start",
           alignItems: "flex-start", flexDirection: "row", alignSelf: "flex-start",
           margin: 0, padding: 0,
 
@@ -176,13 +175,15 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
         renderTime={function (props) {
-
-          //   console.log(props)
-          return <Time {...props}
-
-            currentMessage={messages[0]}
-
-          />
+          return <Time {...props}    timeTextStyle={{
+            
+            left:{
+              color:"#A0A0A0"
+            },
+            right:{
+              color:"#A0A0A0"
+            }
+          }}  />
         }}
 
         renderMessage={function (props) {
@@ -193,7 +194,7 @@ export function ChatScreen({ navigation, route, ...props }) {
             <Message {...props} containerStyle={{
 
               left: {
-                backgroundColor: "skyblue",
+                //    backgroundColor: "skyblue",
                 alignItems: "flex-start",
                 alignSelf: "flex-start",
                 padding: 0,
@@ -203,7 +204,7 @@ export function ChatScreen({ navigation, route, ...props }) {
                 transform: [{ translateX: -8 }]
               },
               right: {
-                backgroundColor: "green",
+                //    backgroundColor: "green",
                 alignItems: "flex-start",
                 alignSelf: "flex-start",
                 padding: 0,
@@ -212,7 +213,7 @@ export function ChatScreen({ navigation, route, ...props }) {
                 display: "flex"
               }
             }}
-
+            
 
             />
 
@@ -222,46 +223,63 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         renderBubble={function (props) {
 
-          return <Bubble {...props}
-            wrapperStyle={{
+          return (
+            <ScaleView>
+              <Bubble {...props}
+                wrapperStyle={{
 
-              left: {
-                backgroundColor: bgColor,
-                justifyContent: 'flex-start',
+                  left: {
+                    backgroundColor: bgColor,
+                    justifyContent: 'flex-start',
 
-              },
-              right: {
-                backgroundColor: "lightgreen"
+                  },
+                  right: {
+                    backgroundColor: "lightgreen"
 
-              },
+                  },
 
-            }}
-          //  textStyle={{ left: { color: "red" } }}
-          />
+                }}
+               textStyle={{ right: { color: "black" } }}
+              />
+            </ScaleView>
 
+          )
         }}
 
+        showUserAvatar={false}
         renderAvatar={function (props) {
 
-          return <AvatarIcon {...props}
+          return (
+
+            <ScaleView>
+
+              <AvatarIcon {...props}
+                containerStyle={{
+                  left: {
+                    marginRight: 0,
+                    marginTop: 0,
+                    alignSelf: "flex-start",
+                    backgroundColor: bgColor,//"pink",
+                    padding: 0,
+                    justifyContent: "flex-start",
+                    alignItems: "flex-start",
+                    borderRadius:1000,
+                  },
+                  right: {
+                    marginRight: 0,
+                    marginTop: 0,
+                    alignSelf: "flex-start",
+                    //  backgroundColor: "pink",
+                    padding: 0,
+                    justifyContent: "flex-start",
+                    alignItems: "flex-start"
+                  }
 
 
-            containerStyle={{
-              left: {
-                marginRight: 0,
-                marginTop: 0,
-                alignSelf: "flex-start",
-                backgroundColor: "pink",
-                padding: 0,
-                justifyContent: "flex-start",
-                alignItems: "flex-start"
-              }
+                }} />
 
-
-            }}
-
-          />
-
+            </ScaleView>
+          )
         }}
 
 
@@ -319,4 +337,45 @@ function hexToRgbA(hex) {
     return 'rgba(' + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',') + ',0.2)';
   }
   throw new Error('Bad Hex');
+}
+
+
+
+function ScaleView(props) {
+
+  const scale = useSharedValue(0)
+
+  const scaleStyle = useAnimatedStyle(() => {
+
+
+    return {
+      transform: [
+        { scale: withTiming(scale.value, { duration: 200 }) },
+        //   { translateX: withTiming(interpolate(scale.value, [0, 1], [-100, 0]), { duration: 2000 }) }
+
+      ],
+      //  opacity: withTiming(scale.value, { duration: 200 }),
+      overflow: "hidden",
+    
+    }
+
+  })
+
+  useEffect(function () {
+
+    scale.value = 1
+
+  }, [])
+
+  return (
+
+    <View style={scaleStyle}>
+      {props.children}
+    </View>
+
+
+  )
+
+
+
 }
