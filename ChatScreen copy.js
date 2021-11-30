@@ -67,51 +67,58 @@ export function ChatScreen({ navigation, route, ...props }) {
 
       {
         _id: 1,
-        text: '1111',
+        text: 'custddd',
         createdAt: Date.now() + 1000 * 60,
         user: {
           _id: 3,
           name: 'React Native',
           avatar: () => (<SvgUri style={{ position: "relative", }} width={50} height={50} svgXmlData={avatarString} />),//'https://placeimg.com/140/140/any',
         },
-        //  video: 'https://vimeo.com/311983548',
-      },
 
-      {
-        _id: 2,
-        text: '22222',
-        createdAt: Date.now() + 1000 * 60 + 100,
-        user: {
-          _id: 1,
-          name: 'React Native',
-          avatar: () => (<SvgUri style={{ position: "relative", }} width={50} height={50} svgXmlData={avatarString} />),//'https://placeimg.com/140/140/any',
-        },
+
         //  video: 'https://vimeo.com/311983548',
       },
 
 
+      // {
+      //   _id: 2,
+      //   text: 'cust',
+      //   createdAt: Date.now() + 1000 * 60,
+      //   user: {
+      //     _id: 1,
+      //     name: 'React Native',
+      //     avatar: () => (<SvgUri style={{ position: "relative", }} width={50} height={50} svgXmlData={avatarString} />),//'https://placeimg.com/140/140/any',
+      //   },
 
-    ])
+
+      //   //  video: 'https://vimeo.com/311983548',
+      // },
+
+      // {
+      //   _id: 3,
+      //   text: 'customer message就看电视ustomer message就看电视ustomer message就看电视ustomer message就看电视ustomer message就看电视ustomer message就看电视ustomer message就看电视',
+      //   createdAt: new Date(),
+      //   user: {
+      //     _id: 2,
+      //     name: 'React Native',
+      //     avatar: () => (<SvgUri style={{ position: "relative", }} width={50} height={50} svgXmlData={avatarString} />),//'https://placeimg.com/140/140/any',
+      //   },
+
+
+      //   //  video: 'https://vimeo.com/311983548',
+      // },
+
+
+
+
+    ].reverse())
   }, [])
   const onSend = (messages) => {
 
     // console.log(messages)
 
 
-    setMessages(previousMessages => {
-
-
-      //console.log(messages)
-      //  GiftedChat.append(previousMessages, messages
-      //return [...messages,...previousMessages]
-
-      return GiftedChat.prepend(previousMessages, messages)
-
-
-
-
-    }
-    )
+    setMessages(previousMessages => GiftedChat.append(previousMessages, messages))
   }
 
 
@@ -134,20 +141,12 @@ export function ChatScreen({ navigation, route, ...props }) {
       </View >
 
 
-      {/* <MessageContainer messages={[{ _id: 1, text: "11111", user: { _id: 1 } }, { _id: 2, text: "2222", user: { _id: 1 } }]}
-        loadEarlier={true}
-        alignTop={true}
-     //   inverted={true}
-        renderLoadEarlier={function (props) {
-       //   console.log(props)
-        }}
-
-        
+      <MessageContainer messages={[{ _id: 1, text: "dfdf", user: { _id: 1 } },]}
 
         renderMessage={function (props) {
 
 
-          return <Message {...props} containerStyle={{
+        return  <Message {...props} containerStyle={{
 
             left: {
               backgroundColor: "skyblue",
@@ -174,7 +173,19 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         }}
 
-      /> */}
+      />
+
+      {/* <MessageContainer messages={[{ _id: 2, text: "222" },]} />
+
+
+      <MessageContainer messages={[{ _id: 3, text: "dfdf", },]} />
+
+      <MessageContainer messages={[{ _id: 4, text: "222" },]} />
+
+ */}
+
+
+
 
 
 
@@ -183,20 +194,16 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
       <GiftedChat
-
-
-        // loadEarlier={true}
-        // isLoadingEarlier={true}
-        //  messages={[{ _id: 1, text: "11111", user: { _id: 1 } }, { _id: 2, text: "2222", user: { _id: 2 } }].reverse()}
-
+        alignTop={true}
         messages={messages}
         onSend={messages => onSend(messages)}
+        inverted={true}
+        keyboardShouldPersistTaps={"always"}
 
-        alignTop={true}
-        inverted={false}
-        keyboardShouldPersistTaps={"never"}
 
         renderMessageText={function (props) {
+
+
           return <MessageText {...props} />
         }}
 
@@ -308,8 +315,11 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
         renderInputToolbar={function (props) {
+
           //  console.log(props)
+
           return <InputToolbar {...props}
+
             containerStyle={{
               //   height:100
             }}
@@ -318,6 +328,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         }}
         user={{ _id: 1, }}
+
 
       />
 

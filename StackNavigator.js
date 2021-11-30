@@ -73,17 +73,14 @@ export default function StackNavigator() {
         options={function () {
 
           return {
-            headerRight: () => (
-              <Button
-                onPress={() => { }}
-                title={"hihi"}
-              // color="#fff"
-              />
-            )
+          //  headerRight: function(props) {     return <Button onPress={() => { }} title={"hihi"} />    },
+           
+        
+            headerTitle: function (props) { return <></> },
+            gestureEnabled: true,
+            headerTransparent: true,
           }
-
         }}
-
       />
 
 

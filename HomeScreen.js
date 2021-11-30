@@ -584,9 +584,9 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
             </SharedElement>
 
-            <SharedElement id={"555"} style={{ transform: [{ scale: 3 }] }}  >
-              <Text>{item.name}</Text>
-            </SharedElement>
+       
+              <Text style={{fontSize:20}}>{item.name}</Text>
+           
 
             {/* <ListItem
             bottomDivider={true}
