@@ -174,13 +174,13 @@ export function ImageScreen({ navigation, route, }) {
         // }}
 
       >
-
+ {/* <Pressable onLongPress={function(){alert("fdf")}}> */}
         <SharedElement id={route.params.imageId}    >
 
           <Image source={{ uri: route.params.imageUrl }} resizeMode="contain" style={{ width, height }} />
 
         </SharedElement>
-
+        {/* </Pressable> */}
       </ViewTransformer>
 
 
