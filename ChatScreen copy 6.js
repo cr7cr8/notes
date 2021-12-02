@@ -24,7 +24,7 @@ import ReAnimated, {
 } from 'react-native-reanimated';
 //import Svg, { Circle, Rect, SvgUri } from 'react-native-svg';
 import SvgUri from 'react-native-svg-uri';
-const { View, Text, Image: ImageV, ScrollView: ScrollV } = ReAnimated
+const { View, Text, Image, ScrollView: ScrollV } = ReAnimated
 
 import multiavatar from '@multiavatar/multiavatar';
 
@@ -44,10 +44,8 @@ import { SharedElement } from 'react-navigation-shared-element';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { Context } from "./ContextProvider"
 
-import { GiftedChat, Bubble, InputToolbar, Avatar as AvatarIcon, Message, Time, MessageContainer, MessageText, SystemMessage, Day, Send, Composer, MessageImage } from 'react-native-gifted-chat'
+import { GiftedChat, Bubble, InputToolbar, Avatar as AvatarIcon, Message, Time, MessageContainer, MessageText, SystemMessage, Day, Send, Composer } from 'react-native-gifted-chat'
 import { Video, AVPlaybackStatus } from 'expo-av';
-
-import Image from 'react-native-scalable-image';
 
 export function ChatScreen({ navigation, route, ...props }) {
 
@@ -110,15 +108,12 @@ export function ChatScreen({ navigation, route, ...props }) {
           avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),
         },
         //  video: 'https://vimeo.com/311983548',
-        sent: true,
-        received: true,
-        pending: true,
-
       },
 
 
 
       {
+
         _id: Math.random(),
         text: '333',
         createdAt: Date.now() + 2000 * 60 + 100,
@@ -127,15 +122,18 @@ export function ChatScreen({ navigation, route, ...props }) {
           name: 'React Native',
           avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
         },
-        image: 'https://picsum.photos/500/300',
+        //image: 'https://picsum.photos/200/300',
         // You can also add a video prop:
-        //video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+
+        video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+
         // Mark the message as sent, using one tick
         sent: true,
         // Mark the message as received, using two tick
         received: true,
         // Mark the message as pending with a clock loader
         pending: true,
+
       },
 
 
@@ -162,8 +160,8 @@ export function ChatScreen({ navigation, route, ...props }) {
       },
       {
 
-        _id:Math.random(),
-        text: '555',
+        _id: Math.random(),
+        text: '4444',
         createdAt: Date.now() + 2000 * 60 + 200,
         user: {
           _id: 1,
@@ -171,9 +169,13 @@ export function ChatScreen({ navigation, route, ...props }) {
           avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
         },
         image: 'https://picsum.photos/200/300',
-
+        // You can also add a video prop:
+        //  video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+        // Mark the message as sent, using one tick
         sent: true,
+        // Mark the message as received, using two tick
         received: true,
+        // Mark the message as pending with a clock loader
         pending: true,
 
       }
@@ -308,14 +310,9 @@ export function ChatScreen({ navigation, route, ...props }) {
         renderMessage={function (props) {
 
           const currentMessage = props.currentMessage
-          if (currentMessage.video) { return }
-
-          // if (currentMessage.image) { 
-          //   console.log(currentMessage.image)
-          //   return <Image source={{uri:currentMessage.image}}  style={{ width: 200, height: 200 }}/>
+          if (currentMessage.video || currentMessage.image) { return }
 
 
-          // }
 
           return (
 
@@ -351,33 +348,25 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         renderBubble={function (props) {
 
-          const { currentMessage } = props
-
           return (
             <ScaleView>
               <Bubble {...props}
                 wrapperStyle={{
 
                   left: {
-
-                    backgroundColor: currentMessage.image ? bgColor : bgColor,
+                    backgroundColor: bgColor,
                     justifyContent: 'flex-start',
-
-                    overflow: "hidden",
                   },
                   right: {
-                    // ...!currentMessage.image && { backgroundColor: "lightgreen" },
-
-                    overflow: "hidden",
-                    backgroundColor: currentMessage.image ? "lightgreen" : "lightgreen",
+                    backgroundColor: "lightgreen",
                     transform: [{ translateX: -9 }]
                   },
 
                 }}
                 textStyle={{
-                  left: { color: "black", fontSize: 20, lineHeight: 30, ...currentMessage.image && { display: "none" } },
+                  left: { color: "black", fontSize: 20, lineHeight: 30 },
 
-                  right: { color: "black", fontSize: 20, lineHeight: 30, ...currentMessage.image && { display: "none" } },
+                  right: { color: "black", fontSize: 20, lineHeight: 30 },
 
                 }}
               />
@@ -387,8 +376,6 @@ export function ChatScreen({ navigation, route, ...props }) {
         }}
 
         // renderMessageText={function(props){
-
-        //   console.log(props.currentMessage)
 
         //     return <MessageText {...props} textStyle={{fontSize:20,color:"red"}} containerStyle={{color:"blue"}} />
         // }}
@@ -484,7 +471,7 @@ export function ChatScreen({ navigation, route, ...props }) {
               }>
 
                 <Icon
-                  onPress={function () { panelHeight.value = 0 }}
+                  onPress={function () {  panelHeight.value = 0 }}
                   name="image-outline"
                   type='ionicon'
                   color='#517fa4'
@@ -554,35 +541,6 @@ export function ChatScreen({ navigation, route, ...props }) {
           }
         }
 
-        renderMessageImage={function (props) {
-
-          const currentMessage = props.currentMessage
-          // console.log((props.currentMessage))
-
-          return <Pressable onPress={function () { navigation.navigate('Image', { imageUrl: currentMessage.image, imageId: currentMessage._id }) }}>
-
-
-            <SharedElement id={currentMessage._id}  >
-
-              <Image source={{ uri: props.currentMessage.image }} width={200} style={{
-                resizeMode: "contain",
-
-               // width: 200,
-               // height: 300
-
-              }} />
-            </SharedElement>
-
-          </Pressable>
-          //return <MessageImage {...props} />
-
-        }}
-
-
-
-
-
-
         // onPressActionButton={function () {
         //   alert("fdsf")
         // }}
@@ -617,43 +575,32 @@ export function ChatScreen({ navigation, route, ...props }) {
 
       />
 
-      {/* <Pressable onPress={function () {
-        navigation.navigate('Image', { imageUrl: 'https://picsum.photos/500/301', imageId: "fewf" })
-      }}>
-        <SharedElement id="aaa"  >
-
-          <ImageV source={{ uri: 'https://picsum.photos/500/301' }} style={{
-            resizeMode: "contain",
-
-            width: 200,
-            height: 300
-
-          }} />
-        </SharedElement>
-      </Pressable> */}
       {/* <View style={functionPanelStyle} /> */}
     </>
   )
 }
 
 
-ChatScreen.sharedElements = (route, otherRoute, showing) => {
-  //console.log("fdfsfsdf", otherRoute, showing)
-
- // console.log(otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.imageId)
-  //ontherRoute.route.params && ontherRoute.route.params.imageId
-
-  const element = otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.imageId
-    ? { id: otherRoute.route.params.imageId, animation: "move", resize: "auto", align: "left", }
-    : {}
-
-  return [
+ChatScreen.sharedElements = (route, otherRoute, showing) => [
 
 
-    { id: route.params.item.name, animation: "move", resize: "auto", align: "left", },
-    element,
-  ]
-};
+  { id: route.params.item.name, animation: "move", resize: "auto", align: "left", },
+
+  // { id: route.params.item.name + "-logo", animation: "move", resize: "clip", align: 'left-center', },
+  // { id: route.params.item.key, animation: "move", resize: "clip", align: 'left-center', },
+  // { id: "111", animation: "fade", resize: "auto", align: 'left-center', },
+  // { id: "222", animation: "fade", resize: "auto", align: 'left-center', },
+  // { id: "333", animation: "fade", resize: "auto", align: 'left-center', },
+
+  // { id: "444", animation: "fade", resize: "auto", align: 'left-center', },
+
+  // { id: "555", animation: "resize", resize: "clip", align: 'left-center', },
+
+
+
+
+
+];
 
 function ScaleView(props) {
 

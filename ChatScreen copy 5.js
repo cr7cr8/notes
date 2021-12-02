@@ -24,7 +24,7 @@ import ReAnimated, {
 } from 'react-native-reanimated';
 //import Svg, { Circle, Rect, SvgUri } from 'react-native-svg';
 import SvgUri from 'react-native-svg-uri';
-const { View, Text, Image: ImageV, ScrollView: ScrollV } = ReAnimated
+const { View, Text, Image, ScrollView: ScrollV } = ReAnimated
 
 import multiavatar from '@multiavatar/multiavatar';
 
@@ -44,10 +44,8 @@ import { SharedElement } from 'react-navigation-shared-element';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { Context } from "./ContextProvider"
 
-import { GiftedChat, Bubble, InputToolbar, Avatar as AvatarIcon, Message, Time, MessageContainer, MessageText, SystemMessage, Day, Send, Composer, MessageImage } from 'react-native-gifted-chat'
+import { GiftedChat, Bubble, InputToolbar, Avatar as AvatarIcon, Message, Time, MessageContainer, MessageText, SystemMessage, Day, Send, Composer } from 'react-native-gifted-chat'
 import { Video, AVPlaybackStatus } from 'expo-av';
-
-import Image from 'react-native-scalable-image';
 
 export function ChatScreen({ navigation, route, ...props }) {
 
@@ -88,37 +86,23 @@ export function ChatScreen({ navigation, route, ...props }) {
 
       {
         _id: Math.random(),
-        text: '1111\nfewfhkl \n就看了附件为 、jiofew \n好就好看附件为全额  j离开房间额为急哦iefw看了发生纠纷来看 额为急哦iefw看了发生纠纷来看 是是觉得发来看份文件哦i减肥了快速打击法拉克哇',
+        text: '1111\nfewfhkl \n就看了附件为 、jiofew \n好就好看附件为全额',
         createdAt: Date.now() + 1000 * 60,
         user: {
-          _id: Math.random(),
+          _id:Math.random(),
           name: 'React Native',
-          // avatar: () => (<SvgUri style={{ position: "relative", }} width={60} height={60} svgXmlData={multiavatar(item.name, false)} />),
+         // avatar: () => (<SvgUri style={{ position: "relative", }} width={60} height={60} svgXmlData={multiavatar(item.name, false)} />),
           avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),
         },
         //  video: 'https://vimeo.com/311983548',
       },
 
-      {
-        _id: Math.random(),
-        text: '1111\nfewfhkl \n就看了附件为 、jiofew \n好就好看附件为全额  j离开房间额为急哦iefw看了发生纠纷来看 额为急哦iefw看了发生纠纷来看 是是觉得发来看份文件哦i减肥了快速打击法拉克哇',
-        createdAt: Date.now() + 1000 * 60,
-        user: {
-          _id: 1,
-          name: 'React Native',
-          // avatar: () => (<SvgUri style={{ position: "relative", }} width={60} height={60} svgXmlData={multiavatar(item.name, false)} />),
-          avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),
-        },
-        //  video: 'https://vimeo.com/311983548',
-        sent: true,
-        received: true,
-        pending: true,
 
-      },
 
 
 
       {
+
         _id: Math.random(),
         text: '333',
         createdAt: Date.now() + 2000 * 60 + 100,
@@ -127,15 +111,18 @@ export function ChatScreen({ navigation, route, ...props }) {
           name: 'React Native',
           avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
         },
-        image: 'https://picsum.photos/500/300',
+        //image: 'https://picsum.photos/200/300',
         // You can also add a video prop:
-        //video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+
+        video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+
         // Mark the message as sent, using one tick
         sent: true,
         // Mark the message as received, using two tick
         received: true,
         // Mark the message as pending with a clock loader
         pending: true,
+
       },
 
 
@@ -151,7 +138,7 @@ export function ChatScreen({ navigation, route, ...props }) {
         },
         image: 'https://picsum.photos/200/300',
         // You can also add a video prop:
-        video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
         // Mark the message as sent, using one tick
         sent: true,
         // Mark the message as received, using two tick
@@ -162,8 +149,8 @@ export function ChatScreen({ navigation, route, ...props }) {
       },
       {
 
-        _id:Math.random(),
-        text: '555',
+        _id: Math.random(),
+        text: '4444',
         createdAt: Date.now() + 2000 * 60 + 200,
         user: {
           _id: 1,
@@ -171,9 +158,13 @@ export function ChatScreen({ navigation, route, ...props }) {
           avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
         },
         image: 'https://picsum.photos/200/300',
-
+        // You can also add a video prop:
+        //  video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+        // Mark the message as sent, using one tick
         sent: true,
+        // Mark the message as received, using two tick
         received: true,
+        // Mark the message as pending with a clock loader
         pending: true,
 
       }
@@ -181,72 +172,55 @@ export function ChatScreen({ navigation, route, ...props }) {
 
     ])
   }, [])
+  const onSend = (messages) => {
+
+    // console.log(messages)
 
 
+    setMessages(previousMessages => {
+
+
+      return GiftedChat.prepend(previousMessages, messages)
+
+
+
+
+    }
+    )
+  }
+
+
+
+  // useEffect(function(){
+
+  // console.log(inputRef.current)
+
+  // })
 
   const [inputText, setInputText] = useState("")
-
-  // const expand = useSharedValue(false)
-  //const expandWidth = useDerivedValue(() => { return expand.value ? width : 50 })
-
-  const expandWidth = useSharedValue(50)
-
-  const sendBtnStyle = useAnimatedStyle(() => {
-
-    // const pos = expandWidth.value === 50 ? "center" : "space-between";
-
-    return {
-      width: withTiming(expandWidth.value),
-      // backgroundColor: "pink",
-      borderRadius: 0,
-      height: 50,
-      overflow: "hidden",
-      display: "flex",
-      flexDirection: "row",
-      alignItems: "flex-start",
-      justifyContent: "flex-end",
-      //position:"absolute",
-      //right:8,
-    }
-
-
-  })
-
-  const panelHeight = useSharedValue(0)
-  const functionPanelStyle = useAnimatedStyle(() => {
-
-    // const pos = expandWidth.value === 50 ? "center" : "space-between";
-
-    return {
-      width,
-      height: withTiming(panelHeight.value),
-      backgroundColor: "skyblue",
-      // backgroundColor: "pink",
-      // borderRadius: 0,
-      // height: 50,
-      // overflow: "hidden",
-      // display: "flex",
-      // flexDirection: "row",
-      // alignItems: "flex-start",
-      // justifyContent: "flex-end",
-      //position:"absolute",
-      //right:8,
-    }
-
-
-  })
-
-
+  const [status, setStatus] = React.useState({});
   return (
 
     <>
 
       <View style={{ alignItems: "center", justifyContent: "center", flexDirection: "row", backgroundColor: bgColor, padding: 0, elevation: 1, position: "relative" }}>
 
+        {/* <View style={{ position: "absolute", left: 0 }}>
+          <Button title="back" onPress={function () {
+            //  inputRef.current.blur()
+
+            inputRef.current.blur()
+            //   navigation.goBack()
+            // setTimeout(() => {
+            //  navigation.goBack()
+            //  }, 0);
 
 
+          }} />
+        </View> */}
 
-        <SharedElement id={item.name} style={{ transform: [{ scale: 0.56 }], }}   >
+
+        <SharedElement id={item.name} style={{ transform: [{ scale: 0.58 }], }}   >
           <SvgUri style={{ position: "relative", top: getStatusBarHeight() }} width={60} height={60} svgXmlData={avatarString} />
 
         </SharedElement>
@@ -280,7 +254,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         }}
 
-        minComposerHeight={50}
+        // minComposerHeight={0}
         // renderCustomView={function (props) { return <Button title="Fdf" /> }}
         // renderFooter={function (props) {    return <Button title="aaa" /> }}
 
@@ -307,15 +281,6 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         renderMessage={function (props) {
 
-          const currentMessage = props.currentMessage
-          if (currentMessage.video) { return }
-
-          // if (currentMessage.image) { 
-          //   console.log(currentMessage.image)
-          //   return <Image source={{uri:currentMessage.image}}  style={{ width: 200, height: 200 }}/>
-
-
-          // }
 
           return (
 
@@ -351,47 +316,27 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         renderBubble={function (props) {
 
-          const { currentMessage } = props
-
           return (
             <ScaleView>
               <Bubble {...props}
                 wrapperStyle={{
 
                   left: {
-
-                    backgroundColor: currentMessage.image ? bgColor : bgColor,
+                    backgroundColor: bgColor,
                     justifyContent: 'flex-start',
-
-                    overflow: "hidden",
                   },
                   right: {
-                    // ...!currentMessage.image && { backgroundColor: "lightgreen" },
-
-                    overflow: "hidden",
-                    backgroundColor: currentMessage.image ? "lightgreen" : "lightgreen",
-                    transform: [{ translateX: -9 }]
+                    backgroundColor: "lightgreen",
+                    transform:[{translateX:-16}]
                   },
 
                 }}
-                textStyle={{
-                  left: { color: "black", fontSize: 20, lineHeight: 30, ...currentMessage.image && { display: "none" } },
-
-                  right: { color: "black", fontSize: 20, lineHeight: 30, ...currentMessage.image && { display: "none" } },
-
-                }}
+                textStyle={{ right: { color: "black" } }}
               />
             </ScaleView>
 
           )
         }}
-
-        // renderMessageText={function(props){
-
-        //   console.log(props.currentMessage)
-
-        //     return <MessageText {...props} textStyle={{fontSize:20,color:"red"}} containerStyle={{color:"blue"}} />
-        // }}
 
         renderSystemMessage={function (props) {
 
@@ -442,6 +387,21 @@ export function ChatScreen({ navigation, route, ...props }) {
         }}
 
         alwaysShowSend={true}
+        renderSend={function (props) {
+          return <Send {...props} textStyle >
+            <View style={{ borderRadius: 1000, height: "100%", width: 50, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon
+                name={inputText ? 'send' : 'plus'}
+                type={inputText ? 'material' : 'evilicon'}
+                color='#517fa4'
+                size={inputText ? 30 : 40}
+              //    containerStyle={{backgroundColor:'#517fa4',}}
+              />
+            </View>
+          </Send>
+
+        }}
+
 
 
         keyboardShouldPersistTaps={"never"}
@@ -449,9 +409,8 @@ export function ChatScreen({ navigation, route, ...props }) {
         renderComposer={function (props) {
           return (
             <Composer {...props}
-              textInputStyle={{ fontSize: 20, lineHeight: 30 }}
               textInputProps={{
-                onPressIn: function () { inputRef.current.blur(); inputRef.current.focus(); expandWidth.value = 50; },
+                onPressIn: function () { inputRef.current.blur(); inputRef.current.focus() },
                 onPressOut: function () { inputRef.current.blur(); },
                 ref: function (element) { inputRef.current = element }
 
@@ -459,67 +418,21 @@ export function ChatScreen({ navigation, route, ...props }) {
 
           )
 
+
+
+
+
+
+
+
         }}
 
 
         text={inputText}
         onInputTextChanged={text => setInputText(text)}
 
-
-
-        renderSend={function (props) {
-          return (
-            <Send {...props} containerStyle={{
-              alignSelf: !inputText || inputText.indexOf("\n") === -1 ? "center" : "flex-end",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "row",
-              margin: 0,
-              padding: 0,
-            }}   >
-
-              <View style={
-                [sendBtnStyle]
-              }>
-
-                <Icon
-                  onPress={function () { panelHeight.value = 0 }}
-                  name="image-outline"
-                  type='ionicon'
-                  color='#517fa4'
-                  size={inputText ? 0 : 50}
-                />
-
-
-                <Icon
-                  onPress={function () { panelHeight.value = 100 }}
-                  name="film-outline"
-                  type='ionicon'
-                  color='#517fa4'
-                  size={inputText ? 0 : 50}
-                />
-
-                <Icon
-                  {...(!inputText) && {
-                    onPress: function () { expandWidth.value = expandWidth.value === 50 ? 150 : 50 }
-
-
-                  }}
-                  name={inputText ? 'send' : expandWidth.value === 50 ? 'add-circle-outline' : 'remove-circle-outline'}
-                  type='ionicon'
-                  color='#517fa4'
-                  size={inputText ? 45 : 50}
-                //    containerStyle={{backgroundColor:'#517fa4',}}
-                />
-
-              </View>
-            </Send>
-          )
-        }}
-
-
         onSend={function (messages) {
+
           setMessages(previousMessages => {
             return GiftedChat.prepend(previousMessages, messages)
           })
@@ -528,64 +441,18 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
 
-        renderInputToolbar={
-          function (props) {
 
 
-            return <InputToolbar {...props} containerStyle={{ display: "flex", flexDirection: "row", alignItems: "center", }} >
-              {props.children}
+        renderInputToolbar={function (props) {
+          //  console.log(props)
+          return (<InputToolbar {...props} />)
 
-            </InputToolbar>
-
-            return (
-              <View style={{ height: 300, backgroundColor: "pink" }}>
-                <Button title="fdfwwww" />
-                <Text>dfdsf</Text>
-                {/* <InputToolbar {...props} containerStyle={{ display: "flex", flexDirection: "row", alignItems: "center", }} >
-                {props.children}
-
-              </InputToolbar> */}
-              </View>
-
-
-            )
-
-
-          }
-        }
-
-        renderMessageImage={function (props) {
-
-          const currentMessage = props.currentMessage
-          // console.log((props.currentMessage))
-
-          return <Pressable onPress={function () { navigation.navigate('Image', { imageUrl: currentMessage.image, imageId: currentMessage._id }) }}>
-
-
-            <SharedElement id={currentMessage._id}  >
-
-              <Image source={{ uri: props.currentMessage.image }} width={200} style={{
-                resizeMode: "contain",
-
-               // width: 200,
-               // height: 300
-
-              }} />
-            </SharedElement>
-
-          </Pressable>
-          //return <MessageImage {...props} />
 
         }}
 
-
-
-
-
-
-        // onPressActionButton={function () {
-        //   alert("fdsf")
-        // }}
+        onPressActionButton={function () {
+          alert("fdsf")
+        }}
 
         // renderMessageVideo={function (message) {
         //   console.log("===============")
@@ -617,43 +484,31 @@ export function ChatScreen({ navigation, route, ...props }) {
 
       />
 
-      {/* <Pressable onPress={function () {
-        navigation.navigate('Image', { imageUrl: 'https://picsum.photos/500/301', imageId: "fewf" })
-      }}>
-        <SharedElement id="aaa"  >
-
-          <ImageV source={{ uri: 'https://picsum.photos/500/301' }} style={{
-            resizeMode: "contain",
-
-            width: 200,
-            height: 300
-
-          }} />
-        </SharedElement>
-      </Pressable> */}
-      {/* <View style={functionPanelStyle} /> */}
     </>
   )
 }
 
 
-ChatScreen.sharedElements = (route, otherRoute, showing) => {
-  //console.log("fdfsfsdf", otherRoute, showing)
-
- // console.log(otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.imageId)
-  //ontherRoute.route.params && ontherRoute.route.params.imageId
-
-  const element = otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.imageId
-    ? { id: otherRoute.route.params.imageId, animation: "move", resize: "auto", align: "left", }
-    : {}
-
-  return [
+ChatScreen.sharedElements = (route, otherRoute, showing) => [
 
 
-    { id: route.params.item.name, animation: "move", resize: "auto", align: "left", },
-    element,
-  ]
-};
+  { id: route.params.item.name, animation: "move", resize: "auto", align: "left", },
+
+  // { id: route.params.item.name + "-logo", animation: "move", resize: "clip", align: 'left-center', },
+  // { id: route.params.item.key, animation: "move", resize: "clip", align: 'left-center', },
+  // { id: "111", animation: "fade", resize: "auto", align: 'left-center', },
+  // { id: "222", animation: "fade", resize: "auto", align: 'left-center', },
+  // { id: "333", animation: "fade", resize: "auto", align: 'left-center', },
+
+  // { id: "444", animation: "fade", resize: "auto", align: 'left-center', },
+
+  // { id: "555", animation: "resize", resize: "clip", align: 'left-center', },
+
+
+
+
+
+];
 
 function ScaleView(props) {
 

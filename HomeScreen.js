@@ -232,8 +232,6 @@ class SinglePanel extends React.Component {
         mainEnabled={this.props.mainEnabled}
 
         // bgColor={this.bgColor}
-
-
         // panelIndex={this.panelIndex}
 
         panelKey={this.panelKey}
@@ -339,15 +337,15 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
   const frameStyle = useAnimatedStyle(() => {
 
-    let color=""
+    let color = ""
 
-  //  if(elevation.value!==0){color="white"}
-    if(mainEnabled&&elevation.value===0){color="white"}
-    
-    else if(!mainEnabled&&elevation.value===0){color="white"}
-    else if(mainEnabled&&elevation.value!==0){color=bgColor}
+    //  if(elevation.value!==0){color="white"}
+    if (mainEnabled && elevation.value === 0) { color = "white" }
 
-    else if(!mainEnabled&&elevation.value!==0){color=bgColor}
+    else if (!mainEnabled && elevation.value === 0) { color = "white" }
+    else if (mainEnabled && elevation.value !== 0) { color = bgColor }
+
+    else if (!mainEnabled && elevation.value !== 0) { color = bgColor }
 
 
     return {
@@ -357,7 +355,7 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
       //backgroundColor: bgColor,
 
-      backgroundColor:color,
+      backgroundColor: color,
       // ...holding&&{backgroundColor:"wheat"},
       //  backgroundColor: bgColor.value,
       display: "flex",
@@ -472,6 +470,9 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
   //const enabled = useSharedValue(false)
 
+  let timeout = ""
+
+
   const gestureHandler = useAnimatedGestureHandler({
 
     onStart: (event, obj) => {
@@ -479,11 +480,13 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
       obj.offsetY = transY.value
       obj.preAbsY = event.absoluteY
 
+      timeout && clearTimeout(timeout)
       //   if (enabled.value) {
       runOnJS(settingMovePermission)()
       //   }
     },
     onActive: (event, obj) => {
+      timeout && clearTimeout(timeout)
       if (panelScale.value !== 0.8) return
       zIndex.value = 10
 
@@ -603,8 +606,17 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
             setInMoving(panelKey)
 
+
+            timeout = setTimeout(() => {
+              setMainEnabled(true)
+              setInMoving(false)
+              panelScale.value = withTiming(1)
+              elevation.value = withTiming(0)
+            }, 5000);
+
             panelScale.value = withTiming(0.8)
             elevation.value = withTiming(10)
+
 
           }}
 
