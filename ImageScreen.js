@@ -51,29 +51,8 @@ export function ImageScreen({ navigation, route, }) {
 
 
 
-  // React.useEffect(() => {
-  //   const unsubscribe = navigation.addListener('transitionStart', (e) => {
-  //     // Do something
-  //     opacity.value = 0
 
-  //   });
-
-  //   return unsubscribe;
-  // }, [navigation]);
-
-
-
-  // React.useEffect(() => {
-  //   const unsubscribe = navigation.addListener('transitionEnd', (e) => {
-  //     // Do something
-  //     opacity.value = 1
-
-  //   });
-
-  //   return unsubscribe;
-  // }, [navigation]);
-
-  console.log("====", route.params.imagePos)
+  //console.log("====", route.params.imagePos)
 
 
   const scrollX = useSharedValue(route.params.imagePos * width)
@@ -81,89 +60,82 @@ export function ImageScreen({ navigation, route, }) {
   const holdingTime = useRef(0)
 
 
-  // console.log(route.params.messages.length)
+  const [overLayOn, setOverLayOn] = useState(false)
 
-  //console.log(route.params.imageId)
   return (
+    <>
+      <ScrollView
 
-    <ScrollView style={{}}
-      //   snapToAlignment={width}
-      contentOffset={{ x: route.params.imagePos * width, y: 0 }}
-      scrollEnabled={false}
-      ref={scrollRef}
-      horizontal={true}
-      onScroll={function (e) { scrollX.value = e.nativeEvent.contentOffset.x }}
-
-
-      snapToInterval={width}
-      contentContainerStyle={{
-        display: "flex", justifyContent: "center", alignItems: "center", height,
-        backgroundColor: "pink"
-        // backgroundColor: "pink"
-      }}
-
-    >
+        contentOffset={{ x: route.params.imagePos * width, y: 0 }}
+        scrollEnabled={false}
+        ref={scrollRef}
+        horizontal={true}
+        onScroll={function (e) { scrollX.value = e.nativeEvent.contentOffset.x }}
 
 
-      {route.params.messages.map(item => {
+        snapToInterval={width}
+        contentContainerStyle={{
+          display: "flex", justifyContent: "center", alignItems: "center", height,
+          backgroundColor: "pink"
+          // backgroundColor: "333"
+        }}
 
-        return (
-          <ViewTransformer maxScale={3}
-            key={item._id}
-            onTransformStart={function () { holdingTime.current = Date.now() }}
+      >
 
-            onTransformGestureReleased={function ({ scale, translateX, translateY }) {
 
-              if (scale === 1 && translateX < (-10)) {
-                scrollRef.current.scrollTo({ x: scrollX.value + width, y: 0, animated: true })
-              }
-              else if (scale === 1 && translateX > (10)) {
+        {route.params.messages.map((item, index) => {
 
-                scrollRef.current.scrollTo({ x: scrollX.value - width, y: 0, animated: true })
-              }
-              else if ((scale === 1 && translateX === 0 && translateY === 0) && (Date.now() - holdingTime.current >= 300)) {
+          return (
 
-                alert("fdfsdf")
-              }
+            <ViewTransformer maxScale={3}
 
-            }}
 
-          // onViewTransformed={function ({ scale, translateX, translateY }) {
-          //   if ((scale === 1 && translateX === 0 && translateY === 0) && (Date.now() - holdingTime.current >= 3000)) {
-          //     alert("fdfsdf")
-          //   }
-          // }}
+              onLongPress={function () { setOverLayOn(true) }}
+              key={item._id}
+              onTransformStart={function () { holdingTime.current = Date.now() }}
 
-          >
+              onTransformGestureReleased={function ({ scale, translateX, translateY }) {
 
-            {/* <SharedElement id={route.params.imageId}    > */}
-            <SharedElement id={item._id}    >
-              <Image source={{ uri: item.image }} resizeMode="contain" style={{ width, height }} />
-            </SharedElement>
+                if (scale === 1 && translateX < (-10)) {
+                  scrollRef.current.scrollTo({ x: scrollX.value + width, y: 0, animated: true })
+                }
+                else if (scale === 1 && translateX > (10)) {
 
-          </ViewTransformer>
+                  scrollRef.current.scrollTo({ x: scrollX.value - width, y: 0, animated: true })
+                }
+                else if ((scale === 1 && translateX === 0 && translateY === 0) && (Date.now() - holdingTime.current >= 300)) {
+                  // setOverLayOn(true)
+                }
+
+              }}
+
+
+            >
+
+              <SharedElement id={item._id}>
+
+                <Image source={{ uri: item.image }} resizeMode="contain" style={{ width, height }} />
+              </SharedElement>
+
+            </ViewTransformer>
 
 
 
 
-        )
+          )
 
-      })}
-
-
+        })}
 
 
 
 
+      </ScrollView >
 
 
-    </ScrollView >
-
-
-    // <Overlay isVisible={true} >
-    //   <Text>Hello from Overlay!</Text>
-    // </Overlay> 
-
+      <Overlay isVisible={overLayOn} onBackdropPress={function () { setOverLayOn(false) }} >
+        <Text>Hello from Overlay!</Text>
+      </Overlay>
+    </>
   )
 
 }
@@ -172,6 +144,8 @@ ImageScreen.sharedElements = (route, otherRoute, showing) => {
 
   let messageArr = []
   if (route && route.params && route.params.messages) {
+
+
     messageArr = route.params.messages.map(item => {
       return { id: item._id, animation: "move", resize: "auto", align: "left" }
     })
@@ -180,7 +154,7 @@ ImageScreen.sharedElements = (route, otherRoute, showing) => {
 
 
   return [
-    // { id: route.params.imageId, animation: "move", resize: "clip", align: "auto", },
+
     ...messageArr,
   ]
 };

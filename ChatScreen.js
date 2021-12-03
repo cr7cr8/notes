@@ -600,7 +600,6 @@ export function ChatScreen({ navigation, route, ...props }) {
                 //   imageUrl: currentMessage.image,
 
                 imagePos: imageMessageArr.findIndex(item => { return item._id === currentMessage._id }),
-
                 messages: imageMessageArr,
                 setMessages,
               })
@@ -609,12 +608,8 @@ export function ChatScreen({ navigation, route, ...props }) {
 
               <SharedElement id={currentMessage._id}  >
 
-                <Image source={{ uri: props.currentMessage.image }} width={200} style={{
-                  resizeMode: "contain",
-
-                  // width: 200,
-                  // height: 300
-
+                <Image source={{ uri: props.currentMessage.image }} width={200}  resizeMode="contain" style={{
+                //  resizeMode: "contain",  // width: 200,  // height: 300
                 }} />
               </SharedElement>
 
@@ -662,20 +657,6 @@ export function ChatScreen({ navigation, route, ...props }) {
 
       />
 
-      {/* <Pressable onPress={function () {
-        navigation.navigate('Image', { imageUrl: 'https://picsum.photos/500/301', imageId: "fewf" })
-      }}>
-        <SharedElement id="aaa"  >
-
-          <ImageV source={{ uri: 'https://picsum.photos/500/301' }} style={{
-            resizeMode: "contain",
-
-            width: 200,
-            height: 300
-
-          }} />
-        </SharedElement>
-      </Pressable> */}
 
 
 
@@ -686,14 +667,6 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
 ChatScreen.sharedElements = (route, otherRoute, showing) => {
-  //console.log("fdfsfsdf", otherRoute, showing)
-
-  // console.log(otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.imageId)
-  //ontherRoute.route.params && ontherRoute.route.params.imageId
-
-  const element = otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.imageId
-    ? { id: otherRoute.route.params.imageId, animation: "move", resize: "auto", align: "left", }
-    : {}
 
   let messageArr = []
   if (otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.messages) {
@@ -705,13 +678,10 @@ ChatScreen.sharedElements = (route, otherRoute, showing) => {
 
 
 
-  // const messages = otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.messages
-  //   ? {}
-  //   : {}
 
   return [
     { id: route.params.item.name, animation: "move", resize: "auto", align: "left", },
-    ...messageArr,
+   // ...messageArr,   // turn back image transition off
   ]
 };
 
