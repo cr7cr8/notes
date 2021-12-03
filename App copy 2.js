@@ -95,7 +95,106 @@ import ViewTransformer from "react-native-easy-view-transformer";
 export default function App() {
 
 
-  
+  const style = useAnimatedStyle(() => {
+    return {
+      width,
+      height,
+      backgroundColor: "pink",
+
+    }
+  })
+
+
+  const imageWidth = width;
+  const imageHeight = height;
+
+
+  const focalX = useSharedValue(0)
+  const focalY = useSharedValue(0)
+  const scale = useSharedValue(1)
+
+
+  const frameStyle = useAnimatedStyle(() => {
+    return {
+
+      transform: [
+        { translateX: focalX.value / scale.value},
+        { translateY: focalY.value/ scale.value },
+        { translateX: -imageWidth/ scale.value / 2, },
+        { translateY: -imageHeight / scale.value/ 2, },
+
+
+        { scale: scale.value },
+
+
+        { translateX: -focalX.value/ scale.value },
+        { translateY: -focalY.value/ scale.value },
+        { translateX: imageWidth / scale.value/ 2 },
+        { translateY: imageHeight / scale.value/ 2 },
+
+
+
+      ]
+    }
+  })
+
+  const gestureHandler = useAnimatedGestureHandler({
+
+    onStart: (event, ctx) => {
+
+      //    console.log(event)
+      //    scale.value = event.scale
+
+      // focalX.value = withTiming(event.focalX)
+      // focalY.value = withTiming(event.focalY)
+      focalX.value = focalX.value / scale.value
+      focalY.value = focalY.value / scale.value;
+
+      ctx.scale = scale.value
+    },
+    onActive: (event, ctx) => {
+
+      console.log(event)
+
+
+      focalX.value = event.focalX / scale.value;
+      focalY.value = event.focalY / scale.value;
+      scale.value = event.scale * ctx.scale
+
+
+
+    },
+    onEnd: (event, ctx) => {
+      scale.value = scale.value
+
+      if (scale.value < 1) {
+        scale.value = withTiming(1)
+      }
+
+      focalX.value = focalX.value
+      focalY.value = focalY.value
+
+
+    }
+
+
+  })
+
+
+  return (
+    <PinchGestureHandler onGestureEvent={gestureHandler} >
+      <View style={style}>
+
+        <Image resizeMode="contain" source={{ uri: "https://picsum.photos/200/300" }}
+          style={[{ width: imageWidth, height: imageHeight }, frameStyle]}
+        />
+
+      </View>
+    </PinchGestureHandler>
+  )
+
+
+
 
 
 

@@ -127,7 +127,7 @@ export function ChatScreen({ navigation, route, ...props }) {
           name: 'React Native',
           avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
         },
-        image: 'https://picsum.photos/500/300',
+        image: 'https://picsum.photos/500/310',
         // You can also add a video prop:
         //video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
         // Mark the message as sent, using one tick
@@ -138,31 +138,63 @@ export function ChatScreen({ navigation, route, ...props }) {
         pending: true,
       },
 
-
       {
-
         _id: Math.random(),
-        text: '4444',
-        createdAt: Date.now() + 2000 * 60 + 200,
+        text: '444sd',
+        createdAt: Date.now() + 2000 * 60 + 100,
         user: {
           _id: Math.random(),
           name: 'React Native',
           avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
         },
-        image: 'https://picsum.photos/200/300',
+        image: 'https://picsum.photos/580/300',
         // You can also add a video prop:
-        video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+        //video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
         // Mark the message as sent, using one tick
         sent: true,
         // Mark the message as received, using two tick
         received: true,
         // Mark the message as pending with a clock loader
         pending: true,
-
       },
+
+      {
+        _id: Math.random(),
+        text: '444sd',
+        createdAt: Date.now() + 2000 * 60 + 100,
+        user: {
+          _id: 1,
+          name: 'React Native',
+          avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
+        },
+        image: 'https://picsum.photos/280/300',
+      
+      },
+
+      // {
+
+      //   _id: Math.random(),
+      //   text: '4444',
+      //   createdAt: Date.now() + 2000 * 60 + 200,
+      //   user: {
+      //     _id: Math.random(),
+      //     name: 'React Native',
+      //     avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
+      //   },
+      //   image: 'https://picsum.photos/200/300',
+      //   // You can also add a video prop:
+      //   video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+      //   // Mark the message as sent, using one tick
+      //   sent: true,
+      //   // Mark the message as received, using two tick
+      //   received: true,
+      //   // Mark the message as pending with a clock loader
+      //   pending: true,
+
+      // },
       {
 
-        _id:Math.random(),
+        _id: Math.random(),
         text: '555',
         createdAt: Date.now() + 2000 * 60 + 200,
         user: {
@@ -559,23 +591,36 @@ export function ChatScreen({ navigation, route, ...props }) {
           const currentMessage = props.currentMessage
           // console.log((props.currentMessage))
 
-          return <Pressable onPress={function () { navigation.navigate('Image', { imageUrl: currentMessage.image, imageId: currentMessage._id }) }}>
+          const imageMessageArr = messages.filter(message => Boolean(message.image))
+
+          return (
+            <Pressable onPress={function () {
+
+              navigation.navigate('Image', {
+                //   imageUrl: currentMessage.image,
+
+                imagePos: imageMessageArr.findIndex(item => { return item._id === currentMessage._id }),
+
+                messages: imageMessageArr,
+                setMessages,
+              })
+            }}>
 
 
-            <SharedElement id={currentMessage._id}  >
+              <SharedElement id={currentMessage._id}  >
 
-              <Image source={{ uri: props.currentMessage.image }} width={200} style={{
-                resizeMode: "contain",
+                <Image source={{ uri: props.currentMessage.image }} width={200} style={{
+                  resizeMode: "contain",
 
-               // width: 200,
-               // height: 300
+                  // width: 200,
+                  // height: 300
 
-              }} />
-            </SharedElement>
+                }} />
+              </SharedElement>
 
-          </Pressable>
-          //return <MessageImage {...props} />
-
+            </Pressable>
+            //return <MessageImage {...props} />
+          )
         }}
 
 
@@ -631,6 +676,9 @@ export function ChatScreen({ navigation, route, ...props }) {
           }} />
         </SharedElement>
       </Pressable> */}
+
+
+
       {/* <View style={functionPanelStyle} /> */}
     </>
   )
@@ -640,18 +688,30 @@ export function ChatScreen({ navigation, route, ...props }) {
 ChatScreen.sharedElements = (route, otherRoute, showing) => {
   //console.log("fdfsfsdf", otherRoute, showing)
 
- // console.log(otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.imageId)
+  // console.log(otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.imageId)
   //ontherRoute.route.params && ontherRoute.route.params.imageId
 
   const element = otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.imageId
     ? { id: otherRoute.route.params.imageId, animation: "move", resize: "auto", align: "left", }
     : {}
 
+  let messageArr = []
+  if (otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.messages) {
+    messageArr = otherRoute.route.params.messages.map(item => {
+      return { id: item._id, animation: "move", resize: "auto", align: "left" }
+    })
+
+  }
+
+
+
+  // const messages = otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.messages
+  //   ? {}
+  //   : {}
+
   return [
-
-
     { id: route.params.item.name, animation: "move", resize: "auto", align: "left", },
-    element,
+    ...messageArr,
   ]
 };
 

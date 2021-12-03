@@ -36,7 +36,7 @@ import { ListItem, Avatar, LinearProgress, Button } from 'react-native-elements'
 const { width, height } = Dimensions.get('screen');
 
 import { LinearGradient } from 'expo-linear-gradient';
-import { Icon } from 'react-native-elements';
+import { Icon, Overlay } from 'react-native-elements';
 
 
 import { SharedElement } from 'react-navigation-shared-element';
@@ -49,24 +49,7 @@ import ViewTransformer from "react-native-easy-view-transformer";
 
 export function ImageScreen({ navigation, route, }) {
 
-  const opacity = useSharedValue(0)
 
-
-
-
-  const backStyle = useAnimatedStyle(() => {
-
-    return {
-      backgroundColor: "#333",
-      position: "absolute",
-      width,
-      height,
-      top: 0,
-      left: 0,
-      //   opacity: withTiming(opacity.value, { duration: 300 }),
-    }
-
-  })
 
   // React.useEffect(() => {
   //   const unsubscribe = navigation.addListener('transitionStart', (e) => {
@@ -90,123 +73,96 @@ export function ImageScreen({ navigation, route, }) {
   //   return unsubscribe;
   // }, [navigation]);
 
-  const scrollX = useSharedValue(0)
+  console.log("====", route.params.imagePos)
 
+
+  const scrollX = useSharedValue(route.params.imagePos * width)
   const scrollRef = useRef()
-
-
   const holdingTime = useRef(0)
 
+
+  // console.log(route.params.messages.length)
 
   //console.log(route.params.imageId)
   return (
 
     <ScrollView style={{}}
       //   snapToAlignment={width}
+      contentOffset={{ x: route.params.imagePos * width, y: 0 }}
       scrollEnabled={false}
       ref={scrollRef}
       horizontal={true}
-      onScroll={function (e) {
+      onScroll={function (e) { scrollX.value = e.nativeEvent.contentOffset.x }}
 
-        scrollX.value = e.nativeEvent.contentOffset.x
-        // console.log(e.nativeEvent.contentOffset.x)
 
-      }}
       snapToInterval={width}
       contentContainerStyle={{
         display: "flex", justifyContent: "center", alignItems: "center", height,
-
         backgroundColor: "pink"
+        // backgroundColor: "pink"
       }}
 
     >
 
 
-      {/* <View style={{ height, width,backgroundColor:"skyblue" }} >
-        <Image source={{ uri: route.params.imageUrl }} resizeMode="contain" style={{ width, height }} />
-      </View>
+      {route.params.messages.map(item => {
 
-      <View style={{ height, width,backgroundColor:"lightorange" }} >
-        <Image source={{ uri: "https://picsum.photos/200/300" }} resizeMode="contain" style={{ width, height }} />
-      </View> */}
+        return (
+          <ViewTransformer maxScale={3}
+            key={item._id}
+            onTransformStart={function () { holdingTime.current = Date.now() }}
 
+            onTransformGestureReleased={function ({ scale, translateX, translateY }) {
 
+              if (scale === 1 && translateX < (-10)) {
+                scrollRef.current.scrollTo({ x: scrollX.value + width, y: 0, animated: true })
+              }
+              else if (scale === 1 && translateX > (10)) {
 
+                scrollRef.current.scrollTo({ x: scrollX.value - width, y: 0, animated: true })
+              }
+              else if ((scale === 1 && translateX === 0 && translateY === 0) && (Date.now() - holdingTime.current >= 300)) {
 
-      <ViewTransformer maxScale={3}
+                alert("fdfsdf")
+              }
 
-        onTransformStart={function () {
+            }}
 
-          holdingTime.current = Date.now()
+          // onViewTransformed={function ({ scale, translateX, translateY }) {
+          //   if ((scale === 1 && translateX === 0 && translateY === 0) && (Date.now() - holdingTime.current >= 3000)) {
+          //     alert("fdfsdf")
+          //   }
+          // }}
 
-        }}
+          >
 
-        onTransformGestureReleased={function ({ scale, translateX, translateY }) {
+            {/* <SharedElement id={route.params.imageId}    > */}
+            <SharedElement id={item._id}    >
+              <Image source={{ uri: item.image }} resizeMode="contain" style={{ width, height }} />
+            </SharedElement>
 
-          if (scale === 1 && translateX < (-10)) {
-            scrollRef.current.scrollTo({ x: scrollX.value + width, y: 0, animated: true })
-          }
-          else if (scale === 1 && translateX > (10)) {
-
-            scrollRef.current.scrollTo({ x: 0, y: 0, animated: true })
-          }
-          else if ((scale === 1 && translateX === 0 && translateY === 0) && (Date.now() - holdingTime.current >= 300)) {
-
-            alert("fdfsdf")
-
-
-          }
-
-
-          // else if(scale ===1 && translateX ===0 && translateY===0){
-          //   Date.now()-holdingTime.current >=3000
-          //   alert("fdfsdf")
-          // }
-        }}
-
-        // onViewTransformed={function ({ scale, translateX, translateY }) {
-        //   if ((scale === 1 && translateX === 0 && translateY === 0) && (Date.now() - holdingTime.current >= 3000)) {
-
-        //     alert("fdfsdf")
+          </ViewTransformer>
 
 
-        //   }
-        // }}
-
-      >
- {/* <Pressable onLongPress={function(){alert("fdf")}}> */}
-        <SharedElement id={route.params.imageId}    >
-
-          <Image source={{ uri: route.params.imageUrl }} resizeMode="contain" style={{ width, height }} />
-
-        </SharedElement>
-        {/* </Pressable> */}
-      </ViewTransformer>
 
 
-      <Pressable>
-        <ViewTransformer maxScale={3}
+        )
 
-          onTransformGestureReleased={function ({ scale, translateX, translateY }) {
+      })}
 
-            if (scale === 1 && translateX < (-10)) {
-              scrollRef.current.scrollTo({ x: scrollX.value + width, y: 0, animated: true })
-            }
-            else if (scale === 1 && translateX > (10)) {
 
-              scrollRef.current.scrollTo({ x: 0, y: 0, animated: true })
-            }
-          }}
-        >
-          <SharedElement id={route.params.imageId}    >
-            <Image source={{ uri: 'https://picsum.photos/200/300' }} resizeMode="contain" style={{ width, height }} />
-          </SharedElement>
-        </ViewTransformer>
 
-      </Pressable>
+
+
+
 
 
     </ScrollView >
+
+
+    // <Overlay isVisible={true} >
+    //   <Text>Hello from Overlay!</Text>
+    // </Overlay> 
 
   )
 
@@ -214,8 +170,17 @@ export function ImageScreen({ navigation, route, }) {
 
 ImageScreen.sharedElements = (route, otherRoute, showing) => {
 
-  return [
-    { id: route.params.imageId, animation: "move", resize: "clip", align: "auto", },
+  let messageArr = []
+  if (route && route.params && route.params.messages) {
+    messageArr = route.params.messages.map(item => {
+      return { id: item._id, animation: "move", resize: "auto", align: "left" }
+    })
 
+  }
+
+
+  return [
+    // { id: route.params.imageId, animation: "move", resize: "clip", align: "auto", },
+    ...messageArr,
   ]
 };
