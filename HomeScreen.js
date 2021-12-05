@@ -4,7 +4,7 @@ import { createSharedElementStackNavigator } from 'react-navigation-shared-eleme
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
 
 
-import { StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Pressable, TouchableHighlight, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Pressable, TouchableHighlight, TouchableWithoutFeedback, Vibration } from 'react-native';
 
 import ReAnimated, {
   useAnimatedStyle, useSharedValue, useDerivedValue,
@@ -600,14 +600,15 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
           }}
 
           onLongPress={function () {
-
+         
 
             setMainEnabled(false)
 
             setInMoving(panelKey)
 
-
+            Vibration.vibrate(50)
             timeout = setTimeout(() => {
+             
               setMainEnabled(true)
               setInMoving(false)
               panelScale.value = withTiming(1)

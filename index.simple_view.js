@@ -88,7 +88,7 @@ export default class ViewTransformer extends React.Component {
         this.onResponderRelease = this.onResponderRelease.bind(this);
         this.onResponderMove = this.onResponderMove.bind(this);
 
-       
+
 
         this.scroller = new Scrolling(true, (dx, dy, scroller) => {
             if (dx === 0 && dy === 0 && scroller.isFinished()) {
@@ -213,14 +213,14 @@ export default class ViewTransformer extends React.Component {
         });
     }
 
-  
+
 
     onResponderGrant(evt, gestureState) {
         this.props.onTransformStart && this.props.onTransformStart();
         this.setState({ responderGranted: true });
         this.measureLayout();
 
-     
+
         this.timeOut = setTimeout(() => {
             this.props.onLongPress()
         }, 1200);
@@ -228,8 +228,12 @@ export default class ViewTransformer extends React.Component {
     }
 
     onResponderMove(evt, gestureState) {
-        this.cancelAnimation();
+
         this.timeOut && clearTimeout(this.timeOut)
+
+  
+        this.cancelAnimation();
+
         let dx = gestureState.moveX - gestureState.previousMoveX;
         let dy = gestureState.moveY - gestureState.previousMoveY;
 
@@ -245,6 +249,7 @@ export default class ViewTransformer extends React.Component {
         if (!this.props.enableTranslate) {
             dx = dy = 0;
         }
+
 
         let transform = {};
         if (gestureState.previousPinch && gestureState.pinch && this.props.enableScale) {
@@ -265,12 +270,17 @@ export default class ViewTransformer extends React.Component {
 
 
 
-        } else {
+        }
+        else {
             if (Math.abs(dx) > 2 * Math.abs(dy)) {
                 dy = 0;
-            } else if (Math.abs(dy) > 2 * Math.abs(dx)) {
+            }
+            else if (Math.abs(dy) > 2 * Math.abs(dx)) {
                 dx = 0;
             }
+            
+     
+
             transform.translateX = this.state.translateX + dx / this.state.scale;
             transform.translateY = this.state.translateY + dy / this.state.scale;
 

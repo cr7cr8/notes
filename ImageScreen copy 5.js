@@ -10,8 +10,8 @@ import {
 
   PermissionsAndroid,
   Platform,
-  Animated,
-  Vibration
+
+
 } from 'react-native';
 
 import * as FileSystem from 'expo-file-system';
@@ -36,10 +36,7 @@ import ReAnimated, {
 } from 'react-native-reanimated';
 //import Svg, { Circle, Rect, SvgUri } from 'react-native-svg';
 import SvgUri from 'react-native-svg-uri';
-const { View, Text, ScrollView: ScrollV, Image } = ReAnimated
-
-
-//import Image from 'react-native-scalable-image';
+const { View, Text, ScrollView: ScrollV, Image, } = ReAnimated
 
 import multiavatar from '@multiavatar/multiavatar';
 
@@ -47,11 +44,11 @@ import multiavatar from '@multiavatar/multiavatar';
 import base64 from 'react-native-base64';
 import { PanGestureHandler, ScrollView, FlatList, NativeViewGestureHandler, PinchGestureHandler } from 'react-native-gesture-handler';
 
-import { ListItem, Avatar, LinearProgress, Button, Icon, Overlay, } from 'react-native-elements'
+import { ListItem, Avatar, LinearProgress, Button } from 'react-native-elements'
 const { width, height } = Dimensions.get('screen');
 
 import { LinearGradient } from 'expo-linear-gradient';
-
+import { Icon, Overlay } from 'react-native-elements';
 
 
 import { SharedElement } from 'react-navigation-shared-element';
@@ -64,11 +61,36 @@ import ViewTransformer from "react-native-easy-view-transformer";
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 
 import * as MediaLibrary from 'expo-media-library';
-import * as Permissions from 'expo-permissions';
+
+// import FileSystem from "expo-file-system";
+
+// console.log(FileSystem)
+
+//import RNFetchBlob from 'rn-fetch-blob';
+
+//console.log(RNFetchBlob)
+//const { config, fs } = RNFetchBlob;
+
 
 import { downloadToFolder } from 'expo-file-dl';
 
-import { OverlayDownloader } from "./OverlayDownloader";
+// console.log(FileSystem.documentDirectory)
+
+// const callback = () => { };
+
+// const downloadResumable = FileSystem.createDownloadResumable(
+//  // 'http://techslides.com/demos/sample-videos/small.mp4',
+//  "https://picsum.photos/200/300",
+//  "file:///data/"+ 'small.jpg',
+//   {},
+//   callback
+// );
+
+//  downloadResumable.downloadAsync().then(uri=>{
+//   console.log('Finished downloading to ', uri);
+
+//  });
+
 
 
 
@@ -78,11 +100,22 @@ export function ImageScreen({ navigation, route, }) {
   const avatarString = multiavatar(item.name)
 
   const scrollRef = useRef()
-  const scrollX = useSharedValue(route.params.imagePos * width)
-
   const [overLayOn, setOverLayOn] = useState(false)
 
-  const [btnText, setBtnText] = useState("Download")
+  const scrollX = useSharedValue(route.params.imagePos * width)
+
+  // PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE).then(status => {
+
+  //   //if(status==="")
+  //   console.log(status, PermissionsAndroid.RESULTS.GRANTED)
+
+  //   if (status === PermissionsAndroid.RESULTS.GRANTED) {
+
+  //   }
+
+  // })
+
+
 
 
   return (
@@ -124,7 +157,9 @@ export function ImageScreen({ navigation, route, }) {
             <ViewTransformer maxScale={2.5}
 
               arrLength={arr.length}
-              onLongPress={function () { Vibration.vibrate(50); setOverLayOn(true) }}
+
+              onLongPress={function () { setOverLayOn(true) }}
+
 
               key={item._id}
               onTransformStart={function () { }}
@@ -136,14 +171,22 @@ export function ImageScreen({ navigation, route, }) {
                 else if (scale === 1 && translateX > (10)) {
                   scrollRef.current.scrollTo({ x: (index - 1) * width, y: 0, animated: true })
                 }
+
               }}
+
+
             >
 
               <SharedElement id={item._id}>
+
                 <Image source={{ uri: item.image }} resizeMode="contain" style={{ width, height }} />
               </SharedElement>
 
             </ViewTransformer>
+
+
+
+
           )
 
         })}
@@ -153,98 +196,37 @@ export function ImageScreen({ navigation, route, }) {
 
       </ScrollView >
 
-      <OverlayDownloader
-        overLayOn={overLayOn}
-        setOverLayOn={setOverLayOn}
-        uri={route.params.messages[Math.floor(scrollX.value / width)].image}
-        fileName={Date.now() + ".jpg"}
-      />
-      {/* <Overlay isVisible={overLayOn} fullScreen={false}
-        overlayStyle={{
 
-          position: "relative",
-          width: 0.8 * width,
-          display: "flex",
-          alignItems: "center"
-        }}
-        onBackdropPress={function () { if (btnText === "Download" || btnText === "100%") { setBtnText("Download"); setOverLayOn(false) } }}
-      >
+      <Overlay isVisible={overLayOn} onBackdropPress={function () { setOverLayOn(false) }} >
+        <Text>Hello from Overlay!</Text>
+        <Button title="ssds" onPress={function (props) {
 
-        {btnText !== "Download" && <LinearProgress color="primary" value={1} variant={btnText === "100%" ? "determinate" : "indeterminate"} style={{ height: 5, width: 0.8 * width, position: "absolute", zIndex: 10 }} />}
-        {btnText !== "Download" && btnText !== "100%" && <Button disabled={true} title={btnText} />}
-        {btnText === "Download" && <Button title={btnText} disabled={btnText !== "Download"} onPress={async function (props) {
+          // console.log(MediaLibrary.PermissionStatus)
 
+          MediaLibrary.requestPermissionsAsync().then(result => {
+            if (result.granted) {
 
-          setBtnText("0%")
-          const obj = route.params.messages[Math.floor(scrollX.value / width)]
-          const uri = obj.image
-          //const uri = "https://picsum.photos/100/102" obj.image
+              const obj = route.params.messages[Math.floor(scrollX.value / width)]
 
-          const fileUri = `${FileSystem.documentDirectory}${obj._id}.jpg`
-          //const fileUri = `${FileSystem.documentDirectory}${Date.now()}.jpg`
-
-          //  console.log(uri)
-
-
-          const downloadResumable = FileSystem.createDownloadResumable(
-            uri, fileUri, { headers: { token: "hihihi" } },
-
-            function ({ totalBytesExpectedToWrite, totalBytesWritten }) {
-
-              console.log(totalBytesExpectedToWrite, totalBytesWritten)
-
-              if (totalBytesExpectedToWrite === -1) { setBtnText("100%") }
-              else {
-                // console.log(Math.floor(totalBytesWritten / totalBytesExpectedToWrite * 100))
-                setBtnText(Math.floor(totalBytesWritten / totalBytesExpectedToWrite * 100) + "%")
-              }
-
+              downloadToFolder(obj.image, `${obj._id}.jpg`, "./", obj._id)
+              //  downloadToFolder("https://picsum.photos/200/100", "xyza.jpg", "./", "iiiddd")
 
             }
-          );
 
+          })
+          // MediaLibrary.requestPermissionsAsync().then(result=>{
+          //   console.log(result)
+          // })
 
-          const { status, ...rest } = await downloadResumable.downloadAsync(uri, fileUri, { headers: { token: "hihihi" } }).catch(e => { console.log(e) })
-
-          //  console.log(rest)
-
-          if (status == 200) {
-            const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
-            if (!granted) { return }
-            else {
-
-              const asset = await MediaLibrary.createAssetAsync(fileUri).catch(e => { console.log(e) });
-              const album = await MediaLibrary.getAlbumAsync('ttt').catch(e => { console.log(e) });
-
-              //console.log(album)
-
-              if (album == null) {
-                await MediaLibrary.createAlbumAsync('ttt', asset, false).catch(e => { console.log(e) });
-              }
-              else {
-                await MediaLibrary.addAssetsToAlbumAsync([asset], album, false).catch(e => { console.log(e) });
-              }
-            }
-          }
-          else { alert("server refuse to send") }
+          // downloadToFolder("https://picsum.photos/200/100", "xyza.jpg", "./", "iiiddd")
 
 
         }} />
-        }
-        {btnText === "100%" && <Button title="Finished" onPress={function () {
-
-          setBtnText("Download")
-          setOverLayOn(false)
-        }} />}
-
-      </Overlay> */}
-
+      </Overlay>
     </>
   )
 
 }
-
-
 
 ImageScreen.sharedElements = (route, otherRoute, showing) => {
 
@@ -264,4 +246,10 @@ ImageScreen.sharedElements = (route, otherRoute, showing) => {
     ...messageArr,
   ]
 };
+
+
+
+
+
+
 

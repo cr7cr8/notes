@@ -116,7 +116,10 @@ export default function StackNavigator() {
         options={function({navigaion,router}){
 
           return{
-            headerShown:false
+            headerShown:true,
+            headerTitle: function (props) { return <></> },
+            headerTintColor: 'transparent',
+            headerTransparent: true,
 
           }
         }}

@@ -68,98 +68,23 @@ import * as Permissions from 'expo-permissions';
 
 import { downloadToFolder } from 'expo-file-dl';
 
-import { OverlayDownloader } from "./OverlayDownloader";
 
 
 
-export function ImageScreen({ navigation, route, }) {
 
-  const item = route.params.item
-  const avatarString = multiavatar(item.name)
+export function OverlayDownloader({ overLayOn, setOverLayOn, uri, fileName, ...props }) {
 
-  const scrollRef = useRef()
-  const scrollX = useSharedValue(route.params.imagePos * width)
 
-  const [overLayOn, setOverLayOn] = useState(false)
+  //const [overLayOn, setOverLayOn] = useState(false)
 
   const [btnText, setBtnText] = useState("Download")
 
-
+  // console.log(uri, "-------------------", fileName)
   return (
     <>
 
 
-      <View style={{ overflow: "hidden", height: 0, backgroundColor: "yellow" }}>
-        <SharedElement id={item.name} style={{ transform: [{ scale: 0 }], }}   >
-          <SvgUri style={{ position: "relative", top: getStatusBarHeight() }} width={60} height={60} svgXmlData={avatarString} />
-        </SharedElement>
-      </View>
-
-
-
-      <ScrollView
-
-        contentOffset={{ x: route.params.imagePos * width, y: 0 }}
-        scrollEnabled={false}
-        ref={scrollRef}
-        horizontal={true}
-        onScroll={function (e) { scrollX.value = e.nativeEvent.contentOffset.x }}
-
-
-
-        snapToInterval={width}
-        contentContainerStyle={{
-          display: "flex", justifyContent: "center", alignItems: "center", height,
-          //backgroundColor: "pink"
-          backgroundColor: "#333"
-        }}
-
-      >
-
-
-        {route.params.messages.map((item, index, arr) => {
-
-          return (
-
-            <ViewTransformer maxScale={2.5}
-
-              arrLength={arr.length}
-              onLongPress={function () { Vibration.vibrate(50); setOverLayOn(true) }}
-
-              key={item._id}
-              onTransformStart={function () { }}
-              onTransformGestureReleased={function ({ scale, translateX, translateY }) {
-
-                if (scale === 1 && translateX < (-10)) {
-                  scrollRef.current.scrollTo({ x: (index + 1) * width, y: 0, animated: true })
-                }
-                else if (scale === 1 && translateX > (10)) {
-                  scrollRef.current.scrollTo({ x: (index - 1) * width, y: 0, animated: true })
-                }
-              }}
-            >
-
-              <SharedElement id={item._id}>
-                <Image source={{ uri: item.image }} resizeMode="contain" style={{ width, height }} />
-              </SharedElement>
-
-            </ViewTransformer>
-          )
-
-        })}
-
-
-
-
-      </ScrollView >
-
-      <OverlayDownloader
-        overLayOn={overLayOn}
-        setOverLayOn={setOverLayOn}
-        uri={route.params.messages[Math.floor(scrollX.value / width)].image}
-        fileName={Date.now() + ".jpg"}
-      />
-      {/* <Overlay isVisible={overLayOn} fullScreen={false}
+      <Overlay isVisible={overLayOn} fullScreen={false}
         overlayStyle={{
 
           position: "relative",
@@ -176,14 +101,13 @@ export function ImageScreen({ navigation, route, }) {
 
 
           setBtnText("0%")
-          const obj = route.params.messages[Math.floor(scrollX.value / width)]
-          const uri = obj.image
-          //const uri = "https://picsum.photos/100/102" obj.image
 
-          const fileUri = `${FileSystem.documentDirectory}${obj._id}.jpg`
-          //const fileUri = `${FileSystem.documentDirectory}${Date.now()}.jpg`
+          //  const uri = uri // obj.image
 
-          //  console.log(uri)
+
+          const fileUri = `${FileSystem.documentDirectory}${fileName}`
+          // console.log("====",uri, fileUri)
+
 
 
           const downloadResumable = FileSystem.createDownloadResumable(
@@ -191,7 +115,7 @@ export function ImageScreen({ navigation, route, }) {
 
             function ({ totalBytesExpectedToWrite, totalBytesWritten }) {
 
-              console.log(totalBytesExpectedToWrite, totalBytesWritten)
+              //console.log(totalBytesExpectedToWrite, totalBytesWritten)
 
               if (totalBytesExpectedToWrite === -1) { setBtnText("100%") }
               else {
@@ -204,9 +128,9 @@ export function ImageScreen({ navigation, route, }) {
           );
 
 
-          const { status, ...rest } = await downloadResumable.downloadAsync(uri, fileUri, { headers: { token: "hihihi" } }).catch(e => { console.log(e) })
+          const { status,  } = await downloadResumable.downloadAsync(uri, fileUri, { headers: { token: "hihihi" } }).catch(e => { console.log(e) })
 
-          //  console.log(rest)
+
 
           if (status == 200) {
             const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
@@ -237,7 +161,7 @@ export function ImageScreen({ navigation, route, }) {
           setOverLayOn(false)
         }} />}
 
-      </Overlay> */}
+      </Overlay>
 
     </>
   )
@@ -246,22 +170,8 @@ export function ImageScreen({ navigation, route, }) {
 
 
 
-ImageScreen.sharedElements = (route, otherRoute, showing) => {
-
-  let messageArr = []
-  if (route && route.params && route.params.messages) {
 
 
-    messageArr = route.params.messages.map(item => {
-      return { id: item._id, animation: "move", resize: "auto", align: "left" }
-    })
-
-  }
 
 
-  return [
-    { id: route.params.item.name, animation: "move", resize: "auto", align: "left", },
-    ...messageArr,
-  ]
-};
 

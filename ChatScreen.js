@@ -86,6 +86,8 @@ export function ChatScreen({ navigation, route, ...props }) {
   useEffect(() => {
     setMessages([
 
+
+
       {
         _id: Math.random(),
         text: '1111\nfewfhkl \n就看了附件为 、jiofew \n好就好看附件为全额  j离开房间额为急哦iefw看了发生纠纷来看 额为急哦iefw看了发生纠纷来看 是是觉得发来看份文件哦i减肥了快速打击法拉克哇',
@@ -116,7 +118,25 @@ export function ChatScreen({ navigation, route, ...props }) {
 
       },
 
-
+ {
+        _id: Math.random(),
+        text: '333',
+        createdAt: Date.now() + 2000 * 60 + 100,
+        user: {
+          _id: Math.random(),
+          name: 'React Native',
+          avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
+        },
+        image: 'https://picsum.photos/100/110',
+        // You can also add a video prop:
+        //video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+        // Mark the message as sent, using one tick
+        sent: true,
+        // Mark the message as received, using two tick
+        received: true,
+        // Mark the message as pending with a clock loader
+        pending: true,
+      },
 
       {
         _id: Math.random(),
@@ -168,7 +188,7 @@ export function ChatScreen({ navigation, route, ...props }) {
           avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
         },
         image: 'https://picsum.photos/280/300',
-      
+
       },
 
       // {
@@ -591,25 +611,25 @@ export function ChatScreen({ navigation, route, ...props }) {
           const currentMessage = props.currentMessage
           // console.log((props.currentMessage))
 
-          const imageMessageArr = messages.filter(message => Boolean(message.image))
+          const imageMessageArr = messages.filter(message => Boolean(message.image)).map(item=>{ return { ...item,user:{...item.user,avatar:""}  }  })
 
           return (
             <Pressable onPress={function () {
 
               navigation.navigate('Image', {
                 //   imageUrl: currentMessage.image,
-
+                item: { name: route.params.item.name },
                 imagePos: imageMessageArr.findIndex(item => { return item._id === currentMessage._id }),
                 messages: imageMessageArr,
-                setMessages,
+               // setMessages,
               })
             }}>
 
 
               <SharedElement id={currentMessage._id}  >
 
-                <Image source={{ uri: props.currentMessage.image }} width={200}  resizeMode="contain" style={{
-                //  resizeMode: "contain",  // width: 200,  // height: 300
+                <Image source={{ uri: props.currentMessage.image }} width={200} resizeMode="contain" style={{
+                  //  resizeMode: "contain",  // width: 200,  // height: 300
                 }} />
               </SharedElement>
 
@@ -681,7 +701,7 @@ ChatScreen.sharedElements = (route, otherRoute, showing) => {
 
   return [
     { id: route.params.item.name, animation: "move", resize: "auto", align: "left", },
-   // ...messageArr,   // turn back image transition off
+    // ...messageArr,   // turn back image transition off
   ]
 };
 
