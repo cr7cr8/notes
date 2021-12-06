@@ -853,31 +853,44 @@ async function takePhoto(setMessages) {
     const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
     if (!granted) { return }
     else {
-      const createdAfter = Date.now()
+    
       const fileUri = result.uri;
+
+      const fileName = fileUri.substr(fileUri.lastIndexOf('/') + 1);
+
+
+     // console.log(fileUri)
       const asset = await MediaLibrary.createAssetAsync(fileUri).catch(e => { console.log(e) });
       let album = await MediaLibrary.getAlbumAsync('expoPhotos').catch(e => { console.log(e) });
-  
+
       if (album == null) { album = await MediaLibrary.createAlbumAsync('expoPhotos', asset, false) }
       else { await MediaLibrary.addAssetsToAlbumAsync([asset], album, false) }
 
-      await FileSystem.deleteAsync(fileUri,{idempotent:true})
+      await FileSystem.deleteAsync(fileUri, { idempotent: true })
 
-      const data = await MediaLibrary.getAssetsAsync({ album: album.id, first: 1, createdAfter })
+      const data = await MediaLibrary.getAssetsAsync({ album: album.id, first:1000})
 
+      const item = data.assets.find(item=>{
+
+       return item.uri.substr(item.uri.lastIndexOf('/') + 1) === fileName
+
+ 
+      })
+
+     // console.log(item)
       //console.log("album", data)
 
-      setMessages(pre => {
+      item&& setMessages(pre => {
         return [...pre, {
           _id: Math.random(),
           text: '',
-          createdAt: createdAfter,
+          createdAt: Date.now(),
           user: {
             _id: 1,
             name: 'React Native',
             //  avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
           },
-          image: data.assets[0].uri,
+          image: item.uri,
           isCameraPhoto: true
         },
         ]

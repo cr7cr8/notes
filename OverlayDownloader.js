@@ -76,14 +76,14 @@ export function OverlayDownloader({ overLayOn, setOverLayOn, uri, fileName, ...p
   //  console.log(FileSystem.documentDirectory)
   FileSystem.readDirectoryAsync(FileSystem.documentDirectory).then(data => {
     data.forEach(filename_ => {
-      console.log("=cached image==***===" + filename_)
-       // FileSystem.deleteAsync(FileSystem.documentDirectory + filename_, { idempotent: true })
+      //console.log("=cached image==***===" + filename_)
+      // FileSystem.deleteAsync(FileSystem.documentDirectory + filename_, { idempotent: true })
     })
   })
 
   FileSystem.readDirectoryAsync("file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540cr7cr8%252Fnotes/ImagePicker/").then(data => {
     data.forEach(filename_ => {
-      console.log("=cached photo==***===" + filename_)
+      //console.log("=cached photo==***===" + filename_)
       //  FileSystem.deleteAsync("file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540cr7cr8%252Fnotes/ImagePicker/" + filename_, { idempotent: true })
     })
 
@@ -163,12 +163,10 @@ async function downloadFromUri(uri, fileName, setBtnText) {
 
   if (status == 200) {
     const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
-    if (!granted) { return }
-
+    if (!granted) { setBtnText("100%"); return }
 
     const asset = await MediaLibrary.createAssetAsync(fileUri).catch(e => { console.log(e) });
     let album = await MediaLibrary.getAlbumAsync('expoDownload').catch(e => { console.log(e) });
-    //if (album == null) { await MediaLibrary.createAlbumAsync('ttt', asset, false).catch(e => { console.log(e) }); }
 
     if (album == null) { await MediaLibrary.createAlbumAsync('expoDownload', asset, false).catch(e => { console.log(e) }); }
     else {
@@ -176,7 +174,7 @@ async function downloadFromUri(uri, fileName, setBtnText) {
     }
 
 
-    await FileSystem.deleteAsync(fileUri,{idempotent:true})
+    await FileSystem.deleteAsync(fileUri, { idempotent: true })
 
 
 
@@ -190,8 +188,28 @@ async function downloadFromUri(uri, fileName, setBtnText) {
 
 async function downloadFromBase64(uri, fileName, setBtnText) {
 
-  alert("aaa")
 
+  setBtnText("0%")
+  const base64Code = uri.split("data:image/png;base64,")[1];
+
+  const fileUri = FileSystem.documentDirectory + fileName;
+  await FileSystem.writeAsStringAsync(fileUri, base64Code, { encoding: FileSystem.EncodingType.Base64, });
+  // console.log(base64Code)
+  // console.log(fileUri)
+
+  const asset = await MediaLibrary.createAssetAsync(fileUri)
+  let album = await MediaLibrary.getAlbumAsync('expoDownload')
+  if (album == null) { await MediaLibrary.createAlbumAsync('expoDownload', asset, true) }
+  else {
+    await MediaLibrary.addAssetsToAlbumAsync([asset], album, false)
+  }
+
+  await FileSystem.deleteAsync(fileUri, { idempotent: true })
+
+
+  //const mediaResult = await MediaLibrary.saveToLibraryAsync(filename);
+
+  setBtnText("100%")
 }
 
 async function downloadFromLocal(uri, fileName, setBtnText) {
@@ -208,15 +226,8 @@ async function downloadFromLocal(uri, fileName, setBtnText) {
     await MediaLibrary.addAssetsToAlbumAsync([asset], album, true)
   }
 
-
-
-
-
-
   setBtnText("100%")
-  //FileSystem.copyAsync({from:uri,to:   })
 
-  // FileSystem.copyAsync(options)
 
 }
 
