@@ -4,7 +4,7 @@ import { createSharedElementStackNavigator } from 'react-navigation-shared-eleme
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
 
 
-import { StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Keyboard, Pressable } from 'react-native';
+import { StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Keyboard, Pressable, Vibration } from 'react-native';
 
 import ReAnimated, {
   useAnimatedStyle, useSharedValue, useDerivedValue,
@@ -48,6 +48,11 @@ import { GiftedChat, Bubble, InputToolbar, Avatar as AvatarIcon, Message, Time, 
 import { Video, AVPlaybackStatus } from 'expo-av';
 
 import Image from 'react-native-scalable-image';
+
+import * as FileSystem from 'expo-file-system';
+import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
+import { OverlayDownloader } from "./OverlayDownloader";
 
 export function ChatScreen({ navigation, route, ...props }) {
 
@@ -118,7 +123,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
       },
 
- {
+      {
         _id: Math.random(),
         text: '333',
         createdAt: Date.now() + 2000 * 60 + 100,
@@ -247,8 +252,9 @@ export function ChatScreen({ navigation, route, ...props }) {
 
     // const pos = expandWidth.value === 50 ? "center" : "space-between";
 
+
     return {
-      width: withTiming(expandWidth.value),
+      width: withTiming(expandWidth.value, { duration: 100 }),
       // backgroundColor: "pink",
       borderRadius: 0,
       height: 50,
@@ -288,6 +294,11 @@ export function ChatScreen({ navigation, route, ...props }) {
 
   })
 
+
+
+
+  const [overLayOn, setOverLayOn] = useState(false)
+  const [uri, setUri] = useState()
 
   return (
 
@@ -520,6 +531,18 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
         renderSend={function (props) {
+          // return (
+          //   <Send {...props} containerStyle={{
+          //     alignSelf: !inputText || inputText.indexOf("\n") === -1 ? "center" : "flex-end",
+          //     display: "flex",
+          //     alignItems: "center",
+          //     justifyContent: "center",
+          //     flexDirection: "row",
+          //     margin: 0,
+          //     padding: 0,
+          //   }} />
+          // )
+
           return (
             <Send {...props} containerStyle={{
               alignSelf: !inputText || inputText.indexOf("\n") === -1 ? "center" : "flex-end",
@@ -529,15 +552,24 @@ export function ChatScreen({ navigation, route, ...props }) {
               flexDirection: "row",
               margin: 0,
               padding: 0,
-            }}   >
+            }}>
 
               <View style={
                 [sendBtnStyle]
               }>
 
                 <Icon
-                  onPress={function () { panelHeight.value = 0 }}
+                  onPress={function () { panelHeight.value = 0; pickImage(setMessages) }}
                   name="image-outline"
+                  type='ionicon'
+                  color='#517fa4'
+                  size={inputText ? 0 : 50}
+                />
+
+
+                <Icon
+                  onPress={function () { panelHeight.value = 0; takePhoto(setMessages) }}
+                  name="camera-outline"
                   type='ionicon'
                   color='#517fa4'
                   size={inputText ? 0 : 50}
@@ -554,9 +586,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
                 <Icon
                   {...(!inputText) && {
-                    onPress: function () { expandWidth.value = expandWidth.value === 50 ? 150 : 50 }
-
-
+                    onPress: function () { expandWidth.value = expandWidth.value === 50 ? 200 : 50 }
                   }}
                   name={inputText ? 'send' : expandWidth.value === 50 ? 'add-circle-outline' : 'remove-circle-outline'}
                   type='ionicon'
@@ -573,6 +603,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         onSend={function (messages) {
           setMessages(previousMessages => {
+            //console.log(messages)
             return GiftedChat.prepend(previousMessages, messages)
           })
 
@@ -611,24 +642,32 @@ export function ChatScreen({ navigation, route, ...props }) {
           const currentMessage = props.currentMessage
           // console.log((props.currentMessage))
 
-          const imageMessageArr = messages.filter(message => Boolean(message.image)).map(item=>{ return { ...item,user:{...item.user,avatar:""}  }  })
+          const imageMessageArr = messages.filter(message => Boolean(message.image)).map(item => { return { ...item, user: { ...item.user, avatar: "" } } })
 
           return (
-            <Pressable onPress={function () {
+            <Pressable
 
-              navigation.navigate('Image', {
-                //   imageUrl: currentMessage.image,
-                item: { name: route.params.item.name },
-                imagePos: imageMessageArr.findIndex(item => { return item._id === currentMessage._id }),
-                messages: imageMessageArr,
-               // setMessages,
-              })
-            }}>
+              onLongPress={function () {
+                Vibration.vibrate(50);
+                setUri(currentMessage.image)
+                setOverLayOn(true)
+              }}
+
+              onPress={function () {
+
+                navigation.navigate('Image', {
+                  //   imageUrl: currentMessage.image,
+                  item: { name: route.params.item.name },
+                  imagePos: imageMessageArr.findIndex(item => { return item._id === currentMessage._id }),
+                  messages: imageMessageArr,
+                  // setMessages,
+                })
+              }}>
 
 
               <SharedElement id={currentMessage._id}  >
 
-                <Image source={{ uri: props.currentMessage.image }} width={200} resizeMode="contain" style={{
+                <Image source={{ uri: props.currentMessage.image, headers: { token: "hihihi" } }} width={200} resizeMode="contain" style={{
                   //  resizeMode: "contain",  // width: 200,  // height: 300
                 }} />
               </SharedElement>
@@ -681,6 +720,9 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
       {/* <View style={functionPanelStyle} /> */}
+
+      <OverlayDownloader overLayOn={overLayOn} setOverLayOn={setOverLayOn} uri={uri} fileName={Date.now() + ".jpg"} />
+
     </>
   )
 }
@@ -764,3 +806,85 @@ function hexify(color) {
 }
 
 
+async function pickImage(setMessages) {
+  let result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    // aspect: [1, 1],
+    quality: 1,
+    base64: true,
+  });
+
+
+  if (!result.cancelled) {
+    setMessages(pre => {
+      return [...pre, {
+        _id: Math.random(),
+        text: '',
+        createdAt: Date.now(),
+        user: {
+          _id: 1,
+          name: 'React Native',
+          //  avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
+        },
+        image: "data:image/png;base64," + result.base64,
+        isBase64: true
+      },
+      ]
+
+    })
+
+  }
+};
+
+async function takePhoto(setMessages) {
+  let result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    //  aspect: [1, 1],
+    quality: 1,
+  });
+
+  //  console.log(result);
+
+  if (!result.cancelled) {
+
+
+    const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
+    if (!granted) { return }
+    else {
+      const createdAfter = Date.now()
+      const fileUri = result.uri;
+      const asset = await MediaLibrary.createAssetAsync(fileUri).catch(e => { console.log(e) });
+      let album = await MediaLibrary.getAlbumAsync('expoPhotos').catch(e => { console.log(e) });
+  
+      if (album == null) { album = await MediaLibrary.createAlbumAsync('expoPhotos', asset, false) }
+      else { await MediaLibrary.addAssetsToAlbumAsync([asset], album, false) }
+
+      await FileSystem.deleteAsync(fileUri,{idempotent:true})
+
+      const data = await MediaLibrary.getAssetsAsync({ album: album.id, first: 1, createdAfter })
+
+      //console.log("album", data)
+
+      setMessages(pre => {
+        return [...pre, {
+          _id: Math.random(),
+          text: '',
+          createdAt: createdAfter,
+          user: {
+            _id: 1,
+            name: 'React Native',
+            //  avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
+          },
+          image: data.assets[0].uri,
+          isCameraPhoto: true
+        },
+        ]
+
+      })
+    }
+  }
+
+}
+;

@@ -69,7 +69,7 @@ import * as Permissions from 'expo-permissions';
 import { downloadToFolder } from 'expo-file-dl';
 
 import { OverlayDownloader } from "./OverlayDownloader";
-
+import * as ImagePicker from 'expo-image-picker';
 
 
 export function ImageScreen({ navigation, route, }) {
@@ -82,20 +82,16 @@ export function ImageScreen({ navigation, route, }) {
 
   const [overLayOn, setOverLayOn] = useState(false)
 
-  const [btnText, setBtnText] = useState("Download")
 
 
   return (
     <>
-
 
       <View style={{ overflow: "hidden", height: 0, backgroundColor: "yellow" }}>
         <SharedElement id={item.name} style={{ transform: [{ scale: 0 }], }}   >
           <SvgUri style={{ position: "relative", top: getStatusBarHeight() }} width={60} height={60} svgXmlData={avatarString} />
         </SharedElement>
       </View>
-
-
 
       <ScrollView
 
@@ -104,8 +100,6 @@ export function ImageScreen({ navigation, route, }) {
         ref={scrollRef}
         horizontal={true}
         onScroll={function (e) { scrollX.value = e.nativeEvent.contentOffset.x }}
-
-
 
         snapToInterval={width}
         contentContainerStyle={{
@@ -140,17 +134,13 @@ export function ImageScreen({ navigation, route, }) {
             >
 
               <SharedElement id={item._id}>
-                <Image source={{ uri: item.image }} resizeMode="contain" style={{ width, height }} />
+                <Image source={{ uri: item.image, headers: { token: "hihihi" } }} resizeMode="contain" style={{ width, height }} />
               </SharedElement>
 
             </ViewTransformer>
           )
 
         })}
-
-
-
-
       </ScrollView >
 
       <OverlayDownloader
@@ -159,85 +149,6 @@ export function ImageScreen({ navigation, route, }) {
         uri={route.params.messages[Math.floor(scrollX.value / width)].image}
         fileName={Date.now() + ".jpg"}
       />
-      {/* <Overlay isVisible={overLayOn} fullScreen={false}
-        overlayStyle={{
-
-          position: "relative",
-          width: 0.8 * width,
-          display: "flex",
-          alignItems: "center"
-        }}
-        onBackdropPress={function () { if (btnText === "Download" || btnText === "100%") { setBtnText("Download"); setOverLayOn(false) } }}
-      >
-
-        {btnText !== "Download" && <LinearProgress color="primary" value={1} variant={btnText === "100%" ? "determinate" : "indeterminate"} style={{ height: 5, width: 0.8 * width, position: "absolute", zIndex: 10 }} />}
-        {btnText !== "Download" && btnText !== "100%" && <Button disabled={true} title={btnText} />}
-        {btnText === "Download" && <Button title={btnText} disabled={btnText !== "Download"} onPress={async function (props) {
-
-
-          setBtnText("0%")
-          const obj = route.params.messages[Math.floor(scrollX.value / width)]
-          const uri = obj.image
-          //const uri = "https://picsum.photos/100/102" obj.image
-
-          const fileUri = `${FileSystem.documentDirectory}${obj._id}.jpg`
-          //const fileUri = `${FileSystem.documentDirectory}${Date.now()}.jpg`
-
-          //  console.log(uri)
-
-
-          const downloadResumable = FileSystem.createDownloadResumable(
-            uri, fileUri, { headers: { token: "hihihi" } },
-
-            function ({ totalBytesExpectedToWrite, totalBytesWritten }) {
-
-              console.log(totalBytesExpectedToWrite, totalBytesWritten)
-
-              if (totalBytesExpectedToWrite === -1) { setBtnText("100%") }
-              else {
-                // console.log(Math.floor(totalBytesWritten / totalBytesExpectedToWrite * 100))
-                setBtnText(Math.floor(totalBytesWritten / totalBytesExpectedToWrite * 100) + "%")
-              }
-
-
-            }
-          );
-
-
-          const { status, ...rest } = await downloadResumable.downloadAsync(uri, fileUri, { headers: { token: "hihihi" } }).catch(e => { console.log(e) })
-
-          //  console.log(rest)
-
-          if (status == 200) {
-            const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
-            if (!granted) { return }
-            else {
-
-              const asset = await MediaLibrary.createAssetAsync(fileUri).catch(e => { console.log(e) });
-              const album = await MediaLibrary.getAlbumAsync('ttt').catch(e => { console.log(e) });
-
-              //console.log(album)
-
-              if (album == null) {
-                await MediaLibrary.createAlbumAsync('ttt', asset, false).catch(e => { console.log(e) });
-              }
-              else {
-                await MediaLibrary.addAssetsToAlbumAsync([asset], album, false).catch(e => { console.log(e) });
-              }
-            }
-          }
-          else { alert("server refuse to send") }
-
-
-        }} />
-        }
-        {btnText === "100%" && <Button title="Finished" onPress={function () {
-
-          setBtnText("Download")
-          setOverLayOn(false)
-        }} />}
-
-      </Overlay> */}
 
     </>
   )

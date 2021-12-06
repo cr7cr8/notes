@@ -106,7 +106,7 @@ export default function StackNavigator() {
             headerTitle: function (props) { return <></> },
             headerBackTitle: "Aaaa",
             //   headerBackAccessibilityLabel="ee",
-            gestureEnabled: true,
+            gestureEnabled: false,
             headerTransparent: true,
           }
         }}

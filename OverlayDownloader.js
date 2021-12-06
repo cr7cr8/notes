@@ -73,6 +73,21 @@ import { downloadToFolder } from 'expo-file-dl';
 
 
 export function OverlayDownloader({ overLayOn, setOverLayOn, uri, fileName, ...props }) {
+  //  console.log(FileSystem.documentDirectory)
+  FileSystem.readDirectoryAsync(FileSystem.documentDirectory).then(data => {
+    data.forEach(filename_ => {
+      console.log("=cached image==***===" + filename_)
+       // FileSystem.deleteAsync(FileSystem.documentDirectory + filename_, { idempotent: true })
+    })
+  })
+
+  FileSystem.readDirectoryAsync("file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540cr7cr8%252Fnotes/ImagePicker/").then(data => {
+    data.forEach(filename_ => {
+      console.log("=cached photo==***===" + filename_)
+      //  FileSystem.deleteAsync("file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540cr7cr8%252Fnotes/ImagePicker/" + filename_, { idempotent: true })
+    })
+
+  })
 
 
   //const [overLayOn, setOverLayOn] = useState(false)
@@ -100,57 +115,17 @@ export function OverlayDownloader({ overLayOn, setOverLayOn, uri, fileName, ...p
         {btnText === "Download" && <Button title={btnText} disabled={btnText !== "Download"} onPress={async function (props) {
 
 
-          setBtnText("0%")
-
-          //  const uri = uri // obj.image
-
-
-          const fileUri = `${FileSystem.documentDirectory}${fileName}`
-          // console.log("====",uri, fileUri)
-
-
-
-          const downloadResumable = FileSystem.createDownloadResumable(
-            uri, fileUri, { headers: { token: "hihihi" } },
-
-            function ({ totalBytesExpectedToWrite, totalBytesWritten }) {
-
-              //console.log(totalBytesExpectedToWrite, totalBytesWritten)
-
-              if (totalBytesExpectedToWrite === -1) { setBtnText("100%") }
-              else {
-                // console.log(Math.floor(totalBytesWritten / totalBytesExpectedToWrite * 100))
-                setBtnText(Math.floor(totalBytesWritten / totalBytesExpectedToWrite * 100) + "%")
-              }
-
-
-            }
-          );
-
-
-          const { status,  } = await downloadResumable.downloadAsync(uri, fileUri, { headers: { token: "hihihi" } }).catch(e => { console.log(e) })
-
-
-
-          if (status == 200) {
-            const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
-            if (!granted) { return }
-            else {
-
-              const asset = await MediaLibrary.createAssetAsync(fileUri).catch(e => { console.log(e) });
-              const album = await MediaLibrary.getAlbumAsync('ttt').catch(e => { console.log(e) });
-
-              //console.log(album)
-
-              if (album == null) {
-                await MediaLibrary.createAlbumAsync('ttt', asset, false).catch(e => { console.log(e) });
-              }
-              else {
-                await MediaLibrary.addAssetsToAlbumAsync([asset], album, false).catch(e => { console.log(e) });
-              }
-            }
+          if (uri.indexOf("data") === 0) {
+            downloadFromBase64(uri, fileName, setBtnText)
           }
-          else { alert("server refuse to send") }
+          else if (uri.indexOf("file") === 0) {
+            downloadFromLocal(uri, fileName, setBtnText)
+          }
+          else {
+            downloadFromUri(uri, fileName, setBtnText)
+          }
+
+
 
 
         }} />
@@ -168,10 +143,81 @@ export function OverlayDownloader({ overLayOn, setOverLayOn, uri, fileName, ...p
 
 }
 
+async function downloadFromUri(uri, fileName, setBtnText) {
+
+  setBtnText("0%")
+
+  const fileUri = `${FileSystem.documentDirectory}${fileName}`
+  const downloadResumable = FileSystem.createDownloadResumable(
+    uri, fileUri, { headers: { token: "hihihi" } },
+    function ({ totalBytesExpectedToWrite, totalBytesWritten }) {
+      totalBytesExpectedToWrite === -1
+        ? setBtnText("100%")
+        : setBtnText(Math.floor(totalBytesWritten / totalBytesExpectedToWrite * 100) + "%")
+    }
+  );
+
+  const { status } = await downloadResumable.downloadAsync(uri, fileUri, { headers: { token: "hihihi" } }).catch(e => { console.log(e) })
+
+
+
+  if (status == 200) {
+    const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
+    if (!granted) { return }
+
+
+    const asset = await MediaLibrary.createAssetAsync(fileUri).catch(e => { console.log(e) });
+    let album = await MediaLibrary.getAlbumAsync('expoDownload').catch(e => { console.log(e) });
+    //if (album == null) { await MediaLibrary.createAlbumAsync('ttt', asset, false).catch(e => { console.log(e) }); }
+
+    if (album == null) { await MediaLibrary.createAlbumAsync('expoDownload', asset, false).catch(e => { console.log(e) }); }
+    else {
+      await MediaLibrary.addAssetsToAlbumAsync([asset], album, false).catch(e => { console.log(e) });
+    }
+
+
+    await FileSystem.deleteAsync(fileUri,{idempotent:true})
+
+
+
+  }
+  else { alert("server refuse to send") }
+
+
+
+}
+
+
+async function downloadFromBase64(uri, fileName, setBtnText) {
+
+  alert("aaa")
+
+}
+
+async function downloadFromLocal(uri, fileName, setBtnText) {
+
+  setBtnText("0%")
+
+  const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
+  if (!granted) { setBtnText("100%"); return }
+
+  const asset = await MediaLibrary.createAssetAsync(uri)
+  let album = await MediaLibrary.getAlbumAsync('expoDownload')
+  if (album == null) { await MediaLibrary.createAlbumAsync('expoDownload', asset, true) }
+  else {
+    await MediaLibrary.addAssetsToAlbumAsync([asset], album, true)
+  }
 
 
 
 
 
+
+  setBtnText("100%")
+  //FileSystem.copyAsync({from:uri,to:   })
+
+  // FileSystem.copyAsync(options)
+
+}
 
 
