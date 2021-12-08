@@ -4,13 +4,7 @@ import { createSharedElementStackNavigator } from 'react-navigation-shared-eleme
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
 
 
-import {
-  StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Pressable, TouchableHighlight, TouchableWithoutFeedback,
-
-
-  //ScrollView,
-  Vibration
-} from 'react-native';
+import { StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Pressable, TouchableHighlight, TouchableWithoutFeedback, Vibration } from 'react-native';
 
 import ReAnimated, {
   useAnimatedStyle, useSharedValue, useDerivedValue,
@@ -20,18 +14,17 @@ import ReAnimated, {
   withDelay,
   withSpring,
   useAnimatedScrollHandler,
-
+  Extrapolate,
   //interpolateColors,
 
   useAnimatedProps,
   withSequence,
   withDecay,
 
-
 } from 'react-native-reanimated';
 //import Svg, { Circle, Rect, SvgUri } from 'react-native-svg';
 import SvgUri from 'react-native-svg-uri';
-const { View, Text, Image, ScrollView: ScrollV, Extrapolate } = ReAnimated
+const { View, Text, Image, ScrollView: ScrollV, } = ReAnimated
 
 import multiavatar from '@multiavatar/multiavatar';
 
@@ -39,11 +32,11 @@ import multiavatar from '@multiavatar/multiavatar';
 import base64 from 'react-native-base64';
 import { PanGestureHandler, ScrollView, FlatList, NativeViewGestureHandler } from 'react-native-gesture-handler';
 
-import { ListItem, Avatar, LinearProgress, Button, Icon, Overlay } from 'react-native-elements'
+import { ListItem, Avatar, LinearProgress, Button } from 'react-native-elements'
 const { width, height } = Dimensions.get('screen');
 
 import { LinearGradient } from 'expo-linear-gradient';
-
+import { Icon } from 'react-native-elements';
 
 
 import { SharedElement } from 'react-navigation-shared-element';
@@ -58,11 +51,11 @@ export function HomeScreen({ navigation, route }) {
 
   const [mainEnabled, setMainEnabled] = useState(true)
 
-  //const [inMoving, setInMoving] = useState(false)
+  const [inMoving, setInMoving] = useState(false)
 
   const mainRef = useRef()
 
-
+  //const [listRef1,setListRef1] = useState()
 
   const listRef1 = useRef()
   const listRef2 = useRef()
@@ -71,7 +64,6 @@ export function HomeScreen({ navigation, route }) {
 
   const allPanelArr = useRef([])
 
-  const scrollX = useSharedValue(0)
   const scrollY = useSharedValue(0)
 
   const [refresh, setRefresh] = useState(true)
@@ -92,24 +84,16 @@ export function HomeScreen({ navigation, route }) {
       snapToInterval={width}
       horizontal={true}
 
-      onScroll={function (e) { scrollX.value = e.nativeEvent.contentOffset.x; }}
+
     >
 
 
       <ScrollView
-        //StickyHeaderComponent={() => { return <Text>aaa</Text> }}
-        // stickyHeaderIndices={[7]}
-
-
         ref={listRef1}
-
         scrollEnabled={mainEnabled}
         contentContainerStyle={{
-          // width,  minHeight: height - 60,
-          justifyContent: 'flex-start',
-          flexGrow: 1,
-          backgroundColor: "wheat",
-
+          width,// backgroundColor: "wheat",
+          minHeight: height - 60
         }}
         onScroll={function (e) { scrollY.value = e.nativeEvent.contentOffset.y; }}
       >
@@ -127,13 +111,12 @@ export function HomeScreen({ navigation, route }) {
               listRef={listRef1}
               allPanelArr={allPanelArr}
 
-              scrollX={scrollX}
               scrollY={scrollY}
               index={index}
               setPeopleList={setPeopleList}
 
-              // inMoving={inMoving}
-              // setInMoving={setInMoving}
+              inMoving={inMoving}
+              setInMoving={setInMoving}
 
               navigation={navigation}
               route={route}
@@ -181,11 +164,7 @@ class SinglePanel extends React.Component {
     super(props)
 
     this.state = {
-
-      panelTransX: 0,
       panelTransY: 0,
-
-
       panelIndex: this.props.index,
 
     }
@@ -249,8 +228,6 @@ class SinglePanel extends React.Component {
         setListRefEnabled={this.props.setListRefEnabled}
         mainRef={this.props.mainRef}
         listRef={this.props.listRef}
-
-        scrollX={this.props.scrollX}
         scrollY={this.props.scrollY}
         mainEnabled={this.props.mainEnabled}
 
@@ -262,16 +239,14 @@ class SinglePanel extends React.Component {
         getPanelIndex={this.getPanelIndex}
         setPanelIndex={this.setPanelIndex}
 
-        panelTransX={this.state.panelTransX}
         panelTransY={this.state.panelTransY}
-
         allPanelArr={this.props.allPanelArr}
 
         setPeopleList={this.props.setPeopleList}
         self={this}
 
-        //  inMoving={this.props.inMoving}
-        //  setInMoving={this.props.setInMoving}
+        inMoving={this.props.inMoving}
+        setInMoving={this.props.setInMoving}
 
 
         navigation={this.props.navigation}
@@ -287,15 +262,13 @@ class SinglePanel extends React.Component {
 }
 
 
-function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRef, scrollX, scrollY, mainEnabled,
+function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRef, scrollY, mainEnabled,
   //bgColor,
 
   // panelIndex,
   panelKey,
   getPanelIndex,
   setPanelIndex,
-
-  panelTransX,
   panelTransY,
   allPanelArr,
 
@@ -305,8 +278,8 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
   navigation,
   route,
 
-  // inMoving,
-  // setInMoving,
+  inMoving,
+  setInMoving,
 
 }) {
 
@@ -321,143 +294,80 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
   //const [holding,setHolding] = useState(false)
 
+  const zIndex = useSharedValue(0)
 
+  const panelScale = useSharedValue(1)
+  const elevation = useSharedValue(0)
 
 
 
 
 
   const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
-  //console.log(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
+  //const hilightColor = hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0])
+
+
+  // const bgColor = useDerivedValue(()=>{
+
+  //  return panelScale.value===1?"white": hilightColor
+
+
+  // })
+  // const bgColor = hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0])
 
 
 
-  const zIndex = useSharedValue(0)
+
+  const panelStyle = useAnimatedStyle(() => {
+    return {
+      //  ...holding&&{backgroundColor:"wheat"},
+
+      backgroundColor: bgColor,
+      transform: [
+
+        { translateY: transY.value },
+        { scale: panelScale.value }
+      ],
+
+      zIndex: zIndex.value,
+
+    }
+  })
+
 
   const frameStyle = useAnimatedStyle(() => {
 
+    let color = ""
 
-    return {
-      width,
-      height: 80,
-      zIndex: zIndex.value,
-      transform: [{ translateY: transY.value }],
-      position: "relative",
-    }
+    //  if(elevation.value!==0){color="white"}
+    if (mainEnabled && elevation.value === 0) { color = "white" }
 
+    else if (!mainEnabled && elevation.value === 0) { color = "white" }
+    else if (mainEnabled && elevation.value !== 0) { color = bgColor }
 
-  })
+    else if (!mainEnabled && elevation.value !== 0) { color = bgColor }
 
 
-
-  const coverTransX = useDerivedValue(() => (withTiming(panelTransX)))
-  const coverBgcolor = useSharedValue("white")
-  const coverOpacity = useSharedValue(1)
-
-  const coverPanelStyle = useAnimatedStyle(() => {
     return {
 
       width,
       height: 80,
 
-      transform: [{ translateX: coverTransX.value }],
-      // opacity: interpolate(coverTransX.value, [0, width], [1, 0], Extrapolate.CLAMP),                         //coverOpacity.value,
-      // opacity:coverOpacity.value,
+      //backgroundColor: bgColor,
 
+      backgroundColor: color,
+      // ...holding&&{backgroundColor:"wheat"},
+      //  backgroundColor: bgColor.value,
       display: "flex",
       justifyContent: "flex-start",
+
       alignItems: "center",
       flexDirection: "row",
-
-      borderBottomWidth: 1,
-      borderBottomColor: "#DDD",
-      //   position: "absolute",
-      backgroundColor: coverBgcolor.value,
-      // zIndex: 8,
-      // elevation:1,
+      elevation: elevation.value,
 
     }
   })
 
-
-  function scrollToNextPanel() {
-    mainRef.current.scrollTo({ x: width, y: 0, animated: true })
-  }
-
-
-
-  const timeout = useRef(0)
-
-
-  function setCountingDown() {
-    timeout.current = setTimeout(() => {
-      coverTransX.value = withTiming(0)
-      backScale.value = withTiming(1)
-    }, 3000)
-
-    // console.log(timeout.current)
-
-  }
-
-  function clearCountingDown() {
-
-    timeout.current && clearTimeout(timeout.current)
-  }
-
-
-  const coverGesture = useAnimatedGestureHandler({
-
-    onStart: (event, obj) => {
-
-      runOnJS(settingMovePermission)()
-
-    },
-    onActive: (event, obj) => {
-
-
-      if ((event.translationX > 0) && (coverTransX.value !== 0 || Math.abs(event.translationY) < 5)) {
-        zIndex.value = 10
-        coverTransX.value = event.translationX
-
-      }
-      else if ((event.translationX < -50) && (coverTransX.value === 0 || Math.abs(event.translationY) < 5)) {
-
-
-        runOnJS(scrollToNextPanel)()
-      }
-
-
-    },
-    onEnd: (event, obj) => {
-
-      if (coverTransX.value >= 80) {
-
-        coverTransX.value = withTiming(width)
-        runOnJS(setCountingDown)()
-
-      }
-      else {
-        coverTransX.value = withTiming(0)
-        zIndex.value = 0
-
-      }
-
-    },
-    onFail: (event, obj) => {
-
-      coverTransX.value = withTiming(0)
-
-    },
-    onCancel: (event, obj) => {
-
-      coverTransX.value = withTiming(0)
-
-    },
-    onFinish: (event, obj) => {
-
-    }
-
-  })
 
 
 
@@ -466,16 +376,19 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
     console.log(a)
   }
 
-  const enableAutoMoving = useSharedValue(false)
-  function scrollTo(initialScrollY, initialTranY, direction = "goUp") {
+  const movingUpLine = 60 + 40
+  const movingDownLine = height - 80
+
+
+
+  function scrollTo(initialY, initialTranY, direction = "goUp") {
 
     if (enableAutoMoving.value) {
       listRef.current.scrollTo({ x: 0, y: direction === "goUp" ? (scrollY.value - 5) : (scrollY.value + 5), animated: false })
-      transY.value = initialTranY + (scrollY.value - initialScrollY)
-
+      transY.value = initialTranY + (scrollY.value - initialY)
 
       setTimeout(() => {
-        scrollTo(initialScrollY, initialTranY, direction)
+        scrollTo(initialY, initialTranY, direction)
       }, 0)
     }
     else {
@@ -522,76 +435,64 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
   function reSortList() {
 
+
     const panelIndex = getPanelIndex()
+
     const from = panelIndex
     const to = panelIndex + Math.min((allPanelArr.current.length - (panelIndex + 1)), Math.max(-panelIndex, Math.round(transY.value / 80)))
 
-    if (from === to) { return setTimeout(() => { setPanEnabled(true) }, 0); }
-
-
     allPanelArr.current = moveArr(allPanelArr.current, from, to)
     const newList = []
-
     allPanelArr.current.forEach((panel, index) => {
+
       newList.push({ name: panel.name, description: panel.description, key: Math.random() })
+
     })
     allPanelArr.current = []
 
-    setPeopleList(newList)
-    //  setTimeout(() => { setPanEnabled(true) }, 0); // no need beackuse setPeopleList will  generate new panel painting
+    setTimeout(() => {
+      setMainEnabled(true)
+      setInMoving(false)
+      setPeopleList(newList)
+
+    }, 200);
+
+
+
 
   }
 
 
-  const backScale = useSharedValue(1)
-  const backPanelStyle = useAnimatedStyle(() => {
-    return {
-
-
-      width,
-      height: 80,
-      // elevation:1,
-
-      borderBottomWidth: 1,
-      borderBottomColor: "#DDD",
-      position: "absolute",
-      backgroundColor: bgColor,
-      //   zIndex: 5,
-
-      transform: [{ scale: backScale.value }],
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      flexDirection: "row",
-
-
-    }
-  })
-
-
-  const movingUpLine = 60 + 40
-  const movingDownLine = height - 80
-  const [panEnabled, setPanEnabled] = useState(true)
 
 
 
-  const backGesture = useAnimatedGestureHandler({
+  const enableAutoMoving = useSharedValue(false)
 
+  //const enabled = useSharedValue(false)
+
+  let timeout = ""
+
+
+  const gestureHandler = useAnimatedGestureHandler({
 
     onStart: (event, obj) => {
-
 
       obj.offsetY = transY.value
       obj.preAbsY = event.absoluteY
 
-      zIndex.value = 10
-      backScale.value = withTiming(0.8)
-
+      timeout && clearTimeout(timeout)
+      //   if (enabled.value) {
       runOnJS(settingMovePermission)()
-
+      //   }
     },
     onActive: (event, obj) => {
-      runOnJS(clearCountingDown)()
+      timeout && clearTimeout(timeout)
+      if (panelScale.value !== 0.8) return
+      zIndex.value = 10
+
+
+      //show(obj.offsetY)
+      //show(event.translationY)
 
       if (event.absoluteY <= movingUpLine) {
         if (!enableAutoMoving.value) {
@@ -630,30 +531,34 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
     },
     onEnd: (event, obj) => {
-
-
-
-      enableAutoMoving.value = false
-      const v = Math.round(transY.value / 80) * 80
-      transY.value = withTiming(v)
-
-      coverTransX.value = withTiming(0)
-      backScale.value = withTiming(1)
-
       zIndex.value = 0
-      runOnJS(setPanEnabled)(false)
+      enableAutoMoving.value = false
+      if (panelScale.value !== 0.8) return
+
+      const v = Math.round(transY.value / 80) * 80
+
+      transY.value = withTiming(v)
+      panelScale.value = withTiming(1)
+      elevation.value = withTiming(0)
+
+
+
       runOnJS(reSortList)()
 
 
       obj.preAbsY = event.absoluteY
     },
     onFail: (event, obj) => {
-
+      if (panelScale.value !== 0.8) return
     },
     onCancel: (event, obj) => {
-
+      if (panelScale.value !== 0.8) return
     },
     onFinish: (event, obj) => {
+      if (panelScale.value !== 0.8) return
+
+
+
 
     }
 
@@ -662,87 +567,102 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
 
-
-
   return (
-    <>
-
-      <View style={frameStyle} >
 
 
+    <PanGestureHandler
 
-        <PanGestureHandler maxPointers={1} onGestureEvent={backGesture} >
-          <View style={[backPanelStyle]}>
-            <Icon
-              //     containerStyle={{width:width/3}}
-              name="drag-horizontal"
-              type='material-community'
-              color='#517fa4'
-              size={60}
-            />
-            <SvgUri style={{ position: "absolute", right: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+      maxPointers={1}
+      onGestureEvent={gestureHandler}
+      shouldCancelWhenOutside={false}
 
-            <View style={{ width: width / 3, position: "absolute", left: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Text style={{ fontSize: 20 }}>{item.name}</Text>
-            </View>
-          </View>
-        </PanGestureHandler>
+      enabled={(inMoving === false || inMoving === panelKey)}
+
+      simultaneousHandlers={[mainRef, listRef]}
 
 
-        <Pressable
 
-          onPressIn={function () {
 
-            coverBgcolor.value = bgColor
+    >
+      <View style={[panelStyle]} >
+        <TouchableOpacity    // style={{backgroundColor:"yellow"}}
+          // style={{ backgroundColor: "white" }}
+          //   ...holding&&{backgroundColor:"wheat"},
 
-          }}
+
+          activeOpacity={0.5}
+
+
 
           onPress={function () {
-            coverTransX.value === 0 && navigation.navigate('Chat', { item: self.props.item })
+
+            navigation.navigate('Chat', { item: self.props.item })
           }}
 
-          onPressOut={function () {
-            coverBgcolor.value = "white"
+          onLongPress={function () {
+         
+
+            setMainEnabled(false)
+
+            setInMoving(panelKey)
+
+            Vibration.vibrate(50)
+            timeout = setTimeout(() => {
+             
+              setMainEnabled(true)
+              setInMoving(false)
+              panelScale.value = withTiming(1)
+              elevation.value = withTiming(0)
+            }, 5000);
+
+            panelScale.value = withTiming(0.8)
+            elevation.value = withTiming(10)
+
+
           }}
+
+
         >
-          <PanGestureHandler
 
-            enabled={panEnabled}
-            minPointers={1} shouldCancelWhenOutside={true} //simultaneousHandlers={[mainRef, listRef]}
-            simultaneousHandlers={[listRef]}
+          <View style={[frameStyle, { borderBottomWidth: 1, borderBottomColor: "#DDD" }]}  >
 
 
-            onGestureEvent={coverGesture} >
+            <SharedElement id={item.name}  >
+              <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+
+              {/* <Image
+                source={{ uri: "https://picsum.photos/200/300" }}
+                style={{ width: 60, height: 60, resizeMode: "contain", }}
+
+              /> */}
+
+            </SharedElement>
+
+
+            <Text style={{ fontSize: 20 }}>{item.name}</Text>
+
+
+            {/* <ListItem
+            bottomDivider={true}
+            containerStyle={[{ elevation: 0, padding: 10, },]}
+
+
+          >
+            <SvgUri width={60} height={60} svgXmlData={multiavatar(item.name)} />
+            <ListItem.Content >
+              <ListItem.Title>{item.name}</ListItem.Title>
+              <ListItem.Subtitle>{item.description}</ListItem.Subtitle>
+            </ListItem.Content>
 
 
 
-            <View style={[coverPanelStyle]}   >
-              {/* <Pressable onPress={function () { console.log("dddsdsd") }}> <View > */}
+          </ListItem> */}
 
-              <SharedElement id={item.name}  >
-                <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
-              </SharedElement>
-              <Text style={{ fontSize: 20 }}>{item.name}</Text>
-
-
-              {/* </View> </Pressable>*/}
-            </View>
-          </PanGestureHandler>
-        </Pressable>
-
-
-
-
-
-
-
-
+          </View>
+        </TouchableOpacity>
       </View>
-      <Overlay isVisible={!panEnabled} fullScreen={true} overlayStyle={{ opacity: 0.5, display: "flex", justifyContent: "center", alignItems: "center" }}  >
-        <LinearProgress color="primary" value={1} variant={"indeterminate"} />
-        <Text>Processing...</Text>
-      </Overlay>
-    </>
+    </PanGestureHandler>
+
   )
 
 
@@ -757,6 +677,20 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
 
+
+export function DetailScreen({ navigation }) {
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+
+      <Image source={{ uri: "https://picsum.photos/200/300" }} width={100} height={100} />
+      <Text>Detail Screen</Text>
+      <Button
+        title="Go to Home"
+        onPress={() => navigation.navigate('Home')}
+      />
+    </View>
+  );
+}
 
 
 

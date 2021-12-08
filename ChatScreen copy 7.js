@@ -57,12 +57,12 @@ import { OverlayDownloader } from "./OverlayDownloader";
 export function ChatScreen({ navigation, route, ...props }) {
 
 
-  const { peopleList, setPeopleList, messages, setMessages } = useContext(Context)
+  const { peopleList, setPeopleList,messages, setMessages } = useContext(Context)
 
 
   const item = route.params.item
 
- // console.log(item)
+  console.log(item)
 
 
   const avatarString = multiavatar(item.name)
@@ -91,7 +91,7 @@ export function ChatScreen({ navigation, route, ...props }) {
   // });
 
 
-
+  
 
   const [inputText, setInputText] = useState("")
 
@@ -153,32 +153,26 @@ export function ChatScreen({ navigation, route, ...props }) {
   const [uri, setUri] = useState()
 
 
+  // return(<>
+  
+  // <View style={{ alignItems: "center", justifyContent: "center", flexDirection: "row", backgroundColor: bgColor, padding: 0, elevation: 1, position: "relative" }}>
+  // <SharedElement id={item.name} style={{ transform: [{ scale: 0.56 }], }}   >
+  //         <SvgUri style={{ position: "relative", top: getStatusBarHeight() }} width={60} height={60} svgXmlData={avatarString} />
 
-//   return (
-
-//     <>
-
-//       <View style={{ alignItems: "center", justifyContent: "center", flexDirection: "row", backgroundColor: bgColor, padding: 0, elevation: 1, position: "relative" }}>
-
-
-//         <SharedElement id={item.name} style={{ transform: [{ scale: 0.56 }], }}   >
-//           <SvgUri style={{ position: "relative", top: getStatusBarHeight() }} width={60} height={60} svgXmlData={avatarString} />
-
-//         </SharedElement>
+  //       </SharedElement>
 
 
-//         <Text style={{ position: "relative", fontSize: 20, top: getStatusBarHeight() / 2 }}>{item.name}</Text>
-
-//       </View >
-
-// </>
-//   )
+  //       <Text style={{ position: "relative", fontSize: 20, top: getStatusBarHeight() / 2 }}>{item.name}</Text>
+  // </View>
+  // </>)
 
   return (
 
     <>
 
       <View style={{ alignItems: "center", justifyContent: "center", flexDirection: "row", backgroundColor: bgColor, padding: 0, elevation: 1, position: "relative" }}>
+
+
 
 
         <SharedElement id={item.name} style={{ transform: [{ scale: 0.56 }], }}   >
@@ -728,7 +722,7 @@ async function takePhoto(setMessages) {
     base64: false,
   });
 
-  
+  //  console.log(result);
 
   if (!result.cancelled) {
 
@@ -736,6 +730,9 @@ async function takePhoto(setMessages) {
     const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
     if (!granted) { return }
     else {
+
+      // const fileUri = result.uri;
+
 
       result.uri && setMessages(pre => {
         return [...pre, {

@@ -47,7 +47,7 @@ import multiavatar from '@multiavatar/multiavatar';
 import base64 from 'react-native-base64';
 import { PanGestureHandler, ScrollView, FlatList, NativeViewGestureHandler, PinchGestureHandler } from 'react-native-gesture-handler';
 
-import { ListItem, Avatar, LinearProgress, Button, Icon, Overlay, } from 'react-native-elements'
+import { ListItem, Avatar, LinearProgress, Button, Icon, Overlay, Divider } from 'react-native-elements'
 const { width, height } = Dimensions.get('screen');
 
 import { LinearGradient } from 'expo-linear-gradient';
@@ -83,8 +83,8 @@ export function OverlayDownloader({ overLayOn, setOverLayOn, uri, fileName, ...p
 
   FileSystem.readDirectoryAsync("file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540cr7cr8%252Fnotes/ImagePicker/").then(data => {
     data.forEach(filename_ => {
-      //console.log("=cached photo==***===" + filename_)
-      //  FileSystem.deleteAsync("file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540cr7cr8%252Fnotes/ImagePicker/" + filename_, { idempotent: true })
+      console.log(Date.now() + "=cached photo==***===" + filename_)
+      FileSystem.deleteAsync("file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540cr7cr8%252Fnotes/ImagePicker/" + filename_, { idempotent: true })
     })
 
   })
@@ -100,12 +100,16 @@ export function OverlayDownloader({ overLayOn, setOverLayOn, uri, fileName, ...p
 
 
       <Overlay isVisible={overLayOn} fullScreen={false}
+
         overlayStyle={{
 
           position: "relative",
           width: 0.8 * width,
+          //height: 0.5 * height,
           display: "flex",
-          alignItems: "center"
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column"
         }}
         onBackdropPress={function () { if (btnText === "Download" || btnText === "100%") { setBtnText("Download"); setOverLayOn(false) } }}
       >
@@ -135,6 +139,11 @@ export function OverlayDownloader({ overLayOn, setOverLayOn, uri, fileName, ...p
           setBtnText("Download")
           setOverLayOn(false)
         }} />}
+        <Divider orientation="horizontal" height={8} />
+        <Button title="delete" style={{ marginVertical: 8 }} onPress={function () {
+
+          console.log(uri)
+        }} />
 
       </Overlay>
 
