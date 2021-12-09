@@ -16,22 +16,6 @@
 			]
 		},
 		{
-			"fsPath": "$ROOTPATH$\\ChatScreen.js",
-			"bookmarks": [
-				-1,
-				71,
-				-1,
-				-1,
-				-1,
-				-1,
-				-1,
-				-1,
-				-1,
-				-1,
-				-1
-			]
-		},
-		{
 			"fsPath": "$ROOTPATH$\\node_modules\\react-native-easy-view-transformer\\src\\index.js",
 			"bookmarks": [
 				-1,
@@ -43,6 +27,21 @@
 				-1,
 				-1,
 				-1,
+				-1
+			]
+		},
+		{
+			"fsPath": "$ROOTPATH$\\ChatScreen.js",
+			"bookmarks": [
+				-1,
+				-1,
+				-1,
+				-1,
+				-1,
+				-1,
+				-1,
+				-1,
+				312,
 				-1
 			]
 		}

@@ -47,7 +47,7 @@ import multiavatar from '@multiavatar/multiavatar';
 import base64 from 'react-native-base64';
 import { PanGestureHandler, ScrollView, FlatList, NativeViewGestureHandler, PinchGestureHandler } from 'react-native-gesture-handler';
 
-import { ListItem, Avatar, LinearProgress, Button, Icon, Overlay, Divider } from 'react-native-elements'
+import { ListItem, Avatar, LinearProgress, Button, Icon, Overlay, Divider,Tooltip } from 'react-native-elements'
 const { width, height } = Dimensions.get('screen');
 
 import { LinearGradient } from 'expo-linear-gradient';
@@ -72,25 +72,11 @@ import { downloadToFolder } from 'expo-file-dl';
 
 
 
-export function OverlayDownloader({ overLayOn, setOverLayOn, uri, fileName, ...props }) {
+export function OverlayText({ overLayOn, setOverLayOn, uri, fileName, ...props }) {
  
-  // FileSystem.readDirectoryAsync(FileSystem.documentDirectory).then(data => {
-  //   data.forEach(filename_ => {
-  //     // console.log("=cached image==***===" + filename_)
-  //     // FileSystem.deleteAsync(FileSystem.documentDirectory + filename_, { idempotent: true })
-  //   })
-  // })
-
-  // FileSystem.readDirectoryAsync("file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540cr7cr8%252Fnotes/ImagePicker/").then(data => {
-  //   data.forEach(filename_ => {
-  //     //  console.log(Date.now() + "=cached photo==***===" + filename_)
-  //     //  FileSystem.deleteAsync("file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540cr7cr8%252Fnotes/ImagePicker/" + filename_, { idempotent: true })
-  //   })
-
-  // })
 
 
-  //const [overLayOn, setOverLayOn] = useState(false)
+
 
   const [btnText, setBtnText] = useState("Download")
   //const [deleteBtnText, setDeleteBtnText] = useState("Delete")

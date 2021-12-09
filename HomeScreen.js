@@ -533,7 +533,7 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
     const newList = []
 
     allPanelArr.current.forEach((panel, index) => {
-      newList.push({ name: panel.name, description: panel.description, key: Math.random() })
+      newList.push({ ...panel.props.item, name: panel.name, description: panel.description, key: Math.random() })
     })
     allPanelArr.current = []
 

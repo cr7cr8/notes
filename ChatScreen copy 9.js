@@ -32,7 +32,7 @@ import multiavatar from '@multiavatar/multiavatar';
 import base64 from 'react-native-base64';
 import { PanGestureHandler, ScrollView, FlatList, NativeViewGestureHandler } from 'react-native-gesture-handler';
 
-import { ListItem, Avatar, LinearProgress, Button, Tooltip } from 'react-native-elements'
+import { ListItem, Avatar, LinearProgress, Button } from 'react-native-elements'
 const { width, height } = Dimensions.get('screen');
 
 import { LinearGradient } from 'expo-linear-gradient';
@@ -56,36 +56,49 @@ import { OverlayDownloader } from "./OverlayDownloader";
 
 export function ChatScreen({ navigation, route, ...props }) {
 
+
+  const { peopleList, setPeopleList, messages, setMessages } = useContext(Context)
+
+
   const item = route.params.item
+  const avatar = <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
+
   const avatarString = multiavatar(item.name)
+
   const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
 
-
-  // const { peopleList, setPeopleList, messageList, setMessages } = useContext(Context)
-
-  // const messages = messageList
-  //   .filter(msg => { return msg.user.name === item.name })
-  //   .map(msg => {
-  //     // <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(msg.user.name, false)} />
-  //     return {
-  //       ...msg,
-  //       user: {
-  //         _id: Math.random(),
-  //         name: msg.user.name,
-  //         avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(msg.user.name, false)} />
-  //       }
-
-  //     }
-  //   })
-
-  const [messages, setMessages] = useState([])
-
   const inputRef = useRef()
+  // React.useEffect(() => {
+  //   const unsubscribe = navigation.addListener('transitionStart', (e) => {
+  //     inputRef.current.blur()
+  //   });
+
+  //   return unsubscribe;
+  // });
+
+
+  // React.useEffect(() => {
+  //   const unsubscribe = navigation.addListener('transitionEnd', (e) => {
+  //     inputRef.current.blur()
+  //   });
+
+  //   return unsubscribe;
+  // });
+
+
+
+
   const [inputText, setInputText] = useState("")
 
+  // const expand = useSharedValue(false)
+  //const expandWidth = useDerivedValue(() => { return expand.value ? width : 50 })
 
   const expandWidth = useSharedValue(50)
+
   const sendBtnStyle = useAnimatedStyle(() => {
+
+    // const pos = expandWidth.value === 50 ? "center" : "space-between";
+
 
     return {
       width: withTiming(expandWidth.value, { duration: 100 }),
@@ -101,6 +114,31 @@ export function ChatScreen({ navigation, route, ...props }) {
       //right:8,
     }
 
+
+  })
+
+  const panelHeight = useSharedValue(0)
+  const functionPanelStyle = useAnimatedStyle(() => {
+
+    // const pos = expandWidth.value === 50 ? "center" : "space-between";
+
+    return {
+      width,
+      height: withTiming(panelHeight.value),
+      backgroundColor: "skyblue",
+      // backgroundColor: "pink",
+      // borderRadius: 0,
+      // height: 50,
+      // overflow: "hidden",
+      // display: "flex",
+      // flexDirection: "row",
+      // alignItems: "flex-start",
+      // justifyContent: "flex-end",
+      //position:"absolute",
+      //right:8,
+    }
+
+
   })
 
 
@@ -108,50 +146,6 @@ export function ChatScreen({ navigation, route, ...props }) {
 
   const [overLayOn, setOverLayOn] = useState(false)
   const [uri, setUri] = useState()
-
-
-  useEffect(function () {
-
-    setMessages([
-      {
-        _id: Math.random(),
-        text: `111拉克哇\n111拉克Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolor
-        e magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco lab
-        oris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
-         nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`,
-        createdAt: Date.now() + 1000 * 60,
-        user: {
-          _id: Math.random(),
-          name: 'a',
-          avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
-        },
-      },
-      {
-        _id: Math.random(),
-        text: '111拉克\n哇',
-        createdAt: Date.now() + 1000 * 60 + 5685,
-        user: {
-          _id: "myself",
-          name: 'a',
-          avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
-        },
-      },
-
-      {
-        _id: Math.random(),
-        text: '',
-        createdAt: Date.now() + 1000 * 60,
-        user: {
-          _id: Math.random(),
-          name: 'e',
-          avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
-        },
-        image: 'https://picsum.photos/200/300',
-      },
-
-    ])
-
-  }, [])
 
 
 
@@ -189,7 +183,13 @@ export function ChatScreen({ navigation, route, ...props }) {
         //   return <MessageText {...props} customTextStyle={{color:"red"}}  />
         // }}
 
+        messagesContainerStyle={{
+          //backgroundColor: "yellow",
+          display: "flex", justifyContent: "flex-start",
+          alignItems: "flex-start", flexDirection: "row", alignSelf: "flex-start",
+          margin: 0, padding: 0,
 
+        }}
 
         minComposerHeight={50}
         // renderCustomView={function (props) { return <Button title="Fdf" /> }}
@@ -216,22 +216,17 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         }}
 
-
-
-        messagesContainerStyle={{
-          //backgroundColor: "yellow",
-          display: "flex", justifyContent: "flex-start",
-          alignItems: "flex-start", flexDirection: "row", alignSelf: "flex-start",
-          margin: 0, padding: 0,
-
-        }}
-
-
-
         renderMessage={function (props) {
 
           const currentMessage = props.currentMessage
           if (currentMessage.video) { return }
+
+          // if (currentMessage.image) { 
+          //   console.log(currentMessage.image)
+          //   return <Image source={{uri:currentMessage.image}}  style={{ width: 200, height: 200 }}/>
+
+
+          // }
 
           return (
 
@@ -264,22 +259,19 @@ export function ChatScreen({ navigation, route, ...props }) {
           )
         }}
 
+
         renderBubble={function (props) {
 
           const { currentMessage } = props
 
           return (
-
             <ScaleView>
-
               <Bubble {...props}
-
-                onLongPress={function () { console.log("long press") }}
                 wrapperStyle={{
 
                   left: {
-                    backgroundColor: bgColor,
-                    // backgroundColor: currentMessage.image ? bgColor : bgColor,
+
+                    backgroundColor: currentMessage.image ? bgColor : bgColor,
                     justifyContent: 'flex-start',
 
                     overflow: "hidden",
@@ -288,32 +280,29 @@ export function ChatScreen({ navigation, route, ...props }) {
                     // ...!currentMessage.image && { backgroundColor: "lightgreen" },
 
                     overflow: "hidden",
-                    backgroundColor: "lightgreen",
-                    //   backgroundColor: currentMessage.image ? "lightgreen" : "lightgreen",
+                    backgroundColor: currentMessage.image ? "lightgreen" : "lightgreen",
                     transform: [{ translateX: -9 }]
                   },
 
                 }}
                 textStyle={{
-                  left: { color: "black", ...currentMessage.image && { display: "none" } },
+                  left: { color: "black", fontSize: 20, lineHeight: 30, ...currentMessage.image && { display: "none" } },
 
-                  right: { color: "black", ...currentMessage.image && { display: "none" } },
+                  right: { color: "black", fontSize: 20, lineHeight: 30, ...currentMessage.image && { display: "none" } },
 
                 }}
               />
-
             </ScaleView>
-
 
           )
         }}
 
-        renderMessageText={function (props) {
+        // renderMessageText={function(props){
 
-          return <MessageTextBlock {...props} />
+        //   console.log(props.currentMessage)
 
-
-        }}
+        //     return <MessageText {...props} textStyle={{fontSize:20,color:"red"}} containerStyle={{color:"blue"}} />
+        // }}
 
         renderSystemMessage={function (props) {
 
@@ -390,7 +379,19 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
         renderSend={function (props) {
-
+          // return (
+          //   <Send {...props} containerStyle={{
+          //     alignSelf: !inputText || inputText.indexOf("\n") === -1 ? "center" : "flex-end",
+          //     display: "flex",
+          //     alignItems: "center",
+          //     justifyContent: "center",
+          //     flexDirection: "row",
+          //     margin: 0,
+          //     padding: 0,
+          //   }} />
+          // )
+          // console.log(props)
+          // return <Send {...props} />
           return (
             <Send {...props}
 
@@ -411,7 +412,7 @@ export function ChatScreen({ navigation, route, ...props }) {
               }>
 
                 <Icon
-                  onPress={function () { pickImage(setMessages) }}
+                  onPress={function () { panelHeight.value = 0; pickImage(setMessages) }}
                   name="image-outline"
                   type='ionicon'
                   color='#517fa4'
@@ -420,7 +421,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
                 <Icon
-                  onPress={function () { takePhoto(setMessages) }}
+                  onPress={function () { panelHeight.value = 0; takePhoto(setMessages) }}
                   name="camera-outline"
                   type='ionicon'
                   color='#517fa4'
@@ -429,7 +430,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
                 <Icon
-                  onPress={function () { }}
+                  onPress={function () { panelHeight.value = 100 }}
                   name="film-outline"
                   type='ionicon'
                   color='#517fa4'
@@ -456,7 +457,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         onSend={function (messages) {
           setMessages(previousMessages => {
-            //  console.log(messages)
+            //console.log(messages)
             return GiftedChat.prepend(previousMessages, messages)
           })
 
@@ -467,10 +468,26 @@ export function ChatScreen({ navigation, route, ...props }) {
         renderInputToolbar={
           function (props) {
 
+
             return <InputToolbar {...props} containerStyle={{ display: "flex", flexDirection: "row", alignItems: "center", }} >
               {props.children}
 
             </InputToolbar>
+
+            return (
+              <View style={{ height: 300, backgroundColor: "pink" }}>
+                <Button title="fdfwwww" />
+                <Text>dfdsf</Text>
+                {/* <InputToolbar {...props} containerStyle={{ display: "flex", flexDirection: "row", alignItems: "center", }} >
+                {props.children}
+
+              </InputToolbar> */}
+              </View>
+
+
+            )
+
+
           }
         }
 
@@ -493,7 +510,7 @@ export function ChatScreen({ navigation, route, ...props }) {
               onPress={function () {
 
                 navigation.navigate('Image', {
-
+                  //   imageUrl: currentMessage.image,
                   item: { name: route.params.item.name },
                   imagePos: imageMessageArr.findIndex(item => { return item._id === currentMessage._id }),
                   messages: imageMessageArr,
@@ -549,14 +566,14 @@ export function ChatScreen({ navigation, route, ...props }) {
         // </View>
         // }}
 
-        user={{ _id: "myself", }}
+        user={{ _id: 1, }}
 
       />
 
 
 
 
-
+      {/* <View style={functionPanelStyle} /> */}
 
       <OverlayDownloader overLayOn={overLayOn} setOverLayOn={setOverLayOn} uri={uri} fileName={Date.now() + ".jpg"} />
 
@@ -605,6 +622,10 @@ function ScaleView(props) {
     </View>
   )
 }
+
+
+
+
 
 function hexToRgbA(hex) {
   var c;
@@ -657,7 +678,7 @@ async function pickImage(setMessages) {
         text: '',
         createdAt: Date.now(),
         user: {
-          _id: "myself",
+          _id: 1,
           //  name: 'React Native',
           //  avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
         },
@@ -698,7 +719,7 @@ async function takePhoto(setMessages) {
           text: '',
           createdAt: Date.now(),
           user: {
-            _id: "myself",
+            _id: 1,
             //name: 'React Native',
             //avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
           },
@@ -712,32 +733,4 @@ async function takePhoto(setMessages) {
   }
 
 }
-
-function MessageTextBlock(props) {
-
-  const toolTipRef = useRef()
-
-
-  return (
-    <Tooltip
-      toggleAction="onLongPress"
-      popover={<Button title="button" onPress={function () { toolTipRef.current.toggleTooltip() }} />}
-      height={60}
-      containerStyle={{ padding: 0 }}
-      onOpen={function (e) {
-        console.log(e.nativeEvent)
-      }}
-      ref={element => { toolTipRef.current = element }}
-    >
-      <View>
-        <MessageText {...props}
-          //  containerStyle={{ right: { backgroundColor: "blue" } }}
-          textStyle={{ left: { fontSize: 20, lineHeight: 30, color: "black" }, right: { fontSize: 20, lineHeight: 30, color: "black" } }}
-
-        />
-      </View>
-    </Tooltip>
-
-  )
-
-}
+;

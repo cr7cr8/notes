@@ -59,22 +59,22 @@ import { OverlayDownloader } from "./OverlayDownloader";
 export const Context = createContext()
 
 const list = [
-  { name: "a", description: "fewfas", key: Math.random() },
-  { name: "b", description: "fewf的话就开始as", key: Math.random() },
-  { name: "c", description: "fewfas", key: Math.random() },
-  { name: "d", description: "fewfas", key: Math.random() },
-  { name: "e", description: "fewfas", key: Math.random() },
-  { name: "f", description: "fewfas", key: Math.random() },
-  { name: "g", description: "fewfas", key: Math.random() },
-  { name: "h", description: "as是as", key: Math.random() },
-  { name: "i", description: "fewfas", key: Math.random() },
-  { name: "j", description: "fewfas", key: Math.random() },
-  { name: "k", description: "fewfas", key: Math.random() },
-  { name: "l", description: "fewfas", key: Math.random() },
-  { name: "m", description: "fewfas", key: Math.random() },
-  { name: "n", description: "s ewfas", key: Math.random() },
-  { name: "o", description: "fewd fas", key: Math.random() },
-  { name: "p", description: "feds wfas", key: Math.random() },
+  { name: "a", description: "fewfas", personID: Math.random(), key: Math.random() },
+  { name: "b", description: "fewf的话就开始as", personID: Math.random(), key: Math.random() },
+  { name: "c", description: "fewfas", personID: Math.random(), key: Math.random() },
+  { name: "d", description: "fewfas", personID: Math.random(), key: Math.random() },
+  { name: "e", description: "fewfas", personID: Math.random(), key: Math.random() },
+  { name: "f", description: "fewfas", personID: Math.random(), key: Math.random() },
+  { name: "g", description: "fewfas", personID: Math.random(), key: Math.random() },
+  { name: "h", description: "as是as", personID: Math.random(), key: Math.random() },
+  { name: "i", description: "fewfas", personID: Math.random(), key: Math.random() },
+  { name: "j", description: "fewfas", personID: Math.random(), key: Math.random() },
+  { name: "k", description: "fewfas", personID: Math.random(), key: Math.random() },
+  { name: "l", description: "fewfas", personID: Math.random(), key: Math.random() },
+  { name: "m", description: "fewfas", personID: Math.random(), key: Math.random() },
+  { name: "n", description: "s ewfas", personID: Math.random(), key: Math.random() },
+  { name: "o", description: "fewd fas", personID: Math.random(), key: Math.random() },
+  { name: "p", description: "feds wfas", personID: Math.random(), key: Math.random() },
   // { name: "q", description: "few dfas", key: Math.random() },
   // { name: "r", description: "s ewfas", key: Math.random() },
   // { name: "s", description: "fewd fas", key: Math.random() },
@@ -119,151 +119,28 @@ const messages_ = [
 
   {
     _id: Math.random(),
-    text: '1111\nfewfhkl \n就看了附件为 、jiofew \n好就好看附件为全额  j离开房间额为急哦iefw看了发生纠纷来看 额为急哦iefw看了发生纠纷来看 是是觉得发来看份文件哦i减肥了快速打击法拉克哇',
+    text: '111拉克哇',
     createdAt: Date.now() + 1000 * 60,
     user: {
-      _id: Math.random(),
-      name: 'e',
-      get avatar() {
-        return () => {
-          return <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(this.name, false)} />
-        }
-      }
-
-      //avatar: function () { return <SvgUri style={{ position: "relative", }} width={60} height={60} svgXmlData={multiavatar(this.name, false)} /> },
-      //  avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),
+  //    _id: Math.random(),
+      name: 'a',
+  //    get avatar() { return () => { return <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(this.name, false)} /> } }
     },
-    //  video: 'https://vimeo.com/311983548',
+  
   },
 
-  // {
-  //   _id: Math.random(),
-  //   text: '1111\nfewfhkl \n就看了附件为 、jiofew \n好就好看附件为全额  j离开房间额为急哦iefw看了发生纠纷来看 额为急哦iefw看了发生纠纷来看 是是觉得发来看份文件哦i减肥了快速打击法拉克哇',
-  //   createdAt: Date.now() + 1000 * 60,
-  //   user: {
-  //     _id: 1,
-  //     name: 'React Native',
-  //     // avatar: () => (<SvgUri style={{ position: "relative", }} width={60} height={60} svgXmlData={multiavatar(item.name, false)} />),
-  //     avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),
-  //   },
-  //   //  video: 'https://vimeo.com/311983548',
-  //   sent: true,
-  //   received: true,
-  //   pending: true,
+  {
+    _id: Math.random(),
+    text: '',
+    createdAt: Date.now() + 1000 * 60,
+    user: {
+  //    _id: Math.random(),
+      name: 'e',
+  //    get avatar() { return () => { return <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(this.name, false)} /> } }
+    },
+    image: 'https://picsum.photos/200/300',
+  },
 
-  // },
-
-  // {
-  //   _id: Math.random(),
-  //   text: '333',
-  //   createdAt: Date.now() + 2000 * 60 + 100,
-  //   user: {
-  //     _id: Math.random(),
-  //     name: 'React Native',
-  //     avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
-  //   },
-  //   image: 'https://picsum.photos/100/110',
-  //   // You can also add a video prop:
-  //   //video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-  //   // Mark the message as sent, using one tick
-  //   sent: true,
-  //   // Mark the message as received, using two tick
-  //   received: true,
-  //   // Mark the message as pending with a clock loader
-  //   pending: true,
-  // },
-
-  // {
-  //   _id: Math.random(),
-  //   text: '333',
-  //   createdAt: Date.now() + 2000 * 60 + 100,
-  //   user: {
-  //     _id: Math.random(),
-  //     name: 'React Native',
-  //     avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
-  //   },
-  //   image: 'https://picsum.photos/500/310',
-  //   // You can also add a video prop:
-  //   //video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-  //   // Mark the message as sent, using one tick
-  //   sent: true,
-  //   // Mark the message as received, using two tick
-  //   received: true,
-  //   // Mark the message as pending with a clock loader
-  //   pending: true,
-  // },
-
-  // {
-  //   _id: Math.random(),
-  //   text: '444sd',
-  //   createdAt: Date.now() + 2000 * 60 + 100,
-  //   user: {
-  //     _id: Math.random(),
-  //     name: 'React Native',
-  //     avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
-  //   },
-  //   image: 'https://picsum.photos/580/300',
-  //   // You can also add a video prop:
-  //   //video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-  //   // Mark the message as sent, using one tick
-  //   sent: true,
-  //   // Mark the message as received, using two tick
-  //   received: true,
-  //   // Mark the message as pending with a clock loader
-  //   pending: true,
-  // },
-
-  // {
-  //   _id: Math.random(),
-  //   text: '444sd',
-  //   createdAt: Date.now() + 2000 * 60 + 100,
-  //   user: {
-  //     _id: 1,
-  //     name: 'React Native',
-  //     avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
-  //   },
-  //   image: 'https://picsum.photos/280/300',
-
-  // },
-
-  // {
-
-  //   _id: Math.random(),
-  //   text: '4444',
-  //   createdAt: Date.now() + 2000 * 60 + 200,
-  //   user: {
-  //     _id: Math.random(),
-  //     name: 'React Native',
-  //     avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
-  //   },
-  //   image: 'https://picsum.photos/200/300',
-  //   // You can also add a video prop:
-  //   video: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-  //   // Mark the message as sent, using one tick
-  //   sent: true,
-  //   // Mark the message as received, using two tick
-  //   received: true,
-  //   // Mark the message as pending with a clock loader
-  //   pending: true,
-
-  // },
-  // {
-
-  //   _id: Math.random(),
-  //   text: '555',
-  //   createdAt: Date.now() + 2000 * 60 + 200,
-  //   user: {
-  //     _id: 1,
-  //     name: 'React Native',
-  //     avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
-  //   },
-  //   image: 'https://picsum.photos/200/300',
-
-  //   sent: true,
-  //   received: true,
-  //   pending: true,
-
-  // }
 
 
 ]
@@ -279,7 +156,7 @@ export default function ContextProvider(props) {
 
 
   const [peopleList, setPeopleList] = useState(list)
-  const [messages, setMessages] = useState(messages_)
+  const [messageList, setMessageList] = useState(messages_)
 
 
 
@@ -288,8 +165,8 @@ export default function ContextProvider(props) {
     peopleList,
     setPeopleList,
 
-    messages,
-    setMessages,
+    messageList,
+    setMessageList,
 
   }}>
     {props.children}
