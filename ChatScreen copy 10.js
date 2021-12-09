@@ -4,7 +4,7 @@ import { createSharedElementStackNavigator } from 'react-navigation-shared-eleme
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
 
 
-import { StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Keyboard, Pressable, Vibration, UIManager, findNodeHandle } from 'react-native';
+import { StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Keyboard, Pressable, Vibration, UIManager,findNodeHandle } from 'react-native';
 
 import ReAnimated, {
   useAnimatedStyle, useSharedValue, useDerivedValue,
@@ -55,7 +55,6 @@ import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { OverlayDownloader } from "./OverlayDownloader";
-import { Overlay } from 'react-native-elements/dist/overlay/Overlay';
 
 export function ChatScreen({ navigation, route, ...props }) {
 
@@ -130,33 +129,12 @@ export function ChatScreen({ navigation, route, ...props }) {
           avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
         },
       },
-
       {
         _id: Math.random(),
         text: '111拉克哇ss',
-        createdAt: Date.now() + 1000 * 60,
+        createdAt: Date.now() + 1000 * 60 + 5685,
         user: {
-          _id: "mysvcxvxcelf",
-          name: 'a',
-          avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
-        },
-      },
-      {
-        _id: Math.random(),
-        text: `111拉克sunt in culpa qui officia deserunt mollit anim id est laborum.`,
-        createdAt: Date.now() + 1000 * 60,
-        user: {
-          _id: Math.random(),
-          name: 'a',
-          avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
-        },
-      },
-      {
-        _id: Math.random(),
-        text: 'bbbb',
-        createdAt: Date.now() + 800 * 60,
-        user: {
-          _id: "mysdsdelf",
+          _id: "myself",
           name: 'a',
           avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
         },
@@ -172,19 +150,6 @@ export function ChatScreen({ navigation, route, ...props }) {
           avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
         },
         image: 'https://picsum.photos/200/300',
-      },
-      {
-        _id: Math.random(),
-        text: `111拉克哇\n111拉克Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolor
-        e magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco lab
-        oris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
-         nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`,
-        createdAt: Date.now() + 1000 * 60,
-        user: {
-          _id: Math.random(),
-          name: 'a',
-          avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
-        },
       },
 
     ])
@@ -316,19 +281,17 @@ export function ChatScreen({ navigation, route, ...props }) {
 
                   left: {
                     backgroundColor: bgColor,
-
+                    // backgroundColor: currentMessage.image ? bgColor : bgColor,
                     justifyContent: 'flex-start',
 
                     overflow: "hidden",
                   },
                   right: {
+                    // ...!currentMessage.image && { backgroundColor: "lightgreen" },
 
-                    backgroundColor: "lightgreen",
                     overflow: "hidden",
-
-                    justifyContent: 'flex-start',
-
-
+                    backgroundColor: "lightgreen",
+                    //   backgroundColor: currentMessage.image ? "lightgreen" : "lightgreen",
                     transform: [{ translateX: -9 }]
                   },
 
@@ -757,62 +720,27 @@ function MessageTextBlock(props) {
   const toolTipRef = useRef()
   const viewRef = useAnimatedRef()
 
-
+  //const [posX,setPosX] = useState(0)
 
   const textHeight = useRef(0)
-
-  const [visible, setVisible] = useState(false)
-  const [top, setTop] = useState(60)
-  const [left, setLeft] = useState(0)
 
   return (
     <>
 
-      <Pressable onLongPress={function () {
-        const handle = findNodeHandle(viewRef.current);
-        UIManager.measure(handle, (fx, fy, width, height, px, py) => {
-          console.log('Component width is: ' + width)
-          console.log('Component height is: ' + height)
-          console.log('X offset to frame: ' + fx)
-          console.log('Y offset to frame: ' + fy)
-          console.log('X offset to page: ' + px)
-          console.log('Y offset to page: ' + py)
+      <Pressable onLongPress={function () { toolTipRef.current.toggleTooltip() }}>
+        <MessageText {...props}
+          //  containerStyle={{ right: { backgroundColor: "blue" } }}
+          textStyle={{ left: { fontSize: 20, lineHeight: 30, color: "black" }, right: { fontSize: 20, lineHeight: 30, color: "black" } }}
 
-
-          setTop(Math.max(60, py))
-
-          setLeft(px)
-        })
-        // toolTipRef.current.toggleTooltip()
-        
-        setTimeout(() => {
-          setVisible(true)
-        }, 10);
-       
-
-      }}>
-
-        <View ref={element => { viewRef.current = element }}    >
-          <MessageText {...props}
-            //  containerStyle={{ right: { backgroundColor: "blue" } }}
-            textStyle={{ left: { fontSize: 20, lineHeight: 30, color: "black" }, right: { fontSize: 20, lineHeight: 30, color: "black" } }}
-          />
-        </View>
+        />
       </Pressable>
 
-      <Overlay isVisible={visible} fullScreen={true}
-        overlayStyle={{ backgroundColor: "pink", width: 100, height: 60, position: "absolute", top: top - 60, left }}
-        backdropStyle={{ backgroundColor: "transparent" }}
-
-        onBackdropPress={function () { setVisible(false) }}
-      >
-        <Button title="A" style={{
-
-        }} />
-      </Overlay>
 
 
-      {/* <Tooltip
+
+
+
+      <Tooltip
         toggleAction="onLongPress"
         popover={<Button title="button" onPress={function () { toolTipRef.current.toggleTooltip() }} />}
         height={60}
@@ -822,13 +750,48 @@ function MessageTextBlock(props) {
           backgroundColor: "pink",
           // top:20,
         }}
-     
+        onOpen={function (e) {
+
+          console.log("====")
+          UIManager.measure(toolTipRef.current, (x, y, width, height, pageX, pageY) => {
+            console.log(y);
+
+          })
+
+
+          //console.log(Object.keys(e.target))
+          //  console.log(e.target.viewConfig)
+        }}
         ref={element => { toolTipRef.current = element }}
       >
-        <Text>a</Text>
-      </Tooltip> */}
+        <View
+          ref={element => { viewRef.current = element }}
+          onLayout={function () {
+
+            const handle = findNodeHandle( viewRef.current); 
+            UIManager.measure(handle,(fx, fy, width, height, px, py) => {
+              console.log('Component width is: ' + width)
+              console.log('Component height is: ' + height)
+              console.log('X offset to frame: ' + fx)
+              console.log('Y offset to frame: ' + fy)
+              console.log('X offset to page: ' + px)
+              console.log('Y offset to page: ' + py)
+          })       
 
 
+            // viewRef.current.measure((x, y, width, height, pageX, pageY) => {
+            //   console.log("===",x,y,width,height)
+
+            //   // resolve({ x, y, width, height, pageX, pageY });
+            // });
+
+
+          }}
+
+        >
+
+        </View>
+      </Tooltip>
 
 
 
