@@ -4,7 +4,7 @@ import { createSharedElementStackNavigator } from 'react-navigation-shared-eleme
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
 
 
-import { StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Keyboard, Pressable, Vibration } from 'react-native';
+import { StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Keyboard, Pressable, Vibration, UIManager,findNodeHandle } from 'react-native';
 
 import ReAnimated, {
   useAnimatedStyle, useSharedValue, useDerivedValue,
@@ -20,6 +20,8 @@ import ReAnimated, {
   useAnimatedProps,
   withSequence,
   withDecay,
+  measure,
+  useAnimatedRef
 
 } from 'react-native-reanimated';
 //import Svg, { Circle, Rect, SvgUri } from 'react-native-svg';
@@ -97,6 +99,7 @@ export function ChatScreen({ navigation, route, ...props }) {
       flexDirection: "row",
       alignItems: "flex-start",
       justifyContent: "flex-end",
+
       //position:"absolute",
       //right:8,
     }
@@ -128,7 +131,7 @@ export function ChatScreen({ navigation, route, ...props }) {
       },
       {
         _id: Math.random(),
-        text: '111拉克\n哇',
+        text: '111拉克哇ss',
         createdAt: Date.now() + 1000 * 60 + 5685,
         user: {
           _id: "myself",
@@ -259,7 +262,6 @@ export function ChatScreen({ navigation, route, ...props }) {
               }
             }}
             />
-
 
           )
         }}
@@ -600,7 +602,7 @@ function ScaleView(props) {
   }, [])
 
   return (
-    <View style={scaleStyle}>
+    <View style={scaleStyle}    >
       {props.children}
     </View>
   )
@@ -716,28 +718,85 @@ async function takePhoto(setMessages) {
 function MessageTextBlock(props) {
 
   const toolTipRef = useRef()
+  const viewRef = useAnimatedRef()
 
+  //const [posX,setPosX] = useState(0)
+
+  const textHeight = useRef(0)
 
   return (
-    <Tooltip
-      toggleAction="onLongPress"
-      popover={<Button title="button" onPress={function () { toolTipRef.current.toggleTooltip() }} />}
-      height={60}
-      containerStyle={{ padding: 0 }}
-      onOpen={function (e) {
-        console.log(e.nativeEvent)
-      }}
-      ref={element => { toolTipRef.current = element }}
-    >
-      <View>
+    <>
+
+      <Pressable onLongPress={function () { toolTipRef.current.toggleTooltip() }}>
         <MessageText {...props}
           //  containerStyle={{ right: { backgroundColor: "blue" } }}
           textStyle={{ left: { fontSize: 20, lineHeight: 30, color: "black" }, right: { fontSize: 20, lineHeight: 30, color: "black" } }}
 
         />
-      </View>
-    </Tooltip>
+      </Pressable>
 
+
+
+
+
+
+      <Tooltip
+        toggleAction="onLongPress"
+        popover={<Button title="button" onPress={function () { toolTipRef.current.toggleTooltip() }} />}
+        height={60}
+        containerStyle={{
+          padding: 0,
+          //  position:"absolute",
+          backgroundColor: "pink",
+          // top:20,
+        }}
+        onOpen={function (e) {
+
+          console.log("====")
+          UIManager.measure(toolTipRef.current, (x, y, width, height, pageX, pageY) => {
+            console.log(y);
+
+          })
+
+
+          //console.log(Object.keys(e.target))
+          //  console.log(e.target.viewConfig)
+        }}
+        ref={element => { toolTipRef.current = element }}
+      >
+        <View
+          ref={element => { viewRef.current = element }}
+          onLayout={function () {
+
+            const handle = findNodeHandle( viewRef.current); 
+            UIManager.measure(handle,(fx, fy, width, height, px, py) => {
+              console.log('Component width is: ' + width)
+              console.log('Component height is: ' + height)
+              console.log('X offset to frame: ' + fx)
+              console.log('Y offset to frame: ' + fy)
+              console.log('X offset to page: ' + px)
+              console.log('Y offset to page: ' + py)
+          })       
+
+
+            // viewRef.current.measure((x, y, width, height, pageX, pageY) => {
+            //   console.log("===",x,y,width,height)
+
+            //   // resolve({ x, y, width, height, pageX, pageY });
+            // });
+
+
+          }}
+
+        >
+
+        </View>
+      </Tooltip>
+
+
+
+
+    </>
   )
 
 }
