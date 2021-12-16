@@ -90,14 +90,8 @@ export function OverlayDownloader({ overLayOn, setOverLayOn, uri, fileName, ...p
   // })
 
 
-  //const [overLayOn, setOverLayOn] = useState(false)
-
   const [btnText, setBtnText] = useState("Download")
-  //const [deleteBtnText, setDeleteBtnText] = useState("Delete")
 
-
-
-  // console.log(uri, "-------------------", fileName)
   return (
     <>
 
