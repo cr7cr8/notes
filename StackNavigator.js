@@ -56,83 +56,84 @@ export default function StackNavigator() {
 
 
   return (
-
-    <Stack.Navigator
-      initialRouteName="Home"
-
-
-
-      screenOptions={screenOptions}
-      // headerMode="float"
-      headerMode="screen"
-
-    >
-
-      <Stack.Screen name="Home"
-
-        component={HomeScreen}
-
-        // header={function (props) {     console.log(props)  return <Header {...props} /> }}
-
-        options={function ({ navigation, router }) {
-
-          return {
-            headerShown: true,
-            header: (props) => <Header {...props} />,
-
-            headerRight: () => (<Button onPress={() => { }} title={"hihi"} />), // color="#fff" 
-
-            headerBackTitle: "Aaaa",
+    <>
+    
+      <Stack.Navigator
+        initialRouteName="Home"
 
 
 
+        screenOptions={screenOptions}
+        // headerMode="float"
+        headerMode="screen"
 
-          }
+      >
 
-        }}
+        <Stack.Screen name="Home"
 
-      />
+          component={HomeScreen}
 
+          // header={function (props) {     console.log(props)  return <Header {...props} /> }}
 
-      <Stack.Screen name="Chat"
+          options={function ({ navigation, router }) {
 
-        component={ChatScreen}
-        options={function ({ navigation, router }) {
-          return {
-            // headerRight: function(props) {     return <Button onPress={() => { }} title={"hihi"} />    },
-            // headerShown:false, 
-            // header: function (props) {   return <></>; return <Header {...props} /> },
-            headerTintColor: 'green',  // back arrow color
-            headerTitle: function (props) { return <></> },
-            headerBackTitle: "Aaaa",
-            //   headerBackAccessibilityLabel="ee",
-            gestureEnabled: false,
-            headerTransparent: true,
-          }
-        }}
-      />
-      <Stack.Screen name="Image"
-        component={ImageScreen}
-        options={function({navigaion,router}){
+            return {
+              headerShown: true,
+              header: (props) => <Header {...props} />,
 
-          return{
-            headerShown:true,
-            headerTitle: function (props) { return <></> },
-            headerTintColor: 'transparent',
-            headerTransparent: true,
+              headerRight: () => (<Button onPress={() => { }} title={"hihi"} />), // color="#fff" 
 
-          }
-        }}
-
-      />
-
-
-
-    </Stack.Navigator>
+              headerBackTitle: "Aaaa",
 
 
 
 
+            }
+
+          }}
+
+        />
+
+
+        <Stack.Screen name="Chat"
+
+          component={ChatScreen}
+          options={function ({ navigation, router }) {
+            return {
+              // headerRight: function(props) {     return <Button onPress={() => { }} title={"hihi"} />    },
+              // headerShown:false, 
+              // header: function (props) {   return <></>; return <Header {...props} /> },
+              headerTintColor: 'green',  // back arrow color
+              headerTitle: function (props) { return <></> },
+              headerBackTitle: "Aaaa",
+              //   headerBackAccessibilityLabel="ee",
+              gestureEnabled: false,
+              headerTransparent: true,
+            }
+          }}
+        />
+        <Stack.Screen name="Image"
+          component={ImageScreen}
+          options={function ({ navigaion, router }) {
+
+            return {
+              headerShown: true,
+              headerTitle: function (props) { return <></> },
+              headerTintColor: 'transparent',
+              headerTransparent: true,
+
+            }
+          }}
+
+        />
+
+
+
+      </Stack.Navigator>
+
+
+
+    </>
 
   )
 

@@ -83,7 +83,7 @@ import ViewTransformer from "react-native-easy-view-transformer";
 
 
 
-
+import SnackBar from "./SnackBar";
 
 
 
@@ -95,7 +95,7 @@ import ViewTransformer from "react-native-easy-view-transformer";
 export default function App() {
 
 
-  
+
 
 
 
@@ -103,10 +103,13 @@ export default function App() {
 
 
   return (
+    
     <ContextProvider>
+    
       <NavigationContainer>
         <StackNavigator />
       </NavigationContainer>
+      <SnackBar />
     </ContextProvider>
 
 

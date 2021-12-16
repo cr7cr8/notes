@@ -83,8 +83,8 @@ export function OverlayDownloader({ overLayOn, setOverLayOn, uri, fileName, ...p
 
   // FileSystem.readDirectoryAsync("file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540cr7cr8%252Fnotes/ImagePicker/").then(data => {
   //   data.forEach(filename_ => {
-  //     //  console.log(Date.now() + "=cached photo==***===" + filename_)
-  //     //  FileSystem.deleteAsync("file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540cr7cr8%252Fnotes/ImagePicker/" + filename_, { idempotent: true })
+  //       console.log(Date.now() + "=cached photo==***===" + filename_)
+  //       FileSystem.deleteAsync("file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540cr7cr8%252Fnotes/ImagePicker/" + filename_, { idempotent: true })
   //   })
 
   // })
@@ -137,9 +137,6 @@ export function OverlayDownloader({ overLayOn, setOverLayOn, uri, fileName, ...p
             downloadFromUri(uri, fileName, setBtnText)
           }
 
-
-
-
         }} />
         }
         {btnText === "100%" && <Button title="Finished" onPress={function () {
@@ -179,8 +176,6 @@ async function downloadFromUri(uri, fileName, setBtnText) {
 
   const { status } = await downloadResumable.downloadAsync(uri, fileUri, { headers: { token: "hihihi" } }).catch(e => { console.log(e) })
 
-
-
   if (status == 200) {
     const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
     if (!granted) { setBtnText("100%"); return }
@@ -192,19 +187,11 @@ async function downloadFromUri(uri, fileName, setBtnText) {
     else {
       await MediaLibrary.addAssetsToAlbumAsync([asset], album, false).catch(e => { console.log(e) });
     }
-
-
     await FileSystem.deleteAsync(fileUri, { idempotent: true })
-
-
-
   }
   else { alert("server refuse to send") }
 
-
-
 }
-
 
 async function downloadFromBase64(uri, fileName, setBtnText) {
 

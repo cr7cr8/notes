@@ -38,7 +38,7 @@ import { ListItem, Avatar, LinearProgress, Button, Tooltip, Icon } from 'react-n
 const { width, height } = Dimensions.get('screen');
 
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Clipboard from 'expo-clipboard';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 
 import { SharedElement } from 'react-navigation-shared-element';
@@ -57,10 +57,8 @@ import * as MediaLibrary from 'expo-media-library';
 import { OverlayDownloader } from "./OverlayDownloader";
 import { Overlay } from 'react-native-elements/dist/overlay/Overlay';
 
-//import Snackbar from 'expo-snackbar';
+import Snackbar from 'expo-snackbar';
 //import SnackBar from 'react-native-snackbar-component';
-
-import SnackBar, { SnackContext } from "./SnackBar";
 
 export function ChatScreen({ navigation, route, ...props }) {
 
@@ -184,7 +182,7 @@ export function ChatScreen({ navigation, route, ...props }) {
         text: '',
         createdAt: Date.now() + 1000 * 60,
         user: {
-          _id: "myjkjkself",
+          _id: "myself",
           name: 'e',
           avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
         },
@@ -207,30 +205,28 @@ export function ChatScreen({ navigation, route, ...props }) {
     ])
 
 
-
+  
 
   }, [])
 
 
+const [show,setShown] = useState(true)
 
   return (
 
     <>
-
+   
       <View style={{ alignItems: "center", justifyContent: "center", flexDirection: "row", backgroundColor: bgColor, padding: 0, elevation: 1, position: "relative" }}>
-
-
-
         <SharedElement id={item.name} style={{ transform: [{ scale: 0.56 }], }}   >
           <SvgUri style={{ position: "relative", top: getStatusBarHeight() }} width={60} height={60} svgXmlData={avatarString} />
 
         </SharedElement>
 
 
-
         <Text style={{ position: "relative", fontSize: 20, top: getStatusBarHeight() / 2 }}>{item.name}</Text>
 
       </View >
+
 
       <GiftedChat
 
@@ -329,7 +325,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
             <ScaleView>
 
-              <BubbleBlock {...props} bgColor={bgColor} setMessages={setMessages} />
+              <BubbleBlock {...props} bgColor={bgColor} />
 
             </ScaleView>
 
@@ -505,7 +501,7 @@ export function ChatScreen({ navigation, route, ...props }) {
           const imageMessageArr = messages.filter(message => Boolean(message.image)).map(item => { return { ...item, user: { ...item.user, avatar: "" } } })
 
           return (
-            <ImageBlock imageMessageArr={imageMessageArr} currentMessage={currentMessage} navigation={navigation} route={route} setMessages={setMessages} />
+            <ImageBlock imageMessageArr={imageMessageArr} currentMessage={currentMessage} navigation={navigation} route={route} />
           )
         }}
 
@@ -694,7 +690,7 @@ async function takePhoto(setMessages) {
 
 
 
-function BubbleBlock({ bgColor,setMessages ,...props }) {
+function BubbleBlock({ bgColor, ...props }) {
 
   const viewRef = useAnimatedRef()
   const [visible, setVisible] = useState(false)
@@ -750,15 +746,14 @@ function BubbleBlock({ bgColor,setMessages ,...props }) {
         />
       </View>
 
-
-      <OverlayCompo visible={visible} setVisible={setVisible} top={top} left={left} currentMessage={currentMessage} isText={true} isImage={false} setMessages={setMessages}/>
+      <OverlayCompo visible={visible} setVisible={setVisible} top={top} left={left} />
 
     </>
   )
 
 }
 
-function ImageBlock({ navigation, route, currentMessage, imageMessageArr,setMessages, ...props }) {
+function ImageBlock({ navigation, route, currentMessage, imageMessageArr, ...props }) {
 
   const viewRef = useAnimatedRef()
   const [visible, setVisible] = useState(false)
@@ -802,7 +797,7 @@ function ImageBlock({ navigation, route, currentMessage, imageMessageArr,setMess
 
     </TouchableOpacity>
 
-    <OverlayCompo visible={visible} setVisible={setVisible} top={top} left={left} currentMessage={currentMessage} isText={false} isImage={true} setMessages={setMessages} />
+    <OverlayCompo visible={visible} setVisible={setVisible} top={top} left={left} />
 
   </>
 }
@@ -810,10 +805,9 @@ function ImageBlock({ navigation, route, currentMessage, imageMessageArr,setMess
 
 
 
-function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, isImage,setMessages, ...props }) {
+function OverlayCompo({ visible, top, left, setVisible, ...props }) {
 
 
-  const { setSnackBarHeight, setSnackMsg } = useContext(Context)
 
   return <Overlay isVisible={visible} fullScreen={false}
     overlayStyle={{
@@ -823,33 +817,31 @@ function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, 
       borderWidth: 0,
     }}
     backdropStyle={{ backgroundColor: "rgba(0,0,0,0.5)", }}
+
     onBackdropPress={function () { setVisible(false) }}
   >
     <ScaleView>
       <View style={{ width: 100, display: "flex", flexDirection: "row", justifyContent: "space-around", alignItems: "center", backgroundColor: "gray" }} >
 
+
+
         <Icon
-          name={isText ? "copy-outline" : "arrow-down-circle-outline"}
+          name="copy-outline"
           type='ionicon'
           color='white'
           size={50}
           onPress={function () {
 
-            if (isText) {
+            // Snackbar.show({
+            //   text: 'Hello world',
+            //   duration: Snackbar.LENGTH_INDEFINITE,
+            //   action: {
+            //     text: 'UNDO',
+            //     textColor: 'green',
+            //     onPress: () => { /* Do something. */ },
+            //   },
+            // });
 
-              Clipboard.setString(currentMessage.text);
-              setTimeout(() => {
-                setSnackMsg("copied")
-                setSnackBarHeight(60)
-              }, 0);
-            }
-            else if ((isImage) && (currentMessage.user._id !== "myself")) {
-              downloadFromUri(currentMessage.image, setSnackMsg, setSnackBarHeight)
-            }
-            else if ((isImage) && (currentMessage.user._id === "myself")) {   
-              downloadFromLocal(currentMessage.image, setSnackMsg, setSnackBarHeight)
-            }
-            setVisible(false)
           }}
         />
         <Icon
@@ -857,17 +849,7 @@ function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, 
           type='ionicon'
           color='white'
           size={50}
-          onPress={function () { 
-
-            if (isText) {
-          
-              setMessages(messages=>{
-               return messages.filter(msg=>{return msg._id!==currentMessage._id})
-              })
-            }
-
-
-          }}
+          onPress={function () { setIsPressed(true) }}
         />
       </View>
     </ScaleView>
@@ -880,58 +862,36 @@ function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, 
 
 
 
-async function downloadFromUri(uri, setSnackMsg, setSnackBarHeight) {
-
-  const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
-  if (!granted) { return }
 
 
-  const fileUri = `${FileSystem.documentDirectory}${Date.now()}.jpg`
+
+
+async function downloadFromUri(uri, fileName, setBtnText) {
+
+  setBtnText("0%")
+
+  const fileUri = `${FileSystem.documentDirectory}${fileName}`
   const downloadResumable = FileSystem.createDownloadResumable(
-    uri,
-    fileUri,
-    { headers: { token: "hihihi" } },
-    function ({ totalBytesExpectedToWrite, totalBytesWritten }) { }   //totalBytesExpectedToWrite === -1
+    uri, fileUri, { headers: { token: "hihihi" } },
+    function ({ totalBytesExpectedToWrite, totalBytesWritten }) {
+      totalBytesExpectedToWrite === -1
+        ? setBtnText("100%")
+        : setBtnText(Math.floor(totalBytesWritten / totalBytesExpectedToWrite * 100) + "%")
+    }
   );
 
   const { status } = await downloadResumable.downloadAsync(uri, fileUri, { headers: { token: "hihihi" } }).catch(e => { console.log(e) })
-  if (status == 200) {
-    setSnackMsg("downloaded")
-    setSnackBarHeight(60)
 
+  if (status == 200) {
+    const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
+    if (!granted) { setBtnText("100%"); return }
     const asset = await MediaLibrary.createAssetAsync(fileUri).catch(e => { console.log(e) });
     let album = await MediaLibrary.getAlbumAsync('expoDownload').catch(e => { console.log(e) });
-
     if (album == null) { await MediaLibrary.createAlbumAsync('expoDownload', asset, false).catch(e => { console.log(e) }); }
     else { await MediaLibrary.addAssetsToAlbumAsync([asset], album, false).catch(e => { console.log(e) }); }
     await FileSystem.deleteAsync(fileUri, { idempotent: true })
-
   }
-  else { alert("failed") }
-
-}
-
-
-
-async function downloadFromLocal(uri, setSnackMsg, setSnackBarHeight) {
-
-
-
-  const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
-  if (!granted) { return }
-
-  setSnackMsg("downloaded")
-  setSnackBarHeight(60)
-
-
-  const asset = await MediaLibrary.createAssetAsync(uri)
-  let album = await MediaLibrary.getAlbumAsync('expoDownload')
-  if (album == null) { await MediaLibrary.createAlbumAsync('expoDownload', asset, true) }
-  else {
-    await MediaLibrary.addAssetsToAlbumAsync([asset], album, true)
-  }
-
-
+  else { alert("server refuse to send") }
 
 }
 
@@ -943,4 +903,91 @@ async function downloadFromLocal(uri, setSnackMsg, setSnackBarHeight) {
 
 
 
+function MessageTextBlock(props) {
 
+
+  const viewRef = useAnimatedRef()
+  const [visible, setVisible] = useState(false)
+  const [top, setTop] = useState(60)
+  const [left, setLeft] = useState(0)
+
+  const currentMessage = props.currentMessage
+
+  return (
+    <>
+
+      <Pressable
+        // onPress={function () {
+        //   if (currentMessage.image) {
+
+        //     navigation.navigate('Image', {
+        //       item: { name: route.params.item.name },
+        //       imagePos: imageMessageArr.findIndex(item => { return item._id === currentMessage._id }),
+        //       messages: imageMessageArr,
+        //       // setMessages,
+        //     })
+
+        //   }
+        // }}
+        onLongPress={function () {
+          const handle = findNodeHandle(viewRef.current);
+          UIManager.measure(handle, (fx, fy, compoWidth, compoHeight, px, py) => {
+
+            if ((py + compoHeight) / 2 >= height / 2) {
+              setTop(Math.max(60, py - 24))
+              setLeft(Math.min(width - 100 - 9, px))
+            }
+            else {
+              setTop(Math.min(height - 90, py + compoHeight + 44))
+              setLeft(Math.min(width - 100 - 9, px))
+            }
+          })
+
+          setTimeout(() => { setVisible(true) }, 10);
+        }}>
+
+        <View ref={element => { viewRef.current = element }}    >
+          <MessageText {...props}
+            //  containerStyle={{ right: { backgroundColor: "blue" } }}
+            textStyle={{ left: { fontSize: 20, lineHeight: 30, color: "black" }, right: { fontSize: 20, lineHeight: 30, color: "black" } }}
+          />
+        </View>
+      </Pressable>
+
+
+      <Overlay isVisible={visible} fullScreen={true}
+        overlayStyle={{
+          backgroundColor: "#333", width: 100, height: 60,
+          position: "absolute", top: top - 60, left,
+          display: "flex", flexDirection: "row", justifyContent: "space-around", alignItems: "center"
+
+        }}
+        backdropStyle={{ backgroundColor: "transparent" }}
+
+        onBackdropPress={function () { setVisible(false) }}
+      >
+
+        <Icon
+          onPress={function () { }}
+          name="copy-outline"
+          type='ionicon'
+          color='white'
+          size={30}
+        />
+
+        <Icon
+          onPress={function () { }}
+          name="trash-outline"
+          type='ionicon'
+          color='white'
+          size={30}
+        />
+
+
+
+      </Overlay>
+
+    </>
+  )
+
+}

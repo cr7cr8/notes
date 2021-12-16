@@ -115,35 +115,35 @@ const list = [
 
 ]
 
-const messages_ = [
+// const messages_ = [
 
-  {
-    _id: Math.random(),
-    text: '111拉克哇',
-    createdAt: Date.now() + 1000 * 60,
-    user: {
-  //    _id: Math.random(),
-      name: 'a',
-  //    get avatar() { return () => { return <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(this.name, false)} /> } }
-    },
-  
-  },
+//   {
+//     _id: Math.random(),
+//     text: '111拉克哇',
+//     createdAt: Date.now() + 1000 * 60,
+//     user: {
+//       //    _id: Math.random(),
+//       name: 'a',
+//       //    get avatar() { return () => { return <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(this.name, false)} /> } }
+//     },
 
-  {
-    _id: Math.random(),
-    text: '',
-    createdAt: Date.now() + 1000 * 60,
-    user: {
-  //    _id: Math.random(),
-      name: 'e',
-  //    get avatar() { return () => { return <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(this.name, false)} /> } }
-    },
-    image: 'https://picsum.photos/200/300',
-  },
+//   },
+
+//   {
+//     _id: Math.random(),
+//     text: '',
+//     createdAt: Date.now() + 1000 * 60,
+//     user: {
+//       //    _id: Math.random(),
+//       name: 'e',
+//       //    get avatar() { return () => { return <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(this.name, false)} /> } }
+//     },
+//     image: 'https://picsum.photos/200/300',
+//   },
 
 
 
-]
+// ]
 
 
 
@@ -156,17 +156,23 @@ export default function ContextProvider(props) {
 
 
   const [peopleList, setPeopleList] = useState(list)
-  const [messageList, setMessageList] = useState(messages_)
-
-
+  //const [messageList, setMessageList] = useState(messages_)
+  const [snackBarHeight, setSnackBarHeight] = useState(0)
+  const [snackMsg, setSnackMsg] = useState("Hihi")
 
   return <Context.Provider value={{
 
     peopleList,
     setPeopleList,
 
-    messageList,
-    setMessageList,
+    // messageList,
+    // setMessageList,
+
+    snackBarHeight,
+    setSnackBarHeight,
+
+    snackMsg,
+    setSnackMsg,
 
   }}>
     {props.children}
