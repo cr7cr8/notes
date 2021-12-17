@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 
 import { createSharedElementStackNavigator } from 'react-navigation-shared-element';
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle, Header } from '@react-navigation/stack';
@@ -6,10 +6,13 @@ import { createStackNavigator, CardStyleInterpolators, TransitionPresets, Header
 import { useNavigation } from '@react-navigation/native';
 
 import { StyleSheet, Text, View, Button, Image, } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { HomeScreen } from "./HomeScreen";
 import { ChatScreen } from "./ChatScreen";
 import { ImageScreen } from "./ImageScreen";
+
+import { Context } from "./ContextProvider"
 
 const Stack = createSharedElementStackNavigator();
 
@@ -17,7 +20,7 @@ const Stack = createSharedElementStackNavigator();
 export default function StackNavigator() {
 
 
-
+  const { token, setToken, userName, setUserName } = useContext(Context)
 
 
   const screenOptions = function ({ navigation, route }) {
@@ -57,7 +60,7 @@ export default function StackNavigator() {
 
   return (
     <>
-    
+
       <Stack.Navigator
         initialRouteName="Home"
 
@@ -81,7 +84,14 @@ export default function StackNavigator() {
               headerShown: true,
               header: (props) => <Header {...props} />,
 
-              headerRight: () => (<Button onPress={() => { }} title={"hihi"} />), // color="#fff" 
+              headerRight: () => (<Button onPress={() => {
+
+                AsyncStorage.removeItem("token").then(function () {
+                  setUserName("")
+                  setToken(null)
+                })
+
+              }} title={userName} />), // color="#fff" 
 
               headerBackTitle: "Aaaa",
 

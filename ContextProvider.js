@@ -56,6 +56,11 @@ import { OverlayDownloader } from "./OverlayDownloader";
 
 
 
+import axios from "axios";
+import jwtDecode from 'jwt-decode';
+import { io } from "socket.io-client";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 export const Context = createContext()
 
 const list = [
@@ -115,38 +120,9 @@ const list = [
 
 ]
 
-// const messages_ = [
-
-//   {
-//     _id: Math.random(),
-//     text: '111拉克哇',
-//     createdAt: Date.now() + 1000 * 60,
-//     user: {
-//       //    _id: Math.random(),
-//       name: 'a',
-//       //    get avatar() { return () => { return <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(this.name, false)} /> } }
-//     },
-
-//   },
-
-//   {
-//     _id: Math.random(),
-//     text: '',
-//     createdAt: Date.now() + 1000 * 60,
-//     user: {
-//       //    _id: Math.random(),
-//       name: 'e',
-//       //    get avatar() { return () => { return <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(this.name, false)} /> } }
-//     },
-//     image: 'https://picsum.photos/200/300',
-//   },
 
 
-
-// ]
-
-
-
+import url from "./config";
 
 
 
@@ -155,12 +131,62 @@ const list = [
 export default function ContextProvider(props) {
 
 
+
+
   const [peopleList, setPeopleList] = useState(list)
-  //const [messageList, setMessageList] = useState(messages_)
   const [snackBarHeight, setSnackBarHeight] = useState(0)
   const [snackMsg, setSnackMsg] = useState("Hihi")
 
+  const [token, setToken] = useState(null)
+  const [userName, setUserName] = useState("")
+
+  // let socket = io(`http://192.168.0.100`, {
+  //   auth: {
+  //     userName: "aas",
+  //     token: "ffff"
+  //   }
+  // })
+
+  useEffect(function () {
+
+    AsyncStorage.getItem("token").then(token => {
+
+      if (token) {
+
+        setToken(token)
+        setUserName(jwtDecode(token).userName)
+  
+      }
+      else {
+        const randomStr = String(Date.now()).slice(-3)
+        axios.post(`${url}/api/user/fetchtoken`, {
+
+          userName: "user" + randomStr,
+
+        }).then(response => {
+          const token = response.headers["x-auth-token"]
+
+          setToken(token)
+          AsyncStorage.setItem("token", token)
+          setUserName(jwtDecode(token).userName)
+      
+          
+        })
+      }
+
+
+    })
+
+
+  }, [])
+
+
+
   return <Context.Provider value={{
+
+    token,setToken,
+    userName,setUserName,
+
 
     peopleList,
     setPeopleList,
