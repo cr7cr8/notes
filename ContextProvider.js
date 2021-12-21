@@ -52,72 +52,21 @@ import Image from 'react-native-scalable-image';
 import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
-import { OverlayDownloader } from "./OverlayDownloader";
+
 
 
 
 import axios from "axios";
 import jwtDecode from 'jwt-decode';
 import { io } from "socket.io-client";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
+
 
 export const Context = createContext()
 
 const list = [
-  { name: "a", description: "fewfas", personID: Math.random(), key: Math.random() },
-  { name: "b", description: "fewf的话就开始as", personID: Math.random(), key: Math.random() },
-  { name: "c", description: "fewfas", personID: Math.random(), key: Math.random() },
-  { name: "d", description: "fewfas", personID: Math.random(), key: Math.random() },
-  { name: "e", description: "fewfas", personID: Math.random(), key: Math.random() },
-  { name: "f", description: "fewfas", personID: Math.random(), key: Math.random() },
-  { name: "g", description: "fewfas", personID: Math.random(), key: Math.random() },
-  { name: "h", description: "as是as", personID: Math.random(), key: Math.random() },
-  { name: "i", description: "fewfas", personID: Math.random(), key: Math.random() },
-  { name: "j", description: "fewfas", personID: Math.random(), key: Math.random() },
-  { name: "k", description: "fewfas", personID: Math.random(), key: Math.random() },
-  { name: "l", description: "fewfas", personID: Math.random(), key: Math.random() },
-  { name: "m", description: "fewfas", personID: Math.random(), key: Math.random() },
-  { name: "n", description: "s ewfas", personID: Math.random(), key: Math.random() },
-  { name: "o", description: "fewd fas", personID: Math.random(), key: Math.random() },
-  { name: "p", description: "feds wfas", personID: Math.random(), key: Math.random() },
-  // { name: "q", description: "few dfas", key: Math.random() },
-  // { name: "r", description: "s ewfas", key: Math.random() },
-  // { name: "s", description: "fewd fas", key: Math.random() },
-  // { name: "t", description: "feds wfas", key: Math.random() },
-  // { name: "u", description: "few dfas", key: Math.random() },
-  // { name: "v", description: "feds wfas", key: Math.random() },
-  // { name: "w", description: "few dfas", key: Math.random() },
-  // { name: "x", description: "s ewfas", key: Math.random() },
-  // { name: "y", description: "fewd fas", key: Math.random() },
-  // { name: "z", description: "feds wfas", key: Math.random() },
-  // { name: "A", description: "few dfas", key: Math.random() },
-  // { name: "b", description: "fewf的话就开始as", key: Math.random() },
-  // { name: "c", description: "fewfas", key: Math.random() },
-  // { name: "d", description: "fewfas", key: Math.random() },
-  // { name: "e", description: "fewfas", key: Math.random() },
-  // { name: "f", description: "fewfas", key: Math.random() },
-  // { name: "g", description: "fewfas", key: Math.random() },
-  // { name: "h", description: "as是as", key: Math.random() },
-  // { name: "i", description: "fewfas", key: Math.random() },
-  // { name: "j", description: "fewfas", key: Math.random() },
-  // { name: "k", description: "fewfas", key: Math.random() },
-  // { name: "l", description: "fewfas", key: Math.random() },
-  // { name: "m", description: "fewfas", key: Math.random() },
-  // { name: "n", description: "s ewfas", key: Math.random() },
-  // { name: "o", description: "fewd fas", key: Math.random() },
-  // { name: "p", description: "feds wfas", key: Math.random() },
-  // { name: "q", description: "few dfas", key: Math.random() },
-  // { name: "r", description: "s ewfas", key: Math.random() },
-  // { name: "s", description: "fewd fas", key: Math.random() },
-  // { name: "t", description: "feds wfas", key: Math.random() },
-  // { name: "u", description: "few dfas", key: Math.random() },
-  // { name: "v", description: "feds wfas", key: Math.random() },
-  // { name: "w", description: "few dfas", key: Math.random() },
-  // { name: "x", description: "s ewfas", key: Math.random() },
-  // { name: "y", description: "fewd fas", key: Math.random() },
-  // { name: "z", description: "feds wfas", key: Math.random() },
-  // { name: "A", description: "few dfas", key: Math.random() },
-
+  // { name: "a", description: "fewfas", personID: Math.random(), key: Math.random() },
 ]
 
 
@@ -127,66 +76,71 @@ import url from "./config";
 
 
 
-
+//let socket = null;
 export default function ContextProvider(props) {
-
-
 
 
   const [peopleList, setPeopleList] = useState(list)
   const [snackBarHeight, setSnackBarHeight] = useState(0)
   const [snackMsg, setSnackMsg] = useState("Hihi")
 
-  const [token, setToken] = useState(null)
-  const [userName, setUserName] = useState("")
+  const [token, setToken] = useState(false)
 
-  // let socket = io(`http://192.168.0.100`, {
-  //   auth: {
-  //     userName: "aas",
-  //     token: "ffff"
-  //   }
-  // })
+  const userName = token ? jwtDecode(token).userName : ""
+
+  const [displayName, setDisplayName] = useState("")
+
+  const [socket, setSocket] = useState(null)
+
+  const [initialRouter, setInitialRouter] = useState("")
+
+  //const result = SyncStorage.get('token');
+
+
+
+  function sendMessage(toPerson, messages) {
+
+
+    socket.emit("sendMessage", toPerson, messages)
+  }
+
+
 
   useEffect(function () {
 
-    AsyncStorage.getItem("token").then(token => {
+    if (token) {
 
-      if (token) {
+      const socket = io(`${url}`, {
+        auth: {
+          userName: userName,
+          token: token
+        }
+      })
 
-        setToken(token)
-        setUserName(jwtDecode(token).userName)
-  
-      }
-      else {
-        const randomStr = String(Date.now()).slice(-3)
-        axios.post(`${url}/api/user/fetchtoken`, {
+      assignListenning({ socket, token, setPeopleList, userName })
 
-          userName: "user" + randomStr,
-
-        }).then(response => {
-          const token = response.headers["x-auth-token"]
-
-          setToken(token)
-          AsyncStorage.setItem("token", token)
-          setUserName(jwtDecode(token).userName)
       
-          
-        })
-      }
+      setSocket(socket)
+
+    }
+    if (!token && socket) {
+
+      //socket.disconnect()
+    }
 
 
-    })
 
-
-  }, [])
-
+  }, [token])
 
 
   return <Context.Provider value={{
 
-    token,setToken,
-    userName,setUserName,
+    url,
+    socket, setSocket,
 
+    sendMessage,
+    token, setToken,
+    userName,
 
     peopleList,
     setPeopleList,
@@ -200,9 +154,44 @@ export default function ContextProvider(props) {
     snackMsg,
     setSnackMsg,
 
+    initialRouter,
+    setInitialRouter,
+
   }}>
     {props.children}
   </Context.Provider>
 
 
 }
+
+
+function assignListenning({ socket, token, setPeopleList, userName }) {
+
+  socket.on("connect", function () {
+    console.log(`socket ${socket.id + " " + userName} is connected`)
+  })
+
+  socket.on("updateList", function (msg) {
+
+    axios.get(`${url}/api/user/fetchuserlist`, { headers: { "x-auth-token": token } }).then(response => {
+      setPeopleList(pre => { return response.data })
+    })
+  })
+
+
+  socket.on("receiveMessage", function (msg) {
+    console.log(msg)
+  })
+
+  socket.on("messageFeedback", function (...args) {
+
+    // console.log(args)
+
+  })
+
+  socket.on("disconnect", function (msg) {
+    //  console.log("socket " + userName + " is disconnected")
+
+  })
+}
+

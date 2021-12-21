@@ -76,7 +76,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
   // const { peopleList, setPeopleList, messageList, setMessages } = useContext(Context)
 
-  const { userName, sendMessage, socket } = useContext(Context)
+  const { userName, sendMessage } = useContext(Context)
 
 
   // const messages = messageList
@@ -122,31 +122,99 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
 
+
   const [overLayOn, setOverLayOn] = useState(false)
   const [uri, setUri] = useState()
 
 
   useEffect(function () {
 
-    socket.on("displayMessage", function (msg) {
-     // console.log(msg)
+    // setMessages([
+    //   {
+    //     _id: Math.random(),
+    //     text: `111拉克哇\n111拉克Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolor
+    //     e magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco lab
+    //     oris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+    //      nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`,
+    //     createdAt: Date.now() + 1000 * 60,
+    //     user: {
+    //       _id: Math.random(),
+    //       name: 'a',
+    //       avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
+    //     },
+    //   },
 
-      const msg_ = msg.map(item => {
-        const avatar_id =  item.user._id
-        item.from = item.user._id
-        item.user.avatar = () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(avatar_id, false)} />
-        item.user._id = Math.random()
-        return item
-      })
+    //   {
+    //     _id: Math.random(),
+    //     text: '111拉克哇ss',
+    //     createdAt: Date.now() + 1000 * 60,
+    //     user: {
+    //       _id: userName,
+    //       name: 'a',
+    //       avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
+    //     },
+    //   },
+    //   {
+    //     _id: Math.random(),
+    //     text: `111拉克sunt in culpa qui officia deserunt mollit anim id est laborum.`,
+    //     createdAt: Date.now() + 1000 * 60,
+    //     user: {
+    //       _id: Math.random(),
+    //       name: 'a',
+    //       avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
+    //     },
+    //   },
+    //   {
+    //     _id: Math.random(),
+    //     text: 'bbbb',
+    //     createdAt: Date.now() + 800 * 60,
+    //     user: {
+    //       _id: userName,
+    //       name: 'a',
+    //       avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
+    //     },
+    //   },
+
+    //   {
+    //     _id: Math.random(),
+    //     text: '',
+    //     createdAt: Date.now() + 1000 * 60,
+    //     user: {
+    //       _id: Math.random(),
+    //       name: 'e',
+    //       avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
+    //     },
+    //     image: 'https://picsum.photos/200/300',
+    //   },
+    //   {
+    //     _id: Math.random(),
+    //     text: '',
+    //     createdAt: Date.now() + 1000 * 60,
+    //     user: {
+    //       _id: "myjkjkself",
+    //       name: 'e',
+    //       avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
+    //     },
+    //     image: 'https://picsum.photos/500/300',
+    //   },
+    //   {
+    //     _id: Math.random(),
+    //     text: `111拉克哇\n111拉克Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolor
+    //     e magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco lab
+    //     oris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+    //      nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`,
+    //     createdAt: Date.now() + 1000 * 60,
+    //     user: {
+    //       _id: Math.random(),
+    //       name: 'a',
+    //       avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
+    //     },
+    //   },
+
+    // ])
 
 
-      setMessages(pre => { return [...pre, ...msg_] })
 
-    })
-
-    return function () {
-      socket.off("displayMessage")
-    }
 
   }, [])
 

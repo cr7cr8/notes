@@ -66,7 +66,7 @@ const { View, Text, ScrollView: ScrollV, Image, } = ReAnimated
 import base64 from 'react-native-base64';
 import { PanGestureHandler, ScrollView, FlatList, NativeViewGestureHandler, PinchGestureHandler } from 'react-native-gesture-handler';
 
-import { ListItem, Avatar, LinearProgress, Button } from 'react-native-elements'
+import { ListItem, Avatar, LinearProgress, Button, Overlay, Input } from 'react-native-elements'
 const { width, height } = Dimensions.get('screen');
 
 import { LinearGradient } from 'expo-linear-gradient';
@@ -83,41 +83,86 @@ import ViewTransformer from "react-native-easy-view-transformer";
 
 
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import SnackBar from "./SnackBar";
 
+import axios from "axios";
+import jwtDecode from 'jwt-decode';
+import { io } from "socket.io-client";
+import url from "./config";
+
+export default function App() { return (<ContextProvider><AppStarter /></ContextProvider>) }
+
+function AppStarter() {
+
+  const { token, setToken, initialRouter, setInitialRouter } = useContext(Context)
+
+  useEffect(function () {
+
+    if (!initialRouter) {
+
+
+      AsyncStorage.getItem("token").then(token => {
+
+        if (token) {
+          setToken(token)
+          setInitialRouter("Home")
+        }
+        else {
+          setInitialRouter("Reg")
+
+        }
+
+
+   
+      })
+
+
+    }
 
 
 
 
+  }, [initialRouter])
+
+  // useEffect(function () {
+
+  //   if (token) {
 
 
+  //     socket = io(`${url}`, {
+  //       auth: {
+  //         userName: userName,
+  //         token: token
+  //       }
+  //     })
 
-export default function App() {
-
-
-
-
-
-
-
-
-
-  return (
-    
-    <ContextProvider>
-    
-      <NavigationContainer>
-        <StackNavigator />
-      </NavigationContainer>
-      <SnackBar />
-    </ContextProvider>
+  //     assignListenning({ socket, token, setPeopleList })
 
 
-  )
+  //   }
 
+  // }, [token])
+  // return <><NavigationContainer><StackNavigator /></NavigationContainer><SnackBar /></>
+
+
+  if (initialRouter) {
+    return (
+      <>
+        <NavigationContainer>
+          <StackNavigator />
+        </NavigationContainer>
+        <SnackBar />
+      </>
+    )
+  }
+
+  return <></>
 
 
 }
+
+
 
 const styles = StyleSheet.create({
   container: {

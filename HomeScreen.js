@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, useContext } from 'react';
 import { createSharedElementStackNavigator } from 'react-navigation-shared-element';
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
 
-
+import * as FileSystem from 'expo-file-system';
 import {
   StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Pressable, TouchableHighlight, TouchableWithoutFeedback,
 
@@ -45,15 +45,26 @@ const { width, height } = Dimensions.get('screen');
 import { LinearGradient } from 'expo-linear-gradient';
 
 
-
+import url from "./config";
 import { SharedElement } from 'react-navigation-shared-element';
 import { Context } from "./ContextProvider";
+import axios from 'axios';
+
+
+function uniqByKeepFirst(a, key) {
+  let seen = new Set();
+  return a.filter(item => {
+    let k = key(item);
+    return seen.has(k) ? false : seen.add(k);
+  });
+}
+
 
 
 export function HomeScreen({ navigation, route }) {
 
 
-  const { peopleList, setPeopleList } = useContext(Context)
+  const { peopleList, setPeopleList, token, userName, initialRouter, setInitialRouter } = useContext(Context)
 
 
   const [mainEnabled, setMainEnabled] = useState(true)
@@ -76,12 +87,46 @@ export function HomeScreen({ navigation, route }) {
 
   const [refresh, setRefresh] = useState(true)
 
-  useEffect(function () { setRefresh(pre => !pre) }, [])
+  useEffect(function () {
+
+    // setRefresh(pre => !pre);
+
+    axios.get(`${url}/api/user/fetchuserlist`, { headers: { "x-auth-token": token } }).then(response => {
+
+      if (initialRouter === "Reg") {
+        let arr = response.data //.filter(item => { return item.name !== userName })
+        HomeScreen.sharedElements = null
+
+        setPeopleList(pre => {
+          return uniqByKeepFirst([...pre, ...arr], function (item) { return item.name })
+        })
+        route.params && route.params.item.localImage && FileSystem.deleteAsync(route.params.item.localImage, { idempotent: true })
+      }
+      else if (initialRouter === "Home") {
+
+        setPeopleList(pre => { return response.data })
+      }
+
+    })
+
+
+  }, [])
+
+  // if ((peopleList.length === 0) && Boolean(route.params) && Boolean(route.params.item)) {
+
+  //   const item = route.params.item
+  //   return (
+  //     <SharedElement id={item.name}  >
+  //       {item.hasAvatar
+  //         ? <Image source={{ uri: `${url}/api/image/avatar/${item.name}` }} resizeMode="cover" style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }} />
+  //         : <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+  //       }
 
 
 
-
-
+  //     </SharedElement>
+  //   )
+  // }
   return (
 
     <ScrollView
@@ -190,7 +235,7 @@ class SinglePanel extends React.Component {
 
     }
 
-
+    this.hasAvatar = this.props.item.hasAvatar
     this.name = this.props.item.name
     this.description = this.props.item.description
 
@@ -310,6 +355,9 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 }) {
 
+
+
+  const { token } = useContext(Context)
 
   const avatarString = multiavatar(item.name)
 
@@ -526,16 +574,19 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
     const from = panelIndex
     const to = panelIndex + Math.min((allPanelArr.current.length - (panelIndex + 1)), Math.max(-panelIndex, Math.round(transY.value / 80)))
 
-    if (from === to) { return setTimeout(() => { setPanEnabled(true) }, 0); }
+    // if (from === to) { return setTimeout(() => { setPanEnabled(true) }, 0); }
 
 
     allPanelArr.current = moveArr(allPanelArr.current, from, to)
     const newList = []
 
     allPanelArr.current.forEach((panel, index) => {
-      newList.push({ ...panel.props.item, name: panel.name, description: panel.description, key: Math.random() })
+      newList.push({ ...panel.props.item, name: panel.name, description: panel.description, key: Math.random(), hasAvatar: panel.hasAvatar })
     })
     allPanelArr.current = []
+
+    axios.post(`${url}/api/user/resortuserlist`, newList.map(item => item.name), { headers: { "x-auth-token": token } })
+
 
     setPeopleList(newList)
     //  setTimeout(() => { setPanEnabled(true) }, 0); // no need beackuse setPeopleList will  generate new panel painting
@@ -661,7 +712,7 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
 
-
+  //console.log(item.localImage)
 
 
   return (
@@ -680,8 +731,12 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
               color='#517fa4'
               size={60}
             />
-            <SvgUri style={{ position: "absolute", right: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
-
+            {item.hasAvatar
+              ? <Image source={{ uri: `${url}/api/image/avatar/${item.name}` }}
+                resizeMode="cover"
+                style={{ position: "absolute", right: 10, width: 60, height: 60, borderRadius: 1000 }} />
+              : <SvgUri style={{ position: "absolute", right: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+            }
             <View style={{ width: width / 3, position: "absolute", left: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Text style={{ fontSize: 20 }}>{item.name}</Text>
             </View>
@@ -720,7 +775,13 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
               {/* <Pressable onPress={function () { console.log("dddsdsd") }}> <View > */}
 
               <SharedElement id={item.name}  >
-                <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+                {item.hasAvatar
+                  ? <Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}` }} resizeMode="cover" style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }} />
+                  : <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+                }
+
+
+
               </SharedElement>
               <Text style={{ fontSize: 20 }}>{item.name}</Text>
 
@@ -738,7 +799,7 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
       </View>
-      <Overlay isVisible={!panEnabled} fullScreen={true} overlayStyle={{ opacity: 0.5, display: "flex", justifyContent: "center", alignItems: "center" }}  >
+      <Overlay isVisible={!panEnabled && allPanelArr.current.length > 7} fullScreen={true} overlayStyle={{ opacity: 0.5, display: "flex", justifyContent: "center", alignItems: "center" }}  >
         <LinearProgress color="primary" value={1} variant={"indeterminate"} />
         <Text>Processing...</Text>
       </Overlay>
@@ -752,7 +813,13 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
 
+HomeScreen.sharedElements = (route, otherRoute, showing) => {
 
+
+  return route.params && route.params.item && route.params.item.name && [
+    { id: route.params.item.name, animation: "move", resize: "auto", align: "left", }, // ...messageArr,   // turn back image transition off
+  ]
+};
 
 
 
