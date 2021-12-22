@@ -70,35 +70,22 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
   const item = route.params.item
+  //console.log(item)
+
+
+
+
+
+
   const avatarString = multiavatar(item.name)
   const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
 
-
-  // const { peopleList, setPeopleList, messageList, setMessages } = useContext(Context)
-
-  const { userName, sendMessage, socket } = useContext(Context)
-
-
-  // const messages = messageList
-  //   .filter(msg => { return msg.user.name === item.name })
-  //   .map(msg => {
-  //     // <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(msg.user.name, false)} />
-  //     return {
-  //       ...msg,
-  //       user: {
-  //         _id: Math.random(),
-  //         name: msg.user.name,
-  //         avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(msg.user.name, false)} />
-  //       }
-
-  //     }
-  //   })
+  const { userName, socket } = useContext(Context)
 
   const [messages, setMessages] = useState([])
 
   const inputRef = useRef()
   const [inputText, setInputText] = useState("")
-
 
   const expandWidth = useSharedValue(50)
   const sendBtnStyle = useAnimatedStyle(() => {
@@ -126,26 +113,72 @@ export function ChatScreen({ navigation, route, ...props }) {
   const [uri, setUri] = useState()
 
 
-  useEffect(function () {
+  useEffect(async function () {
 
-    socket.on("displayMessage", function (msg) {
-     // console.log(msg)
+    socket.on("displayMessage" + item.name, function (msg) {
+      // console.log(msg)
+      // const msg_ = msg.map(item => {
+      //   item.user.avatar = () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.sender, false)} />
+      //   item.user._id = item.user._id + "---" + Math.random()
+      //   return item
+      // })
 
-      const msg_ = msg.map(item => {
-        const avatar_id =  item.user._id
-        item.from = item.user._id
-        item.user.avatar = () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(avatar_id, false)} />
-        item.user._id = Math.random()
-        return item
+      setMessages(pre => {
+
+        const msgArr_ = uniqByKeepFirst([...pre, ...msg], function (msg) { return msg._id })
+        return [...msgArr_]
+
+        //  return [...pre, ...msg_,]
+
+
       })
-
-
-      setMessages(pre => { return [...pre, ...msg_] })
 
     })
 
+    const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
+    const info = await FileSystem.getInfoAsync(folderUri)
+
+    // console.log(info)
+    if (!info.exists) {
+      await FileSystem.makeDirectoryAsync(folderUri);
+    }
+
+
+
+    FileSystem.readDirectoryAsync(folderUri).then(data => {
+      const promiseArr = []
+      //      console.log(data.length)
+
+      data.forEach(msgFile => {
+        //  console.log(msgFile)
+
+        promiseArr.push(FileSystem.readAsStringAsync(folderUri + msgFile).then(content => {
+          const msg = JSON.parse(content)
+          const isLocal = Boolean(msg.isLocal)
+
+
+          msg.user.avatar = () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(isLocal ? userName : item.name, false)} />
+          msg.user._id = isLocal ? userName : msg.user._id + "---" + Math.random()
+          //  setMessages(pre => { return [...pre, msg,] })
+          return msg
+        })
+        )
+      })
+      Promise.all(promiseArr).then(msgArr => {
+
+        //   console.log(msgArr)
+
+        const msgArr_ = uniqByKeepFirst([...msgArr, ...messages], function (msg) { return msg._id })
+
+        setMessages(pre => { return [...msgArr_] })
+      })
+
+    })
+
+
+
     return function () {
-      socket.off("displayMessage")
+      socket.off("displayMessage" + item.name)
     }
 
   }, [])
@@ -183,13 +216,34 @@ export function ChatScreen({ navigation, route, ...props }) {
 
       <GiftedChat
 
-        // loadEarlier={true}
+        listViewProps={{
+          onScroll: function (e) {
+            if (e.nativeEvent.contentOffset.y === 0) {
+              console.log(Date.now())
+            }
+          }
+        }}
+
+
+        renderUsernameOnMessage={false}
+        scrollToBottom={false}
+
+        //  loadEarlier={true}
+        infiniteScroll={true}
+        onLoadEarlier={function (a) {
+
+          console.log(Date.now())
+          //  alert(Date.now())
+        }}
+
         // isLoadingEarlier={true}
-        //  messages={[{ _id: 1, text: "11111", user: { _id: 1 } }, { _id: 2, text: "2222", user: { _id: 2 } }].reverse()}
+
+        renderAvatarOnTop={true}
+
         placeholder="enter..."
         messages={messages}
 
-        alignTop={true}
+        alignTop={false}
         inverted={false}
 
         // renderMessageText={function (props) {
@@ -433,12 +487,38 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
         onSend={function (messages) {
+
+          const messages_ = messages.map(msg => { return { ...msg, createdTime: Date.parse(msg.createdAt), sender: userName } })
+          if (userName !== item.name) { socket.emit("sendMessage", { sender: userName, toPerson: item.name, msgArr: messages_ }) }
+
           setMessages(previousMessages => {
 
-
-            sendMessage(item.name, messages)
-            return GiftedChat.prepend(previousMessages, messages.map(msg => ({ ...msg, pending: true, sent: true, received: true })))
+            return GiftedChat.prepend(previousMessages, messages_.map(msg => ({ ...msg, pending: true, sent: true, received: true })))
           })
+
+
+          const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
+
+          FileSystem.getInfoAsync(folderUri)
+            .then(info => {
+              if (!info.exists) {
+                return FileSystem.makeDirectoryAsync(folderUri)
+
+              }
+              else {
+                return info
+              }
+            })
+            .then(() => {
+              //   FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg))
+              messages_.forEach(msg => {
+                const fileUri = folderUri + item.name + "---" + msg.createdTime
+                FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...msg, isLocal: true }))
+
+              })
+            })
+
+
 
         }}
 
@@ -456,7 +536,7 @@ export function ChatScreen({ navigation, route, ...props }) {
           const imageMessageArr = messages.filter(message => Boolean(message.image)).map(item => { return { ...item, user: { ...item.user, avatar: "" } } })
 
           return (
-            <ImageBlock imageMessageArr={imageMessageArr} currentMessage={currentMessage} navigation={navigation} route={route} setMessages={setMessages} />
+            <ImageBlock userName={userName} imageMessageArr={imageMessageArr} currentMessage={currentMessage} navigation={navigation} route={route} setMessages={setMessages} />
           )
         }}
 
@@ -710,7 +790,7 @@ function BubbleBlock({ bgColor, setMessages, ...props }) {
 
 }
 
-function ImageBlock({ navigation, route, currentMessage, imageMessageArr, setMessages, ...props }) {
+function ImageBlock({ navigation, route, currentMessage, imageMessageArr, userName, setMessages, ...props }) {
 
   const viewRef = useAnimatedRef()
   const [visible, setVisible] = useState(false)
@@ -754,7 +834,7 @@ function ImageBlock({ navigation, route, currentMessage, imageMessageArr, setMes
 
     </TouchableOpacity>
 
-    <OverlayCompo visible={visible} setVisible={setVisible} top={top} left={left} currentMessage={currentMessage} isText={false} isImage={true} setMessages={setMessages} />
+    <OverlayCompo userName={userName} visible={visible} setVisible={setVisible} top={top} left={left} currentMessage={currentMessage} isText={false} isImage={true} setMessages={setMessages} />
 
   </>
 }
@@ -762,7 +842,7 @@ function ImageBlock({ navigation, route, currentMessage, imageMessageArr, setMes
 
 
 
-function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, isImage, setMessages, ...props }) {
+function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, isImage, setMessages, userName, ...props }) {
 
 
   const { setSnackBarHeight, setSnackMsg } = useContext(Context)
@@ -795,10 +875,10 @@ function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, 
                 setSnackBarHeight(60)
               }, 0);
             }
-            else if ((isImage) && (currentMessage.user._id !== "myself")) {
+            else if ((isImage) && (currentMessage.user._id !== userName)) {
               downloadFromUri(currentMessage.image, setSnackMsg, setSnackBarHeight)
             }
-            else if ((isImage) && (currentMessage.user._id === "myself")) {
+            else if ((isImage) && (currentMessage.user._id === userName)) {
               downloadFromLocal(currentMessage.image, setSnackMsg, setSnackBarHeight)
             }
             setVisible(false)
@@ -887,6 +967,15 @@ async function downloadFromLocal(uri, setSnackMsg, setSnackBarHeight) {
 
 }
 
+
+
+function uniqByKeepFirst(a, key) {
+  let seen = new Set();
+  return a.filter(item => {
+    let k = key(item);
+    return seen.has(k) ? false : seen.add(k);
+  });
+}
 
 
 

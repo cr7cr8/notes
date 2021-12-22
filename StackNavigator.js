@@ -12,7 +12,7 @@ import { RegScreen } from "./RegScreen";
 import { HomeScreen } from "./HomeScreen";
 import { ChatScreen } from "./ChatScreen";
 import { ImageScreen } from "./ImageScreen";
-
+import * as FileSystem from 'expo-file-system';
 import { Context } from "./ContextProvider"
 
 const Stack = createSharedElementStackNavigator();
@@ -97,10 +97,10 @@ export default function StackNavigator() {
             return {
               headerShown: true,
               gestureEnabled: false,
-              
+
               header: (props) => <Header {...props} />,
 
-              headerLeft: ()=> null,
+              headerLeft: () => null,
               headerRight: () => (<Button onPress={() => {
 
                 AsyncStorage.removeItem("token").then(function () {
@@ -136,6 +136,13 @@ export default function StackNavigator() {
               //   headerBackAccessibilityLabel="ee",
               gestureEnabled: false,
               headerTransparent: true,
+              headerRight: () => (<Button onPress={async function () {
+
+               await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/" , { idempotent: true })
+
+               FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
+
+              }} title="folder" />),
             }
           }}
         />

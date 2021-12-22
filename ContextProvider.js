@@ -73,7 +73,8 @@ const list = [
 
 import url from "./config";
 
-
+const { compareAsc, format, formatDistanceToNow, } = require("date-fns");
+const { zhCN } = require('date-fns/locale');
 
 
 //let socket = null;
@@ -98,11 +99,6 @@ export default function ContextProvider(props) {
 
 
 
-  function sendMessage(toPerson, messages) {
-
-
-    socket.emit("sendMessage", toPerson, messages)
-  }
 
 
 
@@ -118,8 +114,6 @@ export default function ContextProvider(props) {
       })
 
       assignListenning({ socket, token, setPeopleList, userName })
-
-      
       setSocket(socket)
 
     }
@@ -132,13 +126,27 @@ export default function ContextProvider(props) {
 
   }, [token])
 
+  useEffect(async function () {
+
+    const info = await FileSystem.getInfoAsync(FileSystem.documentDirectory + "MessageFolder/")
+    //  console.log(userName, info)
+
+     if (!info.exists) {
+       FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
+     }
+
+    //FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
+ 
+
+  }, [])
+
 
   return <Context.Provider value={{
 
     url,
     socket, setSocket,
 
-    sendMessage,
+
     token, setToken,
     userName,
 
@@ -178,9 +186,57 @@ function assignListenning({ socket, token, setPeopleList, userName }) {
     })
   })
 
+  socket.on("writeMessage", function (sender, msgArr) {
+
+    // const { sender, createdTime } = { ...msg[0] }
+
+    const folderUri = FileSystem.documentDirectory + "MessageFolder/" + sender + "/"
+
+    msgArr.forEach(msg => {
+
+      //console.log(msg.createdTime,"\n",Date.now())
+      const fileUri = FileSystem.documentDirectory + "MessageFolder/" + sender + "/" + sender + "---" + msg.createdTime
+
+
+      FileSystem.getInfoAsync(folderUri)
+        .then(info => {
+          if (!info.exists) {
+            return FileSystem.makeDirectoryAsync(folderUri)
+
+          }
+          else {
+            return info
+          }
+        })
+        .then(() => {
+          FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg))
+        })
+
+    });
+
+
+
+
+    // const content = await FileSystem.readAsStringAsync(fileUri)
+    // console.log(content)
+
+    //console.log(sender, createdTime)
+
+    // const fileUri = FileSystem.documentDirectory + "MessageFolder/" + sender + "---" + createdTime
+
+
+    // await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg[0]))
+    // const content = await FileSystem.readAsStringAsync(fileUri)
+    // console.log(content)
+
+
+
+
+  })
+
 
   socket.on("receiveMessage", function (msg) {
-    console.log(msg)
+    // console.log(msg)
   })
 
   socket.on("messageFeedback", function (...args) {
