@@ -161,9 +161,23 @@ export function RegScreen({ navigation, route, ...props }) {
                 //  setAvatarUri(`${url}/api/image/avatar/${value}`)
 
                 AsyncStorage.setItem("token", response.headers["x-auth-token"])
-             
+
                 setPeopleList([{ name: value, hasAvatar: true, key: Math.random(), localImage: avatarUri }])
-                navigation.navigate('Home', { item: { name: value, hasAavatar: true, localImage: avatarUri } })
+
+
+                // navigation.navigate('Home', { item: { name: value, hasAavatar: true, localImage: avatarUri } })
+                navigation.reset({
+                  index: 0,
+                  routes: [
+                    {
+                      name: 'Home',
+                      params: { item: { name: value, hasAavatar: false } },
+                    },
+                  ],
+                })
+
+
+
               })
               : regUser(value).then((response) => {
                 setForceDisable(false)
@@ -171,9 +185,21 @@ export function RegScreen({ navigation, route, ...props }) {
                 //  setInitialRouter("Home")
 
                 AsyncStorage.setItem("token", response.headers["x-auth-token"])
-               
+
                 setPeopleList([{ name: value, hasAvatar: false, key: Math.random() }])
-                navigation.navigate('Home', { item: { name: value, hasAavatar: false } })
+
+                //navigation.navigate('Home', { item: { name: value, hasAavatar: false } })
+                navigation.reset({
+                  index: 0,
+                  routes: [
+                    {
+                      name: 'Home',
+                      params: { item: { name: value, hasAavatar: false } },
+                    },
+                  ],
+                })
+
+
 
               })
 

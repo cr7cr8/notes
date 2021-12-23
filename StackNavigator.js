@@ -100,7 +100,7 @@ export default function StackNavigator() {
 
               header: (props) => <Header {...props} />,
 
-              headerLeft: () => null,
+            //  headerLeft: () => null,
               headerRight: () => (<Button onPress={() => {
 
                 AsyncStorage.removeItem("token").then(function () {

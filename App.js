@@ -159,7 +159,8 @@ function AppStarter() {
         socket.emit("helloFromClient", new Date().toISOString())
         return BackgroundFetch.BackgroundFetchResult.NewData;
       });
-      registerBackgroundFetchAsync()
+      setTimeout(registerBackgroundFetchAsync,1000)  
+      //registerBackgroundFetchAsync()
     }
 
   }, [socket])
@@ -194,7 +195,7 @@ function AppStarter() {
   //   checkStatusAsync()
 
   // })
-
+ 
 
   useEffect(function () {
 
@@ -215,7 +216,7 @@ function AppStarter() {
             setNotiToken(notiToken)
             AsyncStorage.setItem("notiToken", notiToken)
             console.log("notiToken", notiToken)
-
+ 
           })
           //   .catch(err => console.log(err));
         }
@@ -259,7 +260,7 @@ function AppStarter() {
 
 }
 
-
+   
 
 
 async function registerForPushNotificationsAsync() {

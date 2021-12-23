@@ -774,7 +774,7 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
               {/* <Pressable onPress={function () { console.log("dddsdsd") }}> <View > */}
               <Badge
                 status="error"
-                containerStyle={{ position: 'absolute', top: 10, left: 60, transform:[{scale:1.8}], zIndex:100 }}
+                containerStyle={{ position: 'absolute', top: 10, left: 60, transform:[{scale:0}], zIndex:100 }}
               />
               <SharedElement id={item.name}  >
                 {item.hasAvatar

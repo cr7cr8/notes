@@ -121,11 +121,28 @@ export function ChatScreen({ navigation, route, ...props }) {
 
   useEffect(function () {
 
-    socket.on("displayMessage" + item.name, function (msg) {
+    socket.on("displayMessage" + item.name, function (msgArr) {
+
+      let msgArr_ = msgArr.map(msg => {
+     
+        return {
+          ...msg,
+          user: {
+            _id: msg.sender + "---" + Math.random(),
+            avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
+          }
+        }
+
+      })
+
       setMessages(pre => {
-        const msgArr_ = uniqByKeepFirst([...pre, ...msg], function (msg) { return msg._id })
+        msgArr_ = uniqByKeepFirst([...pre, ...msgArr_], function (msg) { return msg._id })
         return [...msgArr_]
       })
+ 
+      setTimeout(() => {
+        scrollRef.current.scrollToEnd()
+      }, 0);
     })
 
 
@@ -153,7 +170,7 @@ export function ChatScreen({ navigation, route, ...props }) {
     FileSystem.readDirectoryAsync(folderUri).then(data => {
       const promiseArr = []
       //      console.log(data.length)
-
+  
       data.forEach(msgFile => {
         //  console.log(msgFile)
 
@@ -190,7 +207,13 @@ export function ChatScreen({ navigation, route, ...props }) {
         let preMessagesArr = [msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9, msg10]
         preMessagesArr = preMessagesArr.filter(function (item) { return Boolean(item) })
 
-        if (preMessagesArr.length > 0) { setMessages(pre => { return [...preMessagesArr, ...pre] }) }
+        if (preMessagesArr.length > 0) {
+          
+          const msgArr_ = uniqByKeepFirst([...preMessagesArr,  ...messages], function (msg) { return msg._id })
+          setMessages(pre => { return msgArr_ })
+        //  setMessages(pre => { return [...preMessagesArr, ...pre] })
+        
+        }
         if (previousMessages.current.length === 0) { setShouldDisplayNotice(false) }
 
         //setMessages(pre => { return [previousMessages.current.pop()] })
@@ -283,7 +306,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         // isLoadingEarlier={true}
 
-        renderAvatarOnTop={true}
+        renderAvatarOnTop={false}
 
         placeholder="enter..."
         messages={messages}
@@ -540,7 +563,7 @@ export function ChatScreen({ navigation, route, ...props }) {
           setMessages(previousMessages => {
             return GiftedChat.prepend(previousMessages, messages_.map(msg => ({ ...msg, pending: true, sent: true, received: true })))
           })
-        
+
 
           const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
 
@@ -563,9 +586,9 @@ export function ChatScreen({ navigation, route, ...props }) {
               })
             })
 
-            setTimeout(() => {
-              scrollRef.current.scrollToEnd()
-            }, 0);
+          setTimeout(() => {
+            scrollRef.current.scrollToEnd()
+          }, 0);
 
         }}
 
@@ -948,8 +971,8 @@ async function takePhoto(setMessages, userName, item, scrollRef) {
     setTimeout(() => {
       scrollRef.current.scrollToEnd()
     }, 100);
-    
-    
+
+
     // todo: send image to server
 
 
