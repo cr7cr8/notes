@@ -21,7 +21,7 @@ const Stack = createSharedElementStackNavigator();
 export default function StackNavigator() {
 
 
-  const { token, setToken, userName, initialRouter } = useContext(Context)
+  const { token, setToken, notiToken, setNotiToken, userName, initialRouter } = useContext(Context)
 
 
   const screenOptions = function ({ navigation, route }) {
@@ -104,8 +104,10 @@ export default function StackNavigator() {
               headerRight: () => (<Button onPress={() => {
 
                 AsyncStorage.removeItem("token").then(function () {
-
                   setToken(null)
+                })
+                AsyncStorage.removeItem("notiToken").then(function () {
+                  setNotiToken(null)
                 })
 
               }} title={userName} />), // color="#fff" 
@@ -138,9 +140,12 @@ export default function StackNavigator() {
               headerTransparent: true,
               headerRight: () => (<Button onPress={async function () {
 
-               await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/" , { idempotent: true })
+                await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
+                await FileSystem.deleteAsync(FileSystem.documentDirectory + "ImagePicker/", { idempotent: true })
 
-               FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
+
+                FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
+
 
               }} title="folder" />),
             }

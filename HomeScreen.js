@@ -39,7 +39,7 @@ import multiavatar from '@multiavatar/multiavatar';
 import base64 from 'react-native-base64';
 import { PanGestureHandler, ScrollView, FlatList, NativeViewGestureHandler } from 'react-native-gesture-handler';
 
-import { ListItem, Avatar, LinearProgress, Button, Icon, Overlay } from 'react-native-elements'
+import { ListItem, Avatar, LinearProgress, Button, Icon, Overlay, Badge } from 'react-native-elements'
 const { width, height } = Dimensions.get('screen');
 
 import { LinearGradient } from 'expo-linear-gradient';
@@ -103,7 +103,6 @@ export function HomeScreen({ navigation, route }) {
         route.params && route.params.item.localImage && FileSystem.deleteAsync(route.params.item.localImage, { idempotent: true })
       }
       else if (initialRouter === "Home") {
-
         setPeopleList(pre => { return response.data })
       }
 
@@ -773,7 +772,10 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
             <View style={[coverPanelStyle]}   >
               {/* <Pressable onPress={function () { console.log("dddsdsd") }}> <View > */}
-
+              <Badge
+                status="error"
+                containerStyle={{ position: 'absolute', top: 10, left: 60, transform:[{scale:1.8}], zIndex:100 }}
+              />
               <SharedElement id={item.name}  >
                 {item.hasAvatar
                   ? <Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}` }} resizeMode="cover" style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }} />

@@ -79,7 +79,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export function RegScreen({ navigation, route, ...props }) {
 
 
-  const { setInitialRouter, setToken, setPeopleList } = useContext(Context)
+  const { setInitialRouter, setToken, notiToken, setPeopleList, socket } = useContext(Context)
   const reg = /^[a-zA-Z\u4e00-\u9fa5][a-zA-Z_0-9\u4e00-\u9fa5]{2,14}$/g;
 
   const inputRef = useRef(null)
@@ -161,6 +161,7 @@ export function RegScreen({ navigation, route, ...props }) {
                 //  setAvatarUri(`${url}/api/image/avatar/${value}`)
 
                 AsyncStorage.setItem("token", response.headers["x-auth-token"])
+             
                 setPeopleList([{ name: value, hasAvatar: true, key: Math.random(), localImage: avatarUri }])
                 navigation.navigate('Home', { item: { name: value, hasAavatar: true, localImage: avatarUri } })
               })
@@ -170,6 +171,7 @@ export function RegScreen({ navigation, route, ...props }) {
                 //  setInitialRouter("Home")
 
                 AsyncStorage.setItem("token", response.headers["x-auth-token"])
+               
                 setPeopleList([{ name: value, hasAvatar: false, key: Math.random() }])
                 navigation.navigate('Home', { item: { name: value, hasAavatar: false } })
 

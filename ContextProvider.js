@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect, useContext, useCallback, createCont
 
 import { createSharedElementStackNavigator } from 'react-navigation-shared-element';
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
+import Constants from 'expo-constants';
 
-
-import { StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Keyboard, Pressable, Vibration } from 'react-native';
+import { StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Keyboard, Pressable, Vibration, AppState } from 'react-native';
 
 import ReAnimated, {
   useAnimatedStyle, useSharedValue, useDerivedValue,
@@ -86,6 +86,7 @@ export default function ContextProvider(props) {
   const [snackMsg, setSnackMsg] = useState("Hihi")
 
   const [token, setToken] = useState(false)
+  const [notiToken, setNotiToken] = useState(false)
 
   const userName = token ? jwtDecode(token).userName : ""
 
@@ -95,6 +96,7 @@ export default function ContextProvider(props) {
 
   const [initialRouter, setInitialRouter] = useState("")
 
+  const appState = useRef(AppState.currentState);
   //const result = SyncStorage.get('token');
 
 
@@ -131,12 +133,12 @@ export default function ContextProvider(props) {
     const info = await FileSystem.getInfoAsync(FileSystem.documentDirectory + "MessageFolder/")
     //  console.log(userName, info)
 
-     if (!info.exists) {
-       FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
-     }
+    if (!info.exists) {
+      FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
+    }
 
     //FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
- 
+
 
   }, [])
 
@@ -145,9 +147,10 @@ export default function ContextProvider(props) {
 
     url,
     socket, setSocket,
-
+    appState,
 
     token, setToken,
+    notiToken, setNotiToken,
     userName,
 
     peopleList,
@@ -234,16 +237,12 @@ function assignListenning({ socket, token, setPeopleList, userName }) {
 
   })
 
-
-  socket.on("receiveMessage", function (msg) {
-    // console.log(msg)
+  socket.on("helloFromServer", function (data) {
+    console.log("hello on client", data)
   })
 
-  socket.on("messageFeedback", function (...args) {
 
-    // console.log(args)
 
-  })
 
   socket.on("disconnect", function (msg) {
     //  console.log("socket " + userName + " is disconnected")

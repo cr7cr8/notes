@@ -64,7 +64,7 @@ import SnackBar, { SnackContext } from "./SnackBar";
 
 import jwtDecode from 'jwt-decode';
 
-import url, { hexToRgbA, hexify, uniqByKeepFirst } from "./config";
+import url from "./config";
 
 export function ChatScreen({ navigation, route, ...props }) {
 
@@ -80,14 +80,9 @@ export function ChatScreen({ navigation, route, ...props }) {
   const avatarString = multiavatar(item.name)
   const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
 
-  const { userName, socket, setSnackBarHeight, setSnackMsg } = useContext(Context)
-  const [shouldDisplayNotice, setShouldDisplayNotice] = useState(true)
+  const { userName, socket } = useContext(Context)
 
   const [messages, setMessages] = useState([])
-
-  const previousMessages = useRef([])
-
-  const scrollRef = useRef()
 
   const inputRef = useRef()
   const [inputText, setInputText] = useState("")
@@ -128,7 +123,7 @@ export function ChatScreen({ navigation, route, ...props }) {
       })
     })
 
-
+    
     return function () {
       socket.off("displayMessage" + item.name)
     }
@@ -171,29 +166,11 @@ export function ChatScreen({ navigation, route, ...props }) {
       })
       Promise.all(promiseArr).then(msgArr => {
 
-        //  console.log(msgArr)
+        //   console.log(msgArr)
 
-        previousMessages.current = uniqByKeepFirst([...msgArr, ...messages], function (msg) { return msg._id })
+        const msgArr_ = uniqByKeepFirst([...msgArr, ...messages], function (msg) { return msg._id })
 
-
-        const msg10 = previousMessages.current.pop()
-        const msg9 = previousMessages.current.pop()
-        const msg8 = previousMessages.current.pop()
-        const msg7 = previousMessages.current.pop()
-        const msg6 = previousMessages.current.pop()
-        const msg5 = previousMessages.current.pop()
-        const msg4 = previousMessages.current.pop()
-        const msg3 = previousMessages.current.pop()
-        const msg2 = previousMessages.current.pop()
-        const msg1 = previousMessages.current.pop()
-
-        let preMessagesArr = [msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9, msg10]
-        preMessagesArr = preMessagesArr.filter(function (item) { return Boolean(item) })
-
-        if (preMessagesArr.length > 0) { setMessages(pre => { return [...preMessagesArr, ...pre] }) }
-        if (previousMessages.current.length === 0) { setShouldDisplayNotice(false) }
-
-        //setMessages(pre => { return [previousMessages.current.pop()] })
+        setMessages(pre => { return [...msgArr_] })
       })
 
     })
@@ -238,33 +215,9 @@ export function ChatScreen({ navigation, route, ...props }) {
       <GiftedChat
 
         listViewProps={{
-          ref: (element) => { scrollRef.current = element },
           onScroll: function (e) {
             if (e.nativeEvent.contentOffset.y === 0) {
-
-              if ((previousMessages.current.length === 0) && (shouldDisplayNotice)) {
-
-                setShouldDisplayNotice(false)
-                setSnackMsg("All messages are displayed")
-                setSnackBarHeight(60)
-              }
-              else {
-                const msg5 = previousMessages.current.pop()
-                const msg4 = previousMessages.current.pop()
-                const msg3 = previousMessages.current.pop()
-                const msg2 = previousMessages.current.pop()
-                const msg1 = previousMessages.current.pop()
-
-                const preMessagesArr = [msg1, msg2, msg3, msg4, msg5].filter(function (item) { return Boolean(item) })
-
-                if (preMessagesArr.length > 0) { setMessages(pre => { return [...preMessagesArr, ...pre] }) }
-
-              }
-
-
-
-
-
+              console.log(Date.now())
             }
           }
         }}
@@ -377,7 +330,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
             <ScaleView>
 
-              <BubbleBlock {...props} bgColor={bgColor} item={item} setMessages={setMessages} />
+              <BubbleBlock {...props} bgColor={bgColor} setMessages={setMessages} />
 
             </ScaleView>
 
@@ -488,7 +441,7 @@ export function ChatScreen({ navigation, route, ...props }) {
               }>
 
                 <Icon
-                  onPress={function () { pickImage(setMessages, userName, item, scrollRef) }}
+                  onPress={function () { pickImage(setMessages, userName) }}
                   name="image-outline"
                   type='ionicon'
                   color='#517fa4'
@@ -497,7 +450,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
                 <Icon
-                  onPress={function () { takePhoto(setMessages, userName, item, scrollRef) }}
+                  onPress={function () { takePhoto(setMessages, userName) }}
                   name="camera-outline"
                   type='ionicon'
                   color='#517fa4'
@@ -531,16 +484,16 @@ export function ChatScreen({ navigation, route, ...props }) {
         }}
 
 
-
         onSend={function (messages) {
 
           const messages_ = messages.map(msg => { return { ...msg, createdTime: Date.parse(msg.createdAt), sender: userName } })
           if (userName !== item.name) { socket.emit("sendMessage", { sender: userName, toPerson: item.name, msgArr: messages_ }) }
 
           setMessages(previousMessages => {
+
             return GiftedChat.prepend(previousMessages, messages_.map(msg => ({ ...msg, pending: true, sent: true, received: true })))
           })
-        
+
 
           const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
 
@@ -563,9 +516,7 @@ export function ChatScreen({ navigation, route, ...props }) {
               })
             })
 
-            setTimeout(() => {
-              scrollRef.current.scrollToEnd()
-            }, 0);
+
 
         }}
 
@@ -583,7 +534,7 @@ export function ChatScreen({ navigation, route, ...props }) {
           const imageMessageArr = messages.filter(message => Boolean(message.image)).map(item => { return { ...item, user: { ...item.user, avatar: "" } } })
 
           return (
-            <ImageBlock item={item} userName={userName} imageMessageArr={imageMessageArr} currentMessage={currentMessage} navigation={navigation} route={route} setMessages={setMessages} />
+            <ImageBlock userName={userName} imageMessageArr={imageMessageArr} currentMessage={currentMessage} navigation={navigation} route={route} setMessages={setMessages} />
           )
         }}
 
@@ -670,12 +621,110 @@ function ScaleView(props) {
   )
 }
 
+function hexToRgbA(hex) {
+  var c;
+  if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+    c = hex.substring(1).split('');
+    if (c.length == 3) {
+      c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+    }
+    c = '0x' + c.join('');
+    return 'rgba(' + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',') + ',0.2)';
+  }
+  throw new Error('Bad Hex');
+}
+
+function hexify(color) {
+  var values = color
+    .replace(/rgba?\(/, '')
+    .replace(/\)/, '')
+    .replace(/[\s+]/g, '')
+    .split(',');
+  var a = parseFloat(values[3] || 1),
+    r = Math.floor(a * parseInt(values[0]) + (1 - a) * 255),
+    g = Math.floor(a * parseInt(values[1]) + (1 - a) * 255),
+    b = Math.floor(a * parseInt(values[2]) + (1 - a) * 255);
+  return "#" +
+    ("0" + r.toString(16)).slice(-2) +
+    ("0" + g.toString(16)).slice(-2) +
+    ("0" + b.toString(16)).slice(-2);
+}
+
+async function pickImage(setMessages, userName) {
+  let result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    // aspect: [1, 1],
+    quality: 1,
+    base64: false,
+  });
+
+
+
+  if (!result.cancelled) {
+    result.uri && setMessages(pre => {
+      return [...pre, {
+        _id: Math.random(),
+        text: '',
+        createdAt: Date.now(),
+        user: {
+          _id: userName,
+          //  name: 'React Native',
+          //  avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
+        },
+        image: result.uri     //"data:image/png;base64," + result.base64,
+
+      },
+      ]
+
+    })
+
+  }
+};
+
+async function takePhoto(setMessages, userName) {
+  let result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    //  aspect: [1, 1],
+    quality: 1,
+    base64: false,
+  });
+
+
+
+  if (!result.cancelled) {
+
+
+    const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
+    if (!granted) { return }
+    else {
+
+      result.uri && setMessages(pre => {
+        return [...pre, {
+          _id: Math.random(),
+          text: '',
+          createdAt: Date.now(),
+          user: {
+            _id: userName,
+            //name: 'React Native',
+            //avatar: () => (<SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />),//'https://placeimg.com/140/140/any',
+          },
+          image: result.uri // "data:image/png;base64," + result.base64,
+
+        },
+        ]
+
+      })
+    }
+  }
+
+}
 
 
 
 
-
-function BubbleBlock({ item, bgColor, setMessages, ...props }) {
+function BubbleBlock({ bgColor, setMessages, ...props }) {
 
   const viewRef = useAnimatedRef()
   const [visible, setVisible] = useState(false)
@@ -732,21 +781,14 @@ function BubbleBlock({ item, bgColor, setMessages, ...props }) {
       </View>
 
 
-      <OverlayCompo
-        item={item}
-        visible={visible} setVisible={setVisible}
-        top={top} left={left}
-        currentMessage={currentMessage}
-        setMessages={setMessages}
-        isText={true} isImage={false}
-      />
+      <OverlayCompo visible={visible} setVisible={setVisible} top={top} left={left} currentMessage={currentMessage} isText={true} isImage={false} setMessages={setMessages} />
 
     </>
   )
 
 }
 
-function ImageBlock({ scrollRef, item, navigation, route, currentMessage, imageMessageArr, userName, setMessages, ...props }) {
+function ImageBlock({ navigation, route, currentMessage, imageMessageArr, userName, setMessages, ...props }) {
 
   const viewRef = useAnimatedRef()
   const [visible, setVisible] = useState(false)
@@ -790,19 +832,15 @@ function ImageBlock({ scrollRef, item, navigation, route, currentMessage, imageM
 
     </TouchableOpacity>
 
-    <OverlayCompo
-      item={item} userName={userName}
-      visible={visible} setVisible={setVisible}
-      top={top} left={left}
-      currentMessage={currentMessage}
-      setMessages={setMessages}
-      isText={false} isImage={true}
-    />
+    <OverlayCompo userName={userName} visible={visible} setVisible={setVisible} top={top} left={left} currentMessage={currentMessage} isText={false} isImage={true} setMessages={setMessages} />
 
   </>
 }
 
-function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, isImage, setMessages, userName, item, ...props }) {
+
+
+
+function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, isImage, setMessages, userName, ...props }) {
 
 
   const { setSnackBarHeight, setSnackMsg } = useContext(Context)
@@ -853,19 +891,11 @@ function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, 
 
             if (isText) {
 
-              setMessages(messages => { return messages.filter(msg => { return msg._id !== currentMessage._id }) })
-              const fileUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/" + item.name + "---" + currentMessage.createdTime
-              FileSystem.deleteAsync(fileUri, { idempotent: true })
-
+              setMessages(messages => {
+                return messages.filter(msg => { return msg._id !== currentMessage._id })
+              })
             }
-            else if (isImage) {
-              // console.log(currentMessage)
-              setMessages(messages => { return messages.filter(msg => { return msg._id !== currentMessage._id }) })
-              const fileUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/" + item.name + "---" + currentMessage.createdTime
-              FileSystem.deleteAsync(fileUri, { idempotent: true })
 
-              currentMessage.isLocal && FileSystem.deleteAsync(currentMessage.image, { idempotent: true })
-            }
 
           }}
         />
@@ -878,86 +908,6 @@ function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, 
 
 }
 
-
-
-async function pickImage(setMessages, userName, item, scrollRef) {
-  let result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: true,
-    // aspect: [1, 1],
-    quality: 1,
-    base64: false,
-  });
-
-
-
-  if ((!result.cancelled) && (result.uri)) {
-    const time = Date.now()
-
-    const imageMsg = {
-      _id: Math.random(),
-      text: '',
-      createdAt: time,
-      createdTime: time,
-
-      user: { _id: userName },
-      image: result.uri     //"data:image/png;base64," + result.base64,
-    }
-
-    setMessages(pre => { return [...pre, { ...imageMsg, isLocal: true }] })
-    const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
-    const fileUri = folderUri + item.name + "---" + imageMsg.createdTime
-    FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...imageMsg, isLocal: true }))
-    setTimeout(() => {
-      scrollRef.current.scrollToEnd()
-    }, 100);
-    // todo: send image to server
-
-
-  }
-};
-
-async function takePhoto(setMessages, userName, item, scrollRef) {
-  let result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsEditing: true,
-    //  aspect: [1, 1],
-    quality: 1,
-    base64: false,
-  });
-
-
-
-  if ((!result.cancelled) && (result.uri)) {
-    const time = Date.now()
-
-    const imageMsg = {
-      _id: Math.random(),
-      text: '',
-      createdAt: time,
-      createdTime: time,
-
-      user: { _id: userName },
-      image: result.uri     //"data:image/png;base64," + result.base64,
-    }
-
-    setMessages(pre => { return [...pre, { ...imageMsg, isLocal: true }] })
-    const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
-    const fileUri = folderUri + item.name + "---" + imageMsg.createdTime
-    FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...imageMsg, isLocal: true }))
-    setTimeout(() => {
-      scrollRef.current.scrollToEnd()
-    }, 100);
-    
-    
-    // todo: send image to server
-
-
-  }
-
-
-
-}
 
 
 async function downloadFromUri(uri, setSnackMsg, setSnackBarHeight) {
@@ -991,6 +941,8 @@ async function downloadFromUri(uri, setSnackMsg, setSnackBarHeight) {
 
 }
 
+
+
 async function downloadFromLocal(uri, setSnackMsg, setSnackBarHeight) {
 
 
@@ -1015,6 +967,13 @@ async function downloadFromLocal(uri, setSnackMsg, setSnackBarHeight) {
 
 
 
+function uniqByKeepFirst(a, key) {
+  let seen = new Set();
+  return a.filter(item => {
+    let k = key(item);
+    return seen.has(k) ? false : seen.add(k);
+  });
+}
 
 
 
