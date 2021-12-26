@@ -143,6 +143,9 @@ export default function ContextProvider(props) {
   }, [])
 
 
+
+
+
   return <Context.Provider value={{
 
     url,
@@ -155,7 +158,7 @@ export default function ContextProvider(props) {
 
     peopleList,
     setPeopleList,
-
+    
     // messageList,
     // setMessageList,
 
@@ -180,6 +183,7 @@ function assignListenning({ socket, token, setPeopleList, userName }) {
 
   socket.on("connect", function () {
     console.log(`socket ${socket.id + " " + userName} is connected`)
+    socket.emit("helloFromClient")
   })
 
   socket.on("updateList", function (msg) {
@@ -239,6 +243,7 @@ function assignListenning({ socket, token, setPeopleList, userName }) {
 
   socket.on("helloFromServer", function (data) {
     console.log("hello on client", data)
+
   })
 
 

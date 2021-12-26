@@ -85,7 +85,6 @@ export function ChatScreen({ navigation, route, ...props }) {
 
   const { userName, socket, setSnackBarHeight, setSnackMsg, appState } = useContext(Context)
   const [shouldDisplayNotice, setShouldDisplayNotice] = useState(true)
-  const canMoveDown = useRef(true)
 
   const [messages, setMessages] = useState([])
 
@@ -119,8 +118,8 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
 
-  // const [overLayOn, setOverLayOn] = useState(false)
-  // const [uri, setUri] = useState()
+  const [overLayOn, setOverLayOn] = useState(false)
+  const [uri, setUri] = useState()
 
 
 
@@ -128,7 +127,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
     socket.on("displayMessage" + item.name, function (msgArr) {
 
-      canMoveDown.current = true
+
       let msgArr_ = msgArr.map(msg => {
 
         return {
@@ -141,45 +140,14 @@ export function ChatScreen({ navigation, route, ...props }) {
 
       })
 
-      // setMessages(pre => {
-      //   msgArr_ = uniqByKeepFirst([...pre, ...msgArr_], function (msg) { return msg._id })
-      //   return [...msgArr_]
-      // })
-
       setMessages(pre => {
-
         msgArr_ = uniqByKeepFirst([...pre, ...msgArr_], function (msg) { return msg._id })
-        //   return [...msgArr_]
-
-        if (msgArr_.length >= 20) {
-          previousMessages.current = previousMessages.current.concat(msgArr_.slice(0, msgArr_.length - 10))
-          if (!shouldDisplayNotice) { setShouldDisplayNotice(true) }
-
-          return msgArr_.slice(-10)
-        }
-        else {
-
-          return msgArr_
-        }
-
-        //   if (pre.length >= 20) {
-        //     previousMessages.current = previousMessages.current.concat(pre.slice(0, pre.length - 20))
-        //     if (!shouldDisplayNotice && (previousMessages.current.length > 0)) { setShouldDisplayNotice(true) }
-
-        //     msgArr_ =  uniqByKeepFirst([...pre.slice(-20), ...msgArr_], function (msg) { return msg._id })
-
-        //     return GiftedChat.prepend(msgArr_)
-        //   }
-        //   else {
-        // //    msgArr_ = uniqByKeepFirst([...pre, ...msgArr_], function (msg) { return msg._id })
-        //     return GiftedChat.prepend(pre, msgArr_)
-        //   }
-
+        return [...msgArr_]
       })
 
-
-
-
+      setTimeout(() => {
+        scrollRef.current.scrollToEnd()
+      }, Math.max(Math.floor(messages.length * 70), 800));
     })
 
 
@@ -218,7 +186,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
           msg.user.avatar = () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(isLocal ? userName : item.name, false)} />
           msg.user._id = isLocal ? userName : msg.user._id + "---" + Math.random()
-
+          //  setMessages(pre => { return [...pre, msg,] })
           return msg
         })
         )
@@ -248,36 +216,24 @@ export function ChatScreen({ navigation, route, ...props }) {
 
           const msgArr_ = uniqByKeepFirst([...preMessagesArr, ...messages], function (msg) { return msg._id })
           setMessages(pre => {
+
+
             return msgArr_
           })
 
+          // setInitialized(true)
+          setTimeout(function () {
+            scrollRef.current && scrollRef.current.scrollToEnd()
+          }, 800)
 
 
         }
         if (previousMessages.current.length === 0) { setShouldDisplayNotice(false) }
 
-
+      
       })
 
     })
-
-  }, [])
-
-  useEffect(function () {
-
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', function (e) {
-
-      setTimeout(() => {
-        //scrollRef.current.scrollToEnd()
-        scrollRef.current.scrollToOffset({ offset: 9999, animated: true })
-      }, 0);
-
-
-    });
-
-    return function () {
-      keyboardDidShowListener.remove()
-    }
 
   }, [])
 
@@ -326,7 +282,7 @@ export function ChatScreen({ navigation, route, ...props }) {
                 shouldDisplayNotice && setSnackBarHeight(60)
 
 
-
+               
 
                 setShouldDisplayNotice(false)
 
@@ -344,7 +300,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
                 const preMessagesArr = [msg1, msg2, msg3, msg4, msg5].filter(function (item) { return Boolean(item) })
 
-                if (preMessagesArr.length > 0) { canMoveDown.current = false; setMessages(pre => { return [...preMessagesArr, ...pre] }) }
+                if (preMessagesArr.length > 0) { setMessages(pre => { return [...preMessagesArr, ...pre] }) }
 
               }
 
@@ -353,18 +309,9 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
             }
-
           },
-          onLayout: function () { },
-
-          onContentSizeChange: () => {
-            //   scrollRef.current.scrollToEnd({ animated: true })
-            if (canMoveDown.current) {
-              scrollRef.current.scrollToOffset({ offset: 9999, animated: true })
-            }
-            //     else{
-            //  canMoveDown.current = true
-            //     }
+          onLayout: function () {
+        
 
           }
         }}
@@ -478,7 +425,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
             <ScaleView>
 
-              <BubbleBlock {...props} bgColor={bgColor} item={item} setMessages={setMessages} canMoveDown={canMoveDown} />
+              <BubbleBlock {...props} bgColor={bgColor} item={item} setMessages={setMessages} />
 
             </ScaleView>
 
@@ -554,7 +501,7 @@ export function ChatScreen({ navigation, route, ...props }) {
                 onPressIn: function () {
                   inputRef.current.blur(); inputRef.current.focus(); expandWidth.value = 50;
 
-
+                  setTimeout(function () { scrollRef.current.scrollToEnd() }, Math.max(Math.floor(messages.length * 70), 800))
                 },
                 onPressOut: function () { inputRef.current.blur(); },
 
@@ -597,7 +544,7 @@ export function ChatScreen({ navigation, route, ...props }) {
               }>
 
                 <Icon
-                  onPress={function () { canMoveDown.current = true; pickImage(setMessages, userName, item, scrollRef) }}
+                  onPress={function () { pickImage(setMessages, userName, item, scrollRef) }}
                   name="image-outline"
                   type='ionicon'
                   color='#517fa4'
@@ -606,7 +553,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
                 <Icon
-                  onPress={function () { canMoveDown.current = true; takePhoto(setMessages, userName, item, scrollRef) }}
+                  onPress={function () { takePhoto(setMessages, userName, item, scrollRef) }}
                   name="camera-outline"
                   type='ionicon'
                   color='#517fa4'
@@ -647,13 +594,16 @@ export function ChatScreen({ navigation, route, ...props }) {
           if (userName !== item.name) { socket.emit("sendMessage", { sender: userName, toPerson: item.name, msgArr: messages_ }) }
 
 
-          canMoveDown.current = true
+
 
           setMessages(pre => {
             if (pre.length >= 20) {
-              previousMessages.current = previousMessages.current.concat(pre.slice(0, pre.length - 10))
+
+
+
+              previousMessages.current = previousMessages.current.concat(pre.slice(0, pre.length - 20))
               if (!shouldDisplayNotice && (previousMessages.current.length > 0)) { setShouldDisplayNotice(true) }
-              return GiftedChat.prepend(pre.slice(-10), messages_.map(msg => ({ ...msg, pending: true, sent: true, received: true })))
+              return GiftedChat.prepend(pre.slice(-20), messages_.map(msg => ({ ...msg, pending: true, sent: true, received: true })))
             }
             else {
               return GiftedChat.prepend(pre, messages_.map(msg => ({ ...msg, pending: true, sent: true, received: true })))
@@ -684,7 +634,9 @@ export function ChatScreen({ navigation, route, ...props }) {
               })
             })
 
-
+          setTimeout(() => {
+            scrollRef.current.scrollToEnd()
+          }, 10);
 
         }}
 
@@ -702,10 +654,7 @@ export function ChatScreen({ navigation, route, ...props }) {
           const imageMessageArr = messages.filter(message => Boolean(message.image)).map(item => { return { ...item, user: { ...item.user, avatar: "" } } })
 
           return (
-            <ImageBlock item={item} userName={userName}
-              imageMessageArr={imageMessageArr} currentMessage={currentMessage} navigation={navigation} route={route} setMessages={setMessages}
-              canMoveDown={canMoveDown}
-            />
+            <ImageBlock item={item} userName={userName} imageMessageArr={imageMessageArr} currentMessage={currentMessage} navigation={navigation} route={route} setMessages={setMessages} />
           )
         }}
 
@@ -744,7 +693,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
       />
 
-      {/* <OverlayDownloader overLayOn={overLayOn} setOverLayOn={setOverLayOn} uri={uri} fileName={Date.now() + ".jpg"} /> */}
+      <OverlayDownloader overLayOn={overLayOn} setOverLayOn={setOverLayOn} uri={uri} fileName={Date.now() + ".jpg"} />
 
     </>
   )
@@ -793,7 +742,11 @@ function ScaleView(props) {
 }
 
 
-function BubbleBlock({ item, bgColor, setMessages, canMoveDown, ...props }) {
+
+
+
+
+function BubbleBlock({ item, bgColor, setMessages, ...props }) {
 
   const viewRef = useAnimatedRef()
   const [visible, setVisible] = useState(false)
@@ -806,10 +759,6 @@ function BubbleBlock({ item, bgColor, setMessages, canMoveDown, ...props }) {
     <>
       <View ref={element => { viewRef.current = element }}  >
         <Bubble {...props}
-
-          // onPress={function(){
-          //   console.log("sss")
-          // }}
 
           onLongPress={function () {
 
@@ -861,7 +810,6 @@ function BubbleBlock({ item, bgColor, setMessages, canMoveDown, ...props }) {
         currentMessage={currentMessage}
         setMessages={setMessages}
         isText={true} isImage={false}
-        canMoveDown={canMoveDown}
       />
 
     </>
@@ -869,7 +817,7 @@ function BubbleBlock({ item, bgColor, setMessages, canMoveDown, ...props }) {
 
 }
 
-function ImageBlock({ scrollRef, item, navigation, route, currentMessage, imageMessageArr, userName, setMessages, canMoveDown, ...props }) {
+function ImageBlock({ scrollRef, item, navigation, route, currentMessage, imageMessageArr, userName, setMessages, ...props }) {
 
   const viewRef = useAnimatedRef()
   const [visible, setVisible] = useState(false)
@@ -920,18 +868,15 @@ function ImageBlock({ scrollRef, item, navigation, route, currentMessage, imageM
       currentMessage={currentMessage}
       setMessages={setMessages}
       isText={false} isImage={true}
-      canMoveDown={canMoveDown}
     />
 
   </>
 }
 
-function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, isImage, setMessages, userName, item, canMoveDown, ...props }) {
+function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, isImage, setMessages, userName, item, ...props }) {
 
 
   const { setSnackBarHeight, setSnackMsg } = useContext(Context)
-
-
 
   return <Overlay isVisible={visible} fullScreen={false}
     overlayStyle={{
@@ -977,25 +922,26 @@ function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, 
           size={50}
           onPress={function () {
 
-            canMoveDown.current = false
             if (isText) {
 
               setMessages(messages => { return messages.filter(msg => { return msg._id !== currentMessage._id }) })
               const fileUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/" + item.name + "---" + currentMessage.createdTime
+
               setTimeout(() => {
                 FileSystem.deleteAsync(fileUri, { idempotent: true })
-              }, 800);
+              }, 10);
+
 
             }
-
             else if (isImage) {
-
+              // console.log(currentMessage)
               setMessages(messages => { return messages.filter(msg => { return msg._id !== currentMessage._id }) })
               const fileUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/" + item.name + "---" + currentMessage.createdTime
               FileSystem.deleteAsync(fileUri, { idempotent: true })
+
               setTimeout(() => {
                 currentMessage.isLocal && FileSystem.deleteAsync(currentMessage.image, { idempotent: true })
-              }, 800);
+              }, 10);
             }
 
           }}
@@ -1039,7 +985,9 @@ async function pickImage(setMessages, userName, item, scrollRef) {
     const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
     const fileUri = folderUri + item.name + "---" + imageMsg.createdTime
     FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...imageMsg, isLocal: true }))
-
+    setTimeout(() => {
+      scrollRef.current.scrollToEnd()
+    }, 10);
     // todo: send image to server
 
 
@@ -1074,6 +1022,9 @@ async function takePhoto(setMessages, userName, item, scrollRef) {
     const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
     const fileUri = folderUri + item.name + "---" + imageMsg.createdTime
     FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...imageMsg, isLocal: true }))
+    setTimeout(() => {
+      scrollRef.current.scrollToEnd()
+    }, 10);
 
 
     // todo: send image to server
@@ -1142,6 +1093,24 @@ async function downloadFromLocal(uri, setSnackMsg, setSnackBarHeight) {
 
 
 
+
+
+// function scrollToBottom(scrollRef) {
+
+//   console.log(Date.now())
+
+//   if (scrollRef.current) {
+//     //   scrollRef.current.scrollToEnd()
+
+//     scrollRef.current.scrollToEnd()
+//   }
+//   else {
+//     setTimeout(() => {
+//       scrollToBottom(scrollRef)
+//     }, 10);
+//   }
+
+// }
 
 
 

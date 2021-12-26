@@ -5,7 +5,7 @@ import { createStackNavigator, CardStyleInterpolators, TransitionPresets, Header
 
 import { useNavigation } from '@react-navigation/native';
 
-import { StyleSheet, Text, View, Button, Image, } from 'react-native';
+import { AppState, StyleSheet, Text, View, Button, Image, } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { RegScreen } from "./RegScreen";
@@ -15,20 +15,40 @@ import { ImageScreen } from "./ImageScreen";
 import * as FileSystem from 'expo-file-system';
 import { Context } from "./ContextProvider"
 
+import { NavigationContainer } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
+import * as TaskManager from 'expo-task-manager';
 const Stack = createSharedElementStackNavigator();
+
+
 
 
 export default function StackNavigator() {
 
 
-  const { token, setToken, notiToken, setNotiToken, userName, initialRouter } = useContext(Context)
+
+  const { token, setToken, notiToken, setNotiToken, userName, initialRouter, appState, peopleList } = useContext(Context)
+
+  const navigation = useNavigation()
+  useEffect(function () {
+
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      const item = peopleList.find(people => { return people.name === response.notification.request.content.title })
+      navigation.navigate("Chat", { item })
+    });
+
+    return () => subscription.remove();
+
+  }, [peopleList])
+
+
+
+
+
 
 
   const screenOptions = function ({ navigation, route }) {
-
-
-
-
 
     return {
       headerShown: true, //not supported in Android  //route.name!=="Chat",//true,//route.name==="Home",//true,
@@ -100,7 +120,7 @@ export default function StackNavigator() {
 
               header: (props) => <Header {...props} />,
 
-            //  headerLeft: () => null,
+              //  headerLeft: () => null,
               headerRight: () => (<Button onPress={() => {
 
                 AsyncStorage.removeItem("token").then(function () {

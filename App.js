@@ -93,10 +93,11 @@ import jwtDecode from 'jwt-decode';
 import { io } from "socket.io-client";
 import url from "./config";
 
+
+
 export default function App() { return (<ContextProvider><AppStarter /></ContextProvider>) }
 
 const BACKGROUND_FETCH_TASK = 'background-location-task';
-
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -104,7 +105,14 @@ Notifications.setNotificationHandler({
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
+
+  handleSuccess: (notificationId) => {
+   // console.log(notificationId)
+  },
+
 });
+
+
 
 
 // TaskManager.defineTask(BACKGROUND_FETCH_TASK, ({ data, error }) => {
@@ -137,7 +145,7 @@ async function unregisterBackgroundFetchAsync() {
 
 function AppStarter() {
 
-  const { token, setToken, notiToken, setNotiToken, initialRouter, setInitialRouter, socket, appState } = useContext(Context)
+  const { userName, token, setToken, notiToken, setNotiToken, initialRouter, setInitialRouter, socket, appState } = useContext(Context)
 
   useEffect(() => {
 
@@ -151,30 +159,61 @@ function AppStarter() {
     };
   }, []);
 
+
+
   useEffect(function () {
 
+
     if (socket) {
-      TaskManager.defineTask(BACKGROUND_FETCH_TASK, ({ data, error }) => {
-        console.log(`Got background fetch call at: ${new Date().toISOString()}`)
-        socket.emit("helloFromClient", new Date().toISOString())
-        return BackgroundFetch.BackgroundFetchResult.NewData;
-      });
-      setTimeout(registerBackgroundFetchAsync,1000)  
-      //registerBackgroundFetchAsync()
+
+      // TaskManager.defineTask(BACKGROUND_FETCH_TASK, ({ data, error }) => {
+      //   console.log(`Got background fetch call at: ${new Date().toISOString()}`)
+      //   socket.emit("helloFromClient", new Date().toISOString())
+      //   return BackgroundFetch.BackgroundFetchResult.NewData;
+      // });
+      // setTimeout(registerBackgroundFetchAsync,1000)  
+
+      socket.on("checkListeners", function (sender, msgArr) {
+
+        if ((socket.listeners("displayMessage" + sender).length === 0) || appState.current === "background" || appState.current === "inactive") {
+          //  console.log("displaySender " + sender + " is not active")
+
+          //  console.log(sender, msgArr[0].text)
+          Notifications.scheduleNotificationAsync({
+            content: {
+              title: sender,
+           
+              //   body: 'Here is the notification body',
+              body: msgArr[0].text +" made by local",
+            },
+            trigger: null// { seconds: 2 },
+          });
+
+
+
+
+        }
+
+      })
+
+
+
+
+
     }
 
   }, [socket])
 
 
   useEffect(function () {
-    return unregisterBackgroundFetchAsync
+    // return unregisterBackgroundFetchAsync
   }, [])
 
   useEffect(function () {
 
     if (token && notiToken && socket) {
-     // console.log("hihihihi")
-    
+      // console.log("hihihihi")
+
       Notifications.setNotificationChannelAsync('default', {
         name: 'default',
         importance: Notifications.AndroidImportance.MAX,
@@ -182,7 +221,7 @@ function AppStarter() {
         lightColor: '#FF231F7C',
       });
 
-      socket.emit("sendNotiToken", notiToken)
+      //socket.emit("sendNotiToken", notiToken)
 
     }
 
@@ -195,7 +234,7 @@ function AppStarter() {
   //   checkStatusAsync()
 
   // })
- 
+
 
   useEffect(function () {
 
@@ -205,24 +244,15 @@ function AppStarter() {
       AsyncStorage.getItem("notiToken").then(notiToken => {
 
         if (notiToken) {
-          console.log("stored notiToken", notiToken)
-
           setNotiToken(notiToken)
         }
         else {
           registerForPushNotificationsAsync().then(notiToken => {
-
-            console.log("==new notiToken===", notiToken)
             setNotiToken(notiToken)
             AsyncStorage.setItem("notiToken", notiToken)
-            console.log("notiToken", notiToken)
- 
           })
-          //   .catch(err => console.log(err));
         }
-
       })
-
 
 
       AsyncStorage.getItem("token").then(token => {
@@ -237,17 +267,37 @@ function AppStarter() {
       })
 
 
-
-
     }
 
   }, [initialRouter])
 
 
+  useEffect(function () {
+
+    if (token && notiToken) {
+      console.log("sending notiToken", userName, notiToken)
+      axios.post(`${url}/api/user/updatenotitoken`, { notiToken: notiToken }, { headers: { "x-auth-token": token } })
+    }
+  }, [token, notiToken])
+
+
+
+
   if (initialRouter) {
     return (
       <>
-        <NavigationContainer>
+        <NavigationContainer
+
+        // linking={{
+        //   prefixes: ['https://mychat.com', 'mychat://'],
+        //   config: {
+        //     screens: {
+        //       Home: 'feed/:sort',
+        //     },
+        //   },
+        // }}
+
+        >
           <StackNavigator />
         </NavigationContainer>
         <SnackBar />
@@ -260,7 +310,7 @@ function AppStarter() {
 
 }
 
-   
+
 
 
 async function registerForPushNotificationsAsync() {

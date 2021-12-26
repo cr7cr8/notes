@@ -102,9 +102,9 @@ export default function SnackBar({ ...props }) {
 
 
       <Text style={{ color: "white", fontSize: 15, }}>{snackMsg}</Text>
-
+      <Text style={{ color: "white", fontSize: 15, }}>{"   "}</Text>
       <Icon
-        containerStyle={{ position: "absolute", right: 9, transform: [{ translateY: 2 }] }}
+        containerStyle={{ right: 9, transform: [{ translateY: 2 }] }}
         name="close-outline"
         type='ionicon'
         color='white'
