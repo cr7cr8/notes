@@ -77,6 +77,9 @@ import { SharedElement } from 'react-navigation-shared-element';
 import { Context } from "./ContextProvider";
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
+
+import * as FileSystem from 'expo-file-system';
+
 //import Image from 'react-native-scalable-image';
 
 import Lightbox from 'react-native-lightbox';
@@ -107,7 +110,7 @@ Notifications.setNotificationHandler({
   }),
 
   handleSuccess: (notificationId) => {
-   // console.log(notificationId)
+    // console.log(notificationId)
   },
 
 });
@@ -145,12 +148,14 @@ async function unregisterBackgroundFetchAsync() {
 
 function AppStarter() {
 
-  const { userName, token, setToken, notiToken, setNotiToken, initialRouter, setInitialRouter, socket, appState } = useContext(Context)
+  const { userName, token, setToken, notiToken, setNotiToken, initialRouter, setInitialRouter, socket, appState, setUnreadCountObj } = useContext(Context)
 
   useEffect(() => {
 
     const subscription = AppState.addEventListener("change", nextAppState => {
       appState.current = nextAppState;  //inactive background active
+      setUnreadCountObj(pre => { return { ...pre } })
+
       //console.log("AppState", appState.current);
     });
 
@@ -166,48 +171,77 @@ function AppStarter() {
 
     if (socket) {
 
-      // TaskManager.defineTask(BACKGROUND_FETCH_TASK, ({ data, error }) => {
-      //   console.log(`Got background fetch call at: ${new Date().toISOString()}`)
-      //   socket.emit("helloFromClient", new Date().toISOString())
-      //   return BackgroundFetch.BackgroundFetchResult.NewData;
-      // });
-      // setTimeout(registerBackgroundFetchAsync,1000)  
+      //     // TaskManager.defineTask(BACKGROUND_FETCH_TASK, ({ data, error }) => {
+      //     //   console.log(`Got background fetch call at: ${new Date().toISOString()}`)
+      //     //   socket.emit("helloFromClient", new Date().toISOString())
+      //     //   return BackgroundFetch.BackgroundFetchResult.NewData;
+      //     // });
+      //     // setTimeout(registerBackgroundFetchAsync,1000)  
 
-      socket.on("checkListeners", function (sender, msgArr) {
+      //  socket.on("saveUnread", function (sender, msgArr) {
 
-        if ((socket.listeners("displayMessage" + sender).length === 0) || appState.current === "background" || appState.current === "inactive") {
-          //  console.log("displaySender " + sender + " is not active")
+      //   if ((socket.listeners("displayMessage" + sender).length === 0) || appState.current === "background" || appState.current === "inactive") {
 
-          //  console.log(sender, msgArr[0].text)
-          Notifications.scheduleNotificationAsync({
-            content: {
-              title: sender,
-           
-              //   body: 'Here is the notification body',
-              body: msgArr[0].text +" made by local",
-            },
-            trigger: null// { seconds: 2 },
-          });
+      //     msgArr.forEach((msg, index) => {
+      //       console.log("index", index)
+      //       const fileUri = FileSystem.documentDirectory + "UnreadFolder/" + sender + "/" + sender + "---" + msg.createdTime
 
+      //       FileSystem.getInfoAsync(folderUri)
+      //         .then(info => {
 
-
-
-        }
-
-      })
+      //           if (!info.exists) {
+      //             return FileSystem.makeDirectoryAsync(folderUri)
+      //           }
+      //           else {
+      //             return info
+      //           }
+      //         })
+      //         .then(() => {
+      //           return FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg))
 
 
+      //         })
+      //         .then(() => {
+      //           FileSystem.readDirectoryAsync(folderUri).then(data => {
+      //             console.log("---", data)
+      //           })
+      //         })
+
+
+      //     });
 
 
 
-    }
+
+      //   }
+
+
+      //  })
+
+
+      // socket.on("checkListeners", function (sender, msgArr) {
+      //   if ((socket.listeners("displayMessage" + sender).length === 0) || appState.current === "background" || appState.current === "inactive") {
+      //     Notifications.scheduleNotificationAsync({
+      //       content: {
+      //         title: sender,
+      //         body: msgArr[0].text + " made by local",
+      //       },
+      //       trigger: null// { seconds: 2 },
+      //     });
+      //   }
+      // })
+
+
+
+    } //ifsocket
+
 
   }, [socket])
 
 
-  useEffect(function () {
-    // return unregisterBackgroundFetchAsync
-  }, [])
+  // useEffect(function () {
+  //   return unregisterBackgroundFetchAsync
+  // }, [])
 
   useEffect(function () {
 
@@ -230,9 +264,7 @@ function AppStarter() {
 
 
   // useEffect(function () {
-
   //   checkStatusAsync()
-
   // })
 
 
@@ -318,6 +350,7 @@ async function registerForPushNotificationsAsync() {
   if (Constants.isDevice) {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
+
     if (existingStatus !== 'granted') {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
@@ -326,9 +359,17 @@ async function registerForPushNotificationsAsync() {
       alert('Failed to get push token for push notification!');
       return;
     }
+
+
+
     token = (await Notifications.getExpoPushTokenAsync()).data;
+    if (!token) {
+      alert('Unable to get notiToken on client site');
+    }
+    return token;
     // console.log(token);
-  } else {
+  }
+  else {
     alert('Must use physical device for Push Notifications');
   }
 
@@ -342,7 +383,6 @@ async function registerForPushNotificationsAsync() {
   // }
 
 
-  return token;
 }
 
 

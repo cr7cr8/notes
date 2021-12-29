@@ -38,7 +38,7 @@ import ReAnimated, {
 import SvgUri from 'react-native-svg-uri';
 const { View, Text, ScrollView: ScrollV, Image } = ReAnimated
 
-
+import url, { hexToRgbA, hexify, uniqByKeepFirst } from "./config";
 //import Image from 'react-native-scalable-image';
 
 import multiavatar from '@multiavatar/multiavatar';
@@ -75,6 +75,7 @@ import * as ImagePicker from 'expo-image-picker';
 export function ImageScreen({ navigation, route, }) {
 
   const item = route.params.item
+
   const avatarString = multiavatar(item.name)
 
   const scrollRef = useRef()
@@ -84,14 +85,30 @@ export function ImageScreen({ navigation, route, }) {
 
 
 
+
+
   return (
     <>
 
-      <View style={{ overflow: "hidden", height: 0, backgroundColor: "yellow" }}>
-        <SharedElement id={item.name} style={{ transform: [{ scale: 0 }], }}   >
-          <SvgUri style={{ position: "relative", top: getStatusBarHeight() }} width={60} height={60} svgXmlData={avatarString} />
+      <View style={{  height: 0, backgroundColor: "yellow" }}>
+        <SharedElement id={item.name} style={{ transform: [{ scale: 0 }], borderRadius: 1000 }}   >
+          {/* <SvgUri style={{ position: "relative", top: getStatusBarHeight() }} width={60} height={60} svgXmlData={avatarString} /> */}
+          {item.hasAvatar
+            ? <Image source={{ uri: `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
+              style={{
+                position: "relative",
+                top: getStatusBarHeight(),
+                width: 60, height: 60, borderRadius: 1000
+              }} />
+            : <SvgUri style={{ position: "relative", top: getStatusBarHeight() }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+          }
+
+
         </SharedElement>
       </View>
+
+
+
 
       <ScrollView
 

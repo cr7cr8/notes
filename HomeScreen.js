@@ -64,7 +64,7 @@ function uniqByKeepFirst(a, key) {
 export function HomeScreen({ navigation, route }) {
 
 
-  const { peopleList, setPeopleList, token, userName, initialRouter, setInitialRouter } = useContext(Context)
+  const { peopleList, setPeopleList, token, userName, initialRouter, setInitialRouter, unreadCountObj, setUnreadCountObj } = useContext(Context)
 
 
   const [mainEnabled, setMainEnabled] = useState(true)
@@ -91,25 +91,76 @@ export function HomeScreen({ navigation, route }) {
 
     // setRefresh(pre => !pre);
 
-    axios.get(`${url}/api/user/fetchuserlist`, { headers: { "x-auth-token": token } }).then(response => {
+    axios.get(`${url}/api/user/fetchuserlist`, { headers: { "x-auth-token": token } })
+      .then(response => {
 
-      if (initialRouter === "Reg") {
-        let arr = response.data //.filter(item => { return item.name !== userName })
-        HomeScreen.sharedElements = null
+        if (initialRouter === "Reg") {
+          let arr = response.data //.filter(item => { return item.name !== userName })
+          HomeScreen.sharedElements = null
 
-        setPeopleList(pre => {
-          return uniqByKeepFirst([...pre, ...arr], function (item) { return item.name })
+          setPeopleList(pre => {
+            return uniqByKeepFirst([...pre, ...arr], function (item) { return item.name })
+          })
+          route.params && route.params.item.localImage && FileSystem.deleteAsync(route.params.item.localImage, { idempotent: true })
+        }
+        else if (initialRouter === "Home") {
+          setPeopleList(pre => { return response.data })
+        }
+
+        return response.data
+      })
+
+  }, [])
+
+
+  useEffect(function () {
+
+
+    //   console.log(peopleList)
+
+    const unreadCountObj_ = unreadCountObj
+    const promiseArr = []
+    peopleList.forEach((people, index) => {
+      const sender = people.name
+      const folderUri = FileSystem.documentDirectory + "UnreadFolder/" + sender + "/"
+
+      FileSystem.getInfoAsync(folderUri)
+        .then(info => {
+          if (!info.exists) {
+            FileSystem.makeDirectoryAsync(folderUri)
+            promiseArr.push(Promise.resolve({ [sender]: 0 }))
+          }
+          else {
+            promiseArr.push(FileSystem.readDirectoryAsync(folderUri).then(unreadArr => {
+
+              //console.log(unreadArr)
+
+              return { [sender]: unreadArr.length }
+            }))
+          }
+        }).then(function () {
+
+
+          if (index === peopleList.length - 1) {
+            Promise.all(promiseArr).then(objArr => {
+
+
+              let obj = {}
+              objArr.forEach(o => {
+                obj = { ...obj, ...o }
+              })
+            //  console.log("++++++++++++ " + userName + "++++", obj)
+              setUnreadCountObj(obj)
+            })
+
+          }
+
         })
-        route.params && route.params.item.localImage && FileSystem.deleteAsync(route.params.item.localImage, { idempotent: true })
-      }
-      else if (initialRouter === "Home") {
-        setPeopleList(pre => { return response.data })
-      }
 
     })
 
+  }, [peopleList])
 
-  }, [])
 
   // if ((peopleList.length === 0) && Boolean(route.params) && Boolean(route.params.item)) {
 
@@ -356,28 +407,18 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
 
-  const { token } = useContext(Context)
+  const { token, unreadCountObj } = useContext(Context)
 
   const avatarString = multiavatar(item.name)
 
 
 
-  //const transY = useSharedValue(0)
   const transY = useDerivedValue(() => (withTiming(panelTransY)))
-
-
-  //const [holding,setHolding] = useState(false)
-
-
-
-
 
 
 
   const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
   //console.log(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
-
-
 
   const zIndex = useSharedValue(0)
 
@@ -773,8 +814,23 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
             <View style={[coverPanelStyle]}   >
               {/* <Pressable onPress={function () { console.log("dddsdsd") }}> <View > */}
               <Badge
+                value={unreadCountObj[item.name] || 0}
                 status="error"
-                containerStyle={{ position: 'absolute', top: 10, left: 60, transform:[{scale:0}], zIndex:100 }}
+                containerStyle={{
+                  position: 'absolute', top: 10, left: 58, zIndex: 100,
+                  transform: [{ scale: Boolean(unreadCountObj[item.name]) ? 1.2 : 0 }],
+                  display: "flex", justifyContent: "center", alignItems: "center"
+                }}
+                badgeStyle={{
+                  //     color: "blue",
+                  //      position: 'absolute', top: 10, left: 60, zIndex: 100,
+                  //      backgroundColor:"yellow",
+                  // transform: [{ scale: 1.8 }],
+                  display: "flex", justifyContent: "center", alignItems: "center"
+                }}
+                textStyle={{
+                  transform: [{ translateY: -2 }],
+                }}
               />
               <SharedElement id={item.name}  >
                 {item.hasAvatar

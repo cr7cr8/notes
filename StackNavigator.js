@@ -32,7 +32,6 @@ export default function StackNavigator() {
   const navigation = useNavigation()
   useEffect(function () {
 
-
     const subscription = Notifications.addNotificationResponseReceivedListener(response => {
       const item = peopleList.find(people => { return people.name === response.notification.request.content.title })
       navigation.navigate("Chat", { item })
@@ -121,7 +120,7 @@ export default function StackNavigator() {
               header: (props) => <Header {...props} />,
 
               //  headerLeft: () => null,
-              headerRight: () => (<Button onPress={() => {
+              headerRight: () => (<Button onPress={async () => {
 
                 AsyncStorage.removeItem("token").then(function () {
                   setToken(null)
@@ -129,6 +128,17 @@ export default function StackNavigator() {
                 AsyncStorage.removeItem("notiToken").then(function () {
                   setNotiToken(null)
                 })
+
+
+
+                await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
+                await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
+                await FileSystem.deleteAsync(FileSystem.documentDirectory + "ImagePicker/", { idempotent: true })
+
+
+                FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
+                FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/")
+
 
               }} title={userName} />), // color="#fff" 
 
@@ -161,10 +171,12 @@ export default function StackNavigator() {
               headerRight: () => (<Button onPress={async function () {
 
                 await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
+                await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
                 await FileSystem.deleteAsync(FileSystem.documentDirectory + "ImagePicker/", { idempotent: true })
 
 
                 FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
+                FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/")
 
 
               }} title="folder" />),

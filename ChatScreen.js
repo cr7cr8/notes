@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect, useContext, useCallback } from 'rea
 import { createSharedElementStackNavigator } from 'react-navigation-shared-element';
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
 
-
+import axios from 'axios';
 import { StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Keyboard, Pressable, Vibration, UIManager, findNodeHandle } from 'react-native';
 
 import ReAnimated, {
@@ -68,6 +68,7 @@ import SnackBar, { SnackContext } from "./SnackBar";
 import jwtDecode from 'jwt-decode';
 
 import url, { hexToRgbA, hexify, uniqByKeepFirst } from "./config";
+import { Path } from 'react-native-svg';
 
 export function ChatScreen({ navigation, route, ...props }) {
 
@@ -83,7 +84,7 @@ export function ChatScreen({ navigation, route, ...props }) {
   const avatarString = multiavatar(item.name)
   const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
 
-  const { userName, socket, setSnackBarHeight, setSnackMsg, appState } = useContext(Context)
+  const { token, userName, socket, setSnackBarHeight, setSnackMsg, appState, unreadCountObj, setUnreadCountObj, } = useContext(Context)
   const [shouldDisplayNotice, setShouldDisplayNotice] = useState(true)
   const canMoveDown = useRef(true)
 
@@ -135,16 +136,23 @@ export function ChatScreen({ navigation, route, ...props }) {
           ...msg,
           user: {
             _id: msg.sender + "---" + Math.random(),
-            avatar: () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name, false)} />
+            avatar: () => {
+              return item.hasAvatar
+                ? <ImageV source={{ uri: `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
+                  style={{
+                    position: "relative",
+
+                    width: 36, height: 36, borderRadius: 1000
+                  }} />
+                : <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name)} />
+
+            }
           }
         }
 
       })
 
-      // setMessages(pre => {
-      //   msgArr_ = uniqByKeepFirst([...pre, ...msgArr_], function (msg) { return msg._id })
-      //   return [...msgArr_]
-      // })
+
 
       setMessages(pre => {
 
@@ -162,18 +170,7 @@ export function ChatScreen({ navigation, route, ...props }) {
           return msgArr_
         }
 
-        //   if (pre.length >= 20) {
-        //     previousMessages.current = previousMessages.current.concat(pre.slice(0, pre.length - 20))
-        //     if (!shouldDisplayNotice && (previousMessages.current.length > 0)) { setShouldDisplayNotice(true) }
 
-        //     msgArr_ =  uniqByKeepFirst([...pre.slice(-20), ...msgArr_], function (msg) { return msg._id })
-
-        //     return GiftedChat.prepend(msgArr_)
-        //   }
-        //   else {
-        // //    msgArr_ = uniqByKeepFirst([...pre, ...msgArr_], function (msg) { return msg._id })
-        //     return GiftedChat.prepend(pre, msgArr_)
-        //   }
 
       })
 
@@ -216,48 +213,70 @@ export function ChatScreen({ navigation, route, ...props }) {
           const isLocal = Boolean(msg.isLocal)
 
 
-          msg.user.avatar = () => <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(isLocal ? userName : item.name, false)} />
+          msg.user.avatar = () => {
+            return item.hasAvatar
+              ? <ImageV source={{ uri: `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
+                style={{
+                  position: "relative",
+
+                  width: 36, height: 36, borderRadius: 1000
+                }} />
+              : <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(isLocal ? userName : item.name, false)} />
+
+          }
           msg.user._id = isLocal ? userName : msg.user._id + "---" + Math.random()
 
           return msg
         })
         )
       })
-      Promise.all(promiseArr).then(msgArr => {
-
-        //  console.log(msgArr)
-
-        previousMessages.current = uniqByKeepFirst([...msgArr, ...messages], function (msg) { return msg._id })
 
 
-        const msg10 = previousMessages.current.pop()
-        const msg9 = previousMessages.current.pop()
-        const msg8 = previousMessages.current.pop()
-        const msg7 = previousMessages.current.pop()
-        const msg6 = previousMessages.current.pop()
-        const msg5 = previousMessages.current.pop()
-        const msg4 = previousMessages.current.pop()
-        const msg3 = previousMessages.current.pop()
-        const msg2 = previousMessages.current.pop()
-        const msg1 = previousMessages.current.pop()
+      Promise.all(promiseArr)
+        .then(msgArr => {
 
-        let preMessagesArr = [msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9, msg10]
-        preMessagesArr = preMessagesArr.filter(function (item) { return Boolean(item) })
+          //  console.log(msgArr)
 
-        if (preMessagesArr.length > 0) {
-
-          const msgArr_ = uniqByKeepFirst([...preMessagesArr, ...messages], function (msg) { return msg._id })
-          setMessages(pre => {
-            return msgArr_
+          previousMessages.current = uniqByKeepFirst([...msgArr, ...messages], function (msg) { return msg._id }).sort(function (msg1, msg2) {
+            return msg1.createdTime - msg2.createdTime
           })
 
+          const msg10 = previousMessages.current.pop()
+          const msg9 = previousMessages.current.pop()
+          const msg8 = previousMessages.current.pop()
+          const msg7 = previousMessages.current.pop()
+          const msg6 = previousMessages.current.pop()
+          const msg5 = previousMessages.current.pop()
+          const msg4 = previousMessages.current.pop()
+          const msg3 = previousMessages.current.pop()
+          const msg2 = previousMessages.current.pop()
+          const msg1 = previousMessages.current.pop()
+
+          let preMessagesArr = [msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9, msg10]
+          preMessagesArr = preMessagesArr.filter(function (item) { return Boolean(item) })
+
+          if (preMessagesArr.length > 0) {
+            const msgArr_ = uniqByKeepFirst([...preMessagesArr, ...messages], function (msg) { return msg._id })
+
+            // console.log(msgArr_)
+
+            setMessages(pre => {
+              return msgArr_
+            })
+          }
+          if (previousMessages.current.length === 0) { setShouldDisplayNotice(false) }
 
 
-        }
-        if (previousMessages.current.length === 0) { setShouldDisplayNotice(false) }
+        })
+        .then(async function () {
+          const folderUri = FileSystem.documentDirectory + "UnreadFolder/" + item.name + "/"
+          await FileSystem.deleteAsync(folderUri, { idempotent: true })
+          await FileSystem.makeDirectoryAsync(folderUri)
 
-
-      })
+          setUnreadCountObj(pre => {
+            return { ...pre, [item.name]: 0 }
+          })
+        })
 
     })
 
@@ -403,18 +422,26 @@ export function ChatScreen({ navigation, route, ...props }) {
         // renderFooter={function (props) {    return <Button title="aaa" /> }}
 
         renderTime={function (props) {
-
+          const currentMessage = props.currentMessage
+          //console.log(currentMessage)
           //console.log(props.currentMessage.createdAt)
-          return <Time {...props} timeTextStyle={{
 
-            left: {
-              color: "#A0A0A0"
-            },
-            right: {
-              color: "#A0A0A0",
-              //display:"none"
-            }
-          }} />
+
+          return <Time {...props}
+
+            timeFormat="H:mm"
+            timeTextStyle={{
+
+
+              left: {
+                color: "#A0A0A0"
+              },
+              right: {
+                color: "#A0A0A0",
+                //     ...currentMessage.image && {  backgroundColor: "lightgreen",borderRadius:0 }
+                //display:"none"
+              }
+            }} />
         }}
 
         renderDay={function (props) {
@@ -478,7 +505,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
             <ScaleView>
 
-              <BubbleBlock {...props} bgColor={bgColor} item={item} setMessages={setMessages} canMoveDown={canMoveDown} />
+              <BubbleBlock {...props} bgColor={bgColor} item={item} setMessages={setMessages} canMoveDown={canMoveDown} token={token} />
 
             </ScaleView>
 
@@ -597,7 +624,9 @@ export function ChatScreen({ navigation, route, ...props }) {
               }>
 
                 <Icon
-                  onPress={function () { canMoveDown.current = true; pickImage(setMessages, userName, item, scrollRef) }}
+                  onPress={function () {
+                    canMoveDown.current = true; pickImage(setMessages, userName, item, socket)
+                  }}
                   name="image-outline"
                   type='ionicon'
                   color='#517fa4'
@@ -606,7 +635,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
                 <Icon
-                  onPress={function () { canMoveDown.current = true; takePhoto(setMessages, userName, item, scrollRef) }}
+                  onPress={function () { canMoveDown.current = true; takePhoto(setMessages, userName, item, socket) }}
                   name="camera-outline"
                   type='ionicon'
                   color='#517fa4'
@@ -702,7 +731,7 @@ export function ChatScreen({ navigation, route, ...props }) {
           const imageMessageArr = messages.filter(message => Boolean(message.image)).map(item => { return { ...item, user: { ...item.user, avatar: "" } } })
 
           return (
-            <ImageBlock item={item} userName={userName}
+            <ImageBlock item={item} userName={userName} token={token}
               imageMessageArr={imageMessageArr} currentMessage={currentMessage} navigation={navigation} route={route} setMessages={setMessages}
               canMoveDown={canMoveDown}
             />
@@ -793,7 +822,7 @@ function ScaleView(props) {
 }
 
 
-function BubbleBlock({ item, bgColor, setMessages, canMoveDown, ...props }) {
+function BubbleBlock({ token, item, bgColor, setMessages, canMoveDown, ...props }) {
 
   const viewRef = useAnimatedRef()
   const [visible, setVisible] = useState(false)
@@ -835,12 +864,15 @@ function BubbleBlock({ item, bgColor, setMessages, canMoveDown, ...props }) {
               justifyContent: 'flex-start',
               overflow: "hidden",
 
+              //      ...currentMessage.image && { backgroundColor: "transparent",borderRadius:0 }
             },
             right: {
               backgroundColor: "lightgreen",
               overflow: "hidden",
               justifyContent: 'flex-start',
-              transform: [{ translateX: -9 }]
+              transform: [{ translateX: -9 }],
+
+              //      ...currentMessage.image && {  borderTopRadius:10,borderTopRightRadius:100}
             },
 
           }}
@@ -862,6 +894,7 @@ function BubbleBlock({ item, bgColor, setMessages, canMoveDown, ...props }) {
         setMessages={setMessages}
         isText={true} isImage={false}
         canMoveDown={canMoveDown}
+        token={token}
       />
 
     </>
@@ -869,18 +902,34 @@ function BubbleBlock({ item, bgColor, setMessages, canMoveDown, ...props }) {
 
 }
 
-function ImageBlock({ scrollRef, item, navigation, route, currentMessage, imageMessageArr, userName, setMessages, canMoveDown, ...props }) {
+function ImageBlock({ token, scrollRef, item, navigation, route, currentMessage, imageMessageArr, userName, setMessages, canMoveDown, ...props }) {
 
   const viewRef = useAnimatedRef()
   const [visible, setVisible] = useState(false)
   const [top, setTop] = useState(60)
   const [left, setLeft] = useState(0)
 
+  let imageWidth = currentMessage.imageWidth
+  let imageHeight = currentMessage.imageHeight
+
+  if (imageWidth && imageHeight && (imageWidth <= imageHeight)) {
+    imageWidth = imageWidth * 200 / imageHeight
+    imageHeight = 200
+  }
+
+  else if (imageWidth && imageHeight && (imageWidth > imageHeight)) {
+
+    imageHeight = imageHeight * 200 / imageWidth
+    imageWidth = 200
+  }
+
+
+
   return <>
     <TouchableOpacity
       onPress={function () {
         navigation.navigate('Image', {
-          item: { name: route.params.item.name },
+          item: { name: route.params.item.name, hasAvatar: route.params.item.hasAvatar },
           imagePos: imageMessageArr.findIndex(item => { return item._id === currentMessage._id }),
           messages: imageMessageArr,
           // setMessages,
@@ -888,6 +937,8 @@ function ImageBlock({ scrollRef, item, navigation, route, currentMessage, imageM
 
       }}
       onLongPress={function () {
+
+        //  console.log(currentMessage)
 
         const handle = findNodeHandle(viewRef.current);
         UIManager.measure(handle, (fx, fy, compoWidth, compoHeight, px, py) => {
@@ -907,7 +958,12 @@ function ImageBlock({ scrollRef, item, navigation, route, currentMessage, imageM
     >
       <View ref={element => { viewRef.current = element }}  >
         <SharedElement id={currentMessage._id}  >
-          <Image source={{ uri: currentMessage.image, headers: { token: "hihihi" } }} width={200} resizeMode="contain" />
+
+          {imageWidth && imageHeight
+            ? <ImageV source={{ uri: currentMessage.image, headers: { token: "hihihi" } }} style={{ width: Math.max(60, imageWidth), height: imageHeight }}
+              resizeMode={(imageWidth <= 60) ? "cover" : "contain"} />
+            : <Image source={{ uri: currentMessage.image, headers: { token: "hihihi" } }} width={200} resizeMode="contain" />
+          }
         </SharedElement>
       </View>
 
@@ -921,12 +977,14 @@ function ImageBlock({ scrollRef, item, navigation, route, currentMessage, imageM
       setMessages={setMessages}
       isText={false} isImage={true}
       canMoveDown={canMoveDown}
+      token={token}
+
     />
 
   </>
 }
 
-function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, isImage, setMessages, userName, item, canMoveDown, ...props }) {
+function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, isText, isImage, setMessages, userName, item, canMoveDown, ...props }) {
 
 
   const { setSnackBarHeight, setSnackMsg } = useContext(Context)
@@ -989,6 +1047,9 @@ function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, 
             }
 
             else if (isImage) {
+              axios.get(`${url}/api/image/delete/${currentMessage._id}`, { headers: { "x-auth-token": token } }).then(response => {
+               // console.log(response.data)
+              })
 
               setMessages(messages => { return messages.filter(msg => { return msg._id !== currentMessage._id }) })
               const fileUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/" + item.name + "---" + currentMessage.createdTime
@@ -996,6 +1057,8 @@ function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, 
               setTimeout(() => {
                 currentMessage.isLocal && FileSystem.deleteAsync(currentMessage.image, { idempotent: true })
               }, 800);
+
+
             }
 
           }}
@@ -1011,7 +1074,7 @@ function OverlayCompo({ visible, top, left, setVisible, currentMessage, isText, 
 
 
 
-async function pickImage(setMessages, userName, item, scrollRef) {
+async function pickImage(setMessages, userName, item, socket) {
   let result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
     allowsEditing: true,
@@ -1023,17 +1086,26 @@ async function pickImage(setMessages, userName, item, scrollRef) {
 
 
   if ((!result.cancelled) && (result.uri)) {
+
+
+    //  const _id = Math.random(),
+
     const time = Date.now()
 
+
     const imageMsg = {
-      _id: Math.random(),
+      _id: time,
       text: '',
       createdAt: time,
       createdTime: time,
 
       user: { _id: userName },
-      image: result.uri     //"data:image/png;base64," + result.base64,
+      image: result.uri,
+      imageWidth: result.width,     //"data:image/png;base64," + result.base64,
+      imageHeight: result.height
     }
+
+
 
     setMessages(pre => { return [...pre, { ...imageMsg, isLocal: true }] })
     const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
@@ -1042,11 +1114,26 @@ async function pickImage(setMessages, userName, item, scrollRef) {
 
     // todo: send image to server
 
+    uploadImage({ localUri: result.uri, filename: time, sender: userName, toPerson: item.name, imageWidth: result.width, imageHeight: result.height })
+      .then(response => {
+        return {
+          ...imageMsg,
+          ...response.data,
+          image: `${url}/api/image/download/${response.data.mongooseID}`,
+
+        }
+
+      }).then(data => {
+        socket.emit("sendMessage", { sender: userName, toPerson: item.name, msgArr: [data] })
+      })
+
+
+
 
   }
 };
 
-async function takePhoto(setMessages, userName, item, scrollRef) {
+async function takePhoto(setMessages, userName, item, socket) {
   let result = await ImagePicker.launchCameraAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
     allowsEditing: true,
@@ -1061,13 +1148,15 @@ async function takePhoto(setMessages, userName, item, scrollRef) {
     const time = Date.now()
 
     const imageMsg = {
-      _id: Math.random(),
+      _id: time,
       text: '',
       createdAt: time,
       createdTime: time,
 
       user: { _id: userName },
-      image: result.uri     //"data:image/png;base64," + result.base64,
+      image: result.uri,     //"data:image/png;base64," + result.base64,
+      imageWidth: result.width,     //"data:image/png;base64," + result.base64,
+      imageHeight: result.height
     }
 
     setMessages(pre => { return [...pre, { ...imageMsg, isLocal: true }] })
@@ -1076,13 +1165,22 @@ async function takePhoto(setMessages, userName, item, scrollRef) {
     FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...imageMsg, isLocal: true }))
 
 
+    uploadImage({ localUri: result.uri, filename: time, sender: userName, toPerson: item.name, imageWidth: result.width, imageHeight: result.height })
+      .then(response => {
+        return {
+          ...imageMsg,
+          ...response.data,
+          image: `${url}/api/image/download/${response.data.mongooseID}`,
+
+        }
+
+      }).then(data => {
+        socket.emit("sendMessage", { sender: userName, toPerson: item.name, msgArr: [data] })
+      })
+
+
     // todo: send image to server
-
-
   }
-
-
-
 }
 
 
@@ -1139,7 +1237,31 @@ async function downloadFromLocal(uri, setSnackMsg, setSnackBarHeight) {
 
 }
 
+async function uploadImage({ localUri, filename, sender, toPerson, imageWidth, imageHeight }) {
 
+
+
+  const formData = new FormData();
+  let match = /\.(\w+)$/.exec(localUri.split('/').pop());
+
+  const ext = match[1] || ""
+  let type = match ? `image/${match[1]}` : `image`;
+
+  //  console.log(type,filename + "." + ext)
+
+  formData.append('file', { uri: localUri, name: filename + "." + ext, type });
+  formData.append("obj", JSON.stringify({ ownerName: sender, toPerson, picName: filename, imageWidth, imageHeight, sender }))
+
+  return axios.post(`${url}/api/image/uploadimage`, formData, { headers: { 'content-type': 'multipart/form-data', /*"x-auth-token": token*/ }, })
+    .then(response => {
+
+      //  FileSystem.deleteAsync(localUri, { idempotent: true })
+      return response
+    })
+
+
+
+}
 
 
 

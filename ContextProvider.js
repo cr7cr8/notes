@@ -55,6 +55,8 @@ import * as MediaLibrary from 'expo-media-library';
 
 
 
+import * as Notifications from 'expo-notifications';
+
 
 import axios from "axios";
 import jwtDecode from 'jwt-decode';
@@ -82,6 +84,10 @@ export default function ContextProvider(props) {
 
 
   const [peopleList, setPeopleList] = useState(list)
+  const [unreadCountObj, setUnreadCountObj] = useState({})
+
+
+
   const [snackBarHeight, setSnackBarHeight] = useState(0)
   const [snackMsg, setSnackMsg] = useState("Hihi")
 
@@ -115,26 +121,33 @@ export default function ContextProvider(props) {
         }
       })
 
-      assignListenning({ socket, token, setPeopleList, userName })
+      assignListenning({ socket, token, setPeopleList, userName, appState, unreadCountObj, setUnreadCountObj })
       setSocket(socket)
-
     }
     if (!token && socket) {
-
+      socket.offAny()
       //socket.disconnect()
     }
-
-
 
   }, [token])
 
   useEffect(async function () {
 
     const info = await FileSystem.getInfoAsync(FileSystem.documentDirectory + "MessageFolder/")
-    //  console.log(userName, info)
 
     if (!info.exists) {
-      FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
+      await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
+    }
+    else {
+      return info
+    }
+
+    const info2 = await FileSystem.getInfoAsync(FileSystem.documentDirectory + "UnreadFolder/")
+    if (!info2.exists) {
+      await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/")
+    }
+    else {
+      return info2
     }
 
     //FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
@@ -158,7 +171,10 @@ export default function ContextProvider(props) {
 
     peopleList,
     setPeopleList,
-    
+
+    unreadCountObj,
+    setUnreadCountObj,
+
     // messageList,
     // setMessageList,
 
@@ -179,12 +195,79 @@ export default function ContextProvider(props) {
 }
 
 
-function assignListenning({ socket, token, setPeopleList, userName }) {
+function assignListenning({ socket, token, setPeopleList, userName, appState, unreadCountObj, setUnreadCountObj }) {
 
   socket.on("connect", function () {
     console.log(`socket ${socket.id + " " + userName} is connected`)
     socket.emit("helloFromClient")
+
+    axios.get(`${url}/api/user/fecthunread`, { headers: { "x-auth-token": token } }).then(response => {
+
+      const msgArr = response.data
+      if (msgArr.length === 0) { setPeopleList(pre => [...pre]); return } //causing recount unread in homepage return }
+
+
+
+
+
+      msgArr.forEach((msg, index) => {
+        const sender = msg.sender
+
+        const folderUri = FileSystem.documentDirectory + "MessageFolder/" + sender + "/"
+        const folderUri2 = FileSystem.documentDirectory + "UnreadFolder/" + sender + "/"
+
+        const fileUri = FileSystem.documentDirectory + "MessageFolder/" + sender + "/" + sender + "---" + msg.createdTime
+        const fileUri2 = FileSystem.documentDirectory + "UnreadFolder/" + sender + "/" + sender + "---" + msg.createdTime
+
+        FileSystem.getInfoAsync(folderUri)
+          .then(info => {
+            if (!info.exists) { return FileSystem.makeDirectoryAsync(folderUri) }
+            else { return info }
+          })
+          .then(() => {
+            FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg))
+          })
+
+
+        FileSystem.getInfoAsync(folderUri2)
+          .then(info => {
+            if (!info.exists) { return FileSystem.makeDirectoryAsync(folderUri2) }
+            else { return info }
+          })
+          .then(() => {
+            FileSystem.writeAsStringAsync(fileUri2, JSON.stringify(msg))
+          })
+          .then(() => {
+
+            if (index === msgArr.length - 1) setPeopleList(pre => [...pre]) //causing recount unread in homepage
+
+
+
+            // setUnreadCountObj(unreadCountObj => {
+            //   msgArr.forEach(msg => {
+            //     const sender = msg.sender
+            //     if (!unreadCountObj[sender]) { unreadCountObj[sender] = 0 }
+            //     unreadCountObj[sender]++
+            //   })
+            //   return { ...unreadCountObj }
+            // })
+
+          })
+
+
+      })
+
+
+
+
+    })
+
+
+
+
+
   })
+
 
   socket.on("updateList", function (msg) {
 
@@ -199,6 +282,8 @@ function assignListenning({ socket, token, setPeopleList, userName }) {
 
     const folderUri = FileSystem.documentDirectory + "MessageFolder/" + sender + "/"
 
+
+
     msgArr.forEach(msg => {
 
       //console.log(msg.createdTime,"\n",Date.now())
@@ -209,7 +294,6 @@ function assignListenning({ socket, token, setPeopleList, userName }) {
         .then(info => {
           if (!info.exists) {
             return FileSystem.makeDirectoryAsync(folderUri)
-
           }
           else {
             return info
@@ -219,27 +303,12 @@ function assignListenning({ socket, token, setPeopleList, userName }) {
           FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg))
         })
 
+
     });
 
-
-
-
-    // const content = await FileSystem.readAsStringAsync(fileUri)
-    // console.log(content)
-
-    //console.log(sender, createdTime)
-
-    // const fileUri = FileSystem.documentDirectory + "MessageFolder/" + sender + "---" + createdTime
-
-
-    // await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg[0]))
-    // const content = await FileSystem.readAsStringAsync(fileUri)
-    // console.log(content)
-
-
-
-
   })
+
+
 
   socket.on("helloFromServer", function (data) {
     console.log("hello on client", data)
@@ -247,11 +316,92 @@ function assignListenning({ socket, token, setPeopleList, userName }) {
   })
 
 
+  socket.on("notifyUser", function (sender, msgArr) {
+    if ((socket.listeners("displayMessage" + sender).length === 0) || appState.current === "background" || appState.current === "inactive") {
+      Notifications.scheduleNotificationAsync({
+        content: {
+          title: sender,
+          body: msgArr[0].image ? "[image] made by local" : msgArr[0].text + " made by local",
+        },
+        trigger: null// { seconds: 2 },
+      });
+    }
+  })
+
+
+
+
+  socket.on("saveUnread", function (sender, msgArr) {
+
+    if ((socket.listeners("displayMessage" + sender).length === 0) || appState.current === "background" || appState.current === "inactive") {
+
+
+
+
+      const folderUri = FileSystem.documentDirectory + "UnreadFolder/" + sender + "/"
+      msgArr.forEach((msg) => {
+
+        //console.log(msg)
+
+        const fileUri = FileSystem.documentDirectory + "UnreadFolder/" + sender + "/" + sender + "---" + msg.createdTime
+
+        FileSystem.getInfoAsync(folderUri)
+          .then(info => {
+
+            if (!info.exists) {
+              return FileSystem.makeDirectoryAsync(folderUri)
+            }
+            else {
+              return info
+            }
+          })
+          .then(() => {
+            return FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg))
+
+
+          })
+        // .then(() => {
+        //   FileSystem.readDirectoryAsync(folderUri).then(data => {
+        //     console.log("---", data)
+        //   })
+        // })
+
+
+      });
+
+
+
+
+      //   console.log(unreadCountObj)
+      setUnreadCountObj(unreadCountObj => {
+
+        msgArr.forEach(msg => {
+          const sender = msg.sender
+          if (!unreadCountObj[sender]) { unreadCountObj[sender] = 0 }
+          unreadCountObj[sender]++
+        })
+        return { ...unreadCountObj }
+
+      })
+
+    }
+
+
+  })
+
 
 
   socket.on("disconnect", function (msg) {
     //  console.log("socket " + userName + " is disconnected")
 
   })
+
+
+
+
+
+
+
+
 }
 
