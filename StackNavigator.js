@@ -20,7 +20,7 @@ import * as Notifications from 'expo-notifications';
 import * as TaskManager from 'expo-task-manager';
 const Stack = createSharedElementStackNavigator();
 
-
+import { getStatusBarHeight } from 'react-native-status-bar-height';
 
 
 export default function StackNavigator() {
@@ -65,7 +65,7 @@ export default function StackNavigator() {
 
 
       headerStyle: {
-        height: 60,
+        height: getStatusBarHeight() > 24 ? 70 : 60,
         elevation: 1,
       },
 
@@ -168,18 +168,21 @@ export default function StackNavigator() {
               //   headerBackAccessibilityLabel="ee",
               gestureEnabled: false,
               headerTransparent: true,
-              headerRight: () => (<Button onPress={async function () {
+              headerRight: () => {
+                return <Button onPress={async function () {
 
-                await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
-                await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
-                await FileSystem.deleteAsync(FileSystem.documentDirectory + "ImagePicker/", { idempotent: true })
-
-
-                FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
-                FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/")
+                  await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
+                  await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
+                  await FileSystem.deleteAsync(FileSystem.documentDirectory + "ImagePicker/", { idempotent: true })
 
 
-              }} title="folder" />),
+                  FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
+                  FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/")
+
+
+                }} title="folder" />
+
+              },
             }
           }}
         />

@@ -161,12 +161,10 @@ export function ChatScreen({ navigation, route, ...props }) {
 
   const expandWidth = useSharedValue(50)
 
-  const keyboardHeightRef = useRef(0)
-  if (keyboardHeightRef.current === 0 && (keyboardHeight > 0)) {
-    keyboardHeightRef.current = keyboardHeight
-  }
 
-  const totalBlockHeight = useRef(0)
+
+
+
 
   //display message
   useEffect(function () {
@@ -333,7 +331,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
       setTimeout(() => {
         //scrollRef.current.scrollToEnd()
-        //inputRef.current.blur()
+
         scrollRef.current.scrollToOffset({ offset: 9999, animated: true })
       }, 0);
 
@@ -345,6 +343,8 @@ export function ChatScreen({ navigation, route, ...props }) {
     }
 
   }, [])
+
+
 
 
 
@@ -405,6 +405,13 @@ export function ChatScreen({ navigation, route, ...props }) {
   })
 
 
+  // const bodyStyle = {
+  //   //height: height - titleBarHeight - BOTTOM_HEIGHT - keyboardHeight - inputHeight.value,
+  //   //  height: height - titleBarHeight - BOTTOM_HEIGHT  - inputHeight.value,
+  //   //height: "100%",
+  //   backgroundColor: "skyblue",
+  //   flex:1,
+  // }
 
   function adjustPadding() {
 
@@ -454,18 +461,26 @@ export function ChatScreen({ navigation, route, ...props }) {
   }, [inputText])
 
 
+  // const messageBlockStyle = useAnimatedStyle(() => {
+
+
+  //   return {
+  //     transform: [{ translateY: withTiming(-inputHeight.value) }],
+  //     opacity: opacity.value
+  //   }
+
+  // })
 
 
   const inputStyle = useAnimatedStyle(() => {
 
     return {
       backgroundColor: "blue",
-      height: 60,
-      width: 200,
+      height: "50%",
+      width,
       opacity: 1,
-      // position: "absolute",
-      top: 0,
-      left: 0,
+      position: "absolute",
+      bottom: 0
     }
 
   })
@@ -481,7 +496,6 @@ export function ChatScreen({ navigation, route, ...props }) {
       // bottom: 0,
       width,
       opacity: 1,
-      display: "flex"
       // overflow: "hidden"
     }
 
@@ -514,7 +528,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
 
-
+  
 
 
 
@@ -592,7 +606,7 @@ export function ChatScreen({ navigation, route, ...props }) {
             //   scrollRef.current.scrollToEnd({ animated: true })
 
             // console.log(e.nativeEvent)
-            // console.log(totalBlockHeight.current)
+
             if (canMoveDown.current) {
               scrollRef.current.scrollToOffset({ offset: 9999, animated: true })
 
@@ -668,13 +682,41 @@ export function ChatScreen({ navigation, route, ...props }) {
 
           return (
 
-            <MessageBlock inputRef={inputRef} inputText={inputText}
-              Message={Message} outerProps={props} inputHeight={inputHeight} keyboardHeight={keyboardHeight} totalBlockHeight={totalBlockHeight}
-              messages={messages} />
+            <MessageBlock Message={Message} outerProps={props} inputHeight={inputHeight} keyboardHeight={keyboardHeight} />
+
           )
 
 
+          // return (
+          //   <View style={[messageBlockStyle]}>
 
+          //     <Message {...props} containerStyle={{
+
+          //       left: {
+          //         backgroundColor: "skyblue",
+          //         alignItems: "flex-start",
+          //         alignSelf: "flex-start",
+          //         padding: 0,
+          //         margin: 0,
+          //         width,
+          //         display: "flex",
+          //         transform: [{ translateX: 0 }]
+          //       },
+          //       right: {
+          //         backgroundColor: "green",
+          //         alignItems: "flex-start",
+          //         alignSelf: "flex-start",
+          //         padding: 0,
+          //         margin: 0,
+          //         width,
+          //         display: "flex",
+          //         transform: [{ translateX: 0 }]
+          //       }
+          //     }}
+
+          //     />
+          //   </View>
+          // )
         }}
 
         renderBubble={function (props) {
@@ -688,20 +730,8 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         renderMessageText={function (props) {
 
-
-
-          //return <Text selectable={true} style={{fontSize:20}}>{props.currentMessage.text}</Text>
-
-          return <MessageText {...props}
-
-
-            textStyle={{ left: { fontSize: 20, lineHeight: 30, color: "black" }, right: { fontSize: 20, lineHeight: 30, color: "black" } }} />
-
           //return <MessageTextBlock {...props} />
-          //   return <Pressable onPress={function () { console.log(props.currentMessage.text) }}>
-
-          //   <MessageText {...props} textStyle={{ left: { fontSize: 20, lineHeight: 30, color: "black" }, right: { fontSize: 20, lineHeight: 30, color: "black" } }} />
-          //  </Pressable>
+          return <MessageText {...props} textStyle={{ left: { fontSize: 20, lineHeight: 30, color: "black" }, right: { fontSize: 20, lineHeight: 30, color: "black" } }} />
 
         }}
 
@@ -787,13 +817,12 @@ export function ChatScreen({ navigation, route, ...props }) {
           function (props) {
 
             return (
-
-
+              // <View style={[inputStyle]}>
 
               <InputToolbar {...props}
                 containerStyle={{
 
-                  opacity: 1,
+                  opacity: 0.5,
                   backgroundColor: "green",
                   marginVertical: 0,
 
@@ -806,7 +835,7 @@ export function ChatScreen({ navigation, route, ...props }) {
                   justifyContent: "flex-start",
                   backgroundColor: "yellow",
                   width,
-                  minHeight: 60,
+                  height: 60,
                   padding: 0,
                   paddingHorizontal: 0,
                 }}
@@ -822,12 +851,66 @@ export function ChatScreen({ navigation, route, ...props }) {
                 {props.children}
 
               </InputToolbar>
-
-
+              // </View>
             )
 
 
+            return (
 
+              <View style={[inputStyle]}>
+
+                <InputToolbar {...props}
+                  containerStyle={{
+
+                    opacity: 0.5,
+                    backgroundColor: "green",
+                    marginVertical: 0,
+
+                  }}
+
+                  primaryStyle={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    display: "flex",
+                    justifyContent: "flex-start",
+                    backgroundColor: "yellow",
+                    width,
+                    minHeight: 60,
+                    padding: 0,
+                    paddingHorizontal: 0,
+                  }}
+                  accessoryStyle={{
+                    //  backgroundColor: "orange",
+                    // width: 300,
+                    //   width,
+                    height: "100%",
+
+                  }}
+
+                >
+                  {props.children}
+                </InputToolbar>
+
+                <View style={{
+                  position: "absolute",
+                  right: 0,
+                  zIndex: 100,
+                  height: 60,
+                  width: 60,
+                  backgroundColor: "pink",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}>
+                  <Icon
+                    name="image-outline"
+                    type='ionicon'
+                    color='#517fa4'
+                    size={50}
+                  />
+                </View>
+              </View>
+
+            )
           }
         }
 
@@ -870,14 +953,10 @@ export function ChatScreen({ navigation, route, ...props }) {
             //     }, 0)
             //   }, 0);
 
-            inputHeight.value = inputHeight.value === 0
-              ? 60
-              : 0
+
             //setPaddingHeight(pre => { return pre === 60 ? 120 : 60 })
-            inputRef.current.blur();
-
-
-            //   opacity.value = opacity.value === 0.5 ? 1 : 0.5
+            inputHeight.value = inputHeight.value === 0 ? 60 : 0
+            opacity.value = opacity.value === 0.5 ? 1 : 0.5
           }
         }
 
@@ -889,6 +968,7 @@ export function ChatScreen({ navigation, route, ...props }) {
             //   <Input multiline />
             // )
 
+
             return (
               <>
                 {/* <View style={{ backgroundColor: "orange", width: 100, height: 60, position: "absolute", left: 60, zIndex: 100 }} /> */}
@@ -897,18 +977,14 @@ export function ChatScreen({ navigation, route, ...props }) {
                   //   composerHeight={60}
                   //    textInputStyle={{  paddingHorizontal:8 }}
 
-                  // textInputAutoFocus={true}
-
-
-             //     multiline={true}
+                  multiline={true}
                   disableComposer={false}
                   textInputProps={{
                     // multiline: true,
                     numberOfLines: Math.min([...inputText].filter(c => c === "\n").length + 1, 5),
                     style: { backgroundColor: "green", minHeight: 60, width: width - 120, paddingHorizontal: 8, fontSize: 20, lineHeight: 25, },
                     onPressIn: function () {
-                      inputRef.current.blur(); inputRef.current.focus(); expandWidth.value = 50;
-                      inputHeight.value = 0
+                      // inputRef.current.blur(); inputRef.current.focus(); expandWidth.value = 50;
                     },
                     //   onPressOut: function () { inputRef.current.blur(); },
                     onPressOut: function () {
@@ -1033,24 +1109,6 @@ export function ChatScreen({ navigation, route, ...props }) {
         onSend={
           function (messages) {
 
-
-
-
-            if (!messages[0].image && !messages[0].audio && !messages[0].video) {
-              if (messages[0].text.match(/^[\s]*$/g)) {
-                setInputText("")
-                return inputRef.current.blur()
-
-              }
-
-            }
-
-            // if(messages.currentMessage.text.match(/^[\s]*$/g)){
-            //   setInputText("")
-            //   return
-            // }
-
-
             const messages_ = messages.map(msg => { return { ...msg, createdTime: Date.parse(msg.createdAt), sender: userName } })
             if (userName !== item.name) { socket.emit("sendMessage", { sender: userName, toPerson: item.name, msgArr: messages_ }) }
 
@@ -1068,12 +1126,7 @@ export function ChatScreen({ navigation, route, ...props }) {
               }
 
             })
-            // inputRef.current.blur()
-            //  inputRef.current.focus()
-            // setTimeout(() => {
 
-
-            // }, 0);
 
 
 
@@ -1106,35 +1159,7 @@ export function ChatScreen({ navigation, route, ...props }) {
         renderAccessory={
           function (props) {
             //   console.log(props)
-
-
-
-
-            return <View style={[inputBottomStyle]} >
-
-
-              <Icon
-                onPress={function () {
-                  canMoveDown.current = true; pickImage(setMessages, userName, item, socket)
-                }}
-                name="image-outline"
-                type='ionicon'
-                color='#517fa4'
-                size={inputText ? 0 : 50}
-              />
-
-
-              <Icon
-                onPress={function () { canMoveDown.current = true; takePhoto(setMessages, userName, item, socket) }}
-                name="camera-outline"
-                type='ionicon'
-                color='#517fa4'
-                size={inputText ? 0 : 50}
-              />
-
-
-
-            </View>
+            return <View style={[inputBottomStyle]} />
             // return <Button style={{ width: 300, height: 60 }} title="Fdsfdf" onPress={function () {
             //   scrollRef.current.scrollToOffset({ offset: 9999, animated: true })
 
@@ -1152,7 +1177,7 @@ export function ChatScreen({ navigation, route, ...props }) {
             return (
               <ImageBlock item={item} userName={userName} token={token}
                 imageMessageArr={imageMessageArr} currentMessage={currentMessage} navigation={navigation} route={route} setMessages={setMessages}
-                canMoveDown={canMoveDown} inputRef={inputRef}
+                canMoveDown={canMoveDown}
               />
             )
           }
@@ -1320,100 +1345,24 @@ function ScaleView(props) {
 }
 
 
-function MessageBlock({ Message, messages, inputRef, inputText, outerProps, inputHeight, keyboardHeight, totalBlockHeight, ...props }) {
-
-
-
-
-  const blockHeightRef = useRef()
-
-
-  const enterCount = Math.min([...inputText].filter(c => c === "\n").length, 5);
-  // let extraHeight = [0, 15, 50, 50][enterCount]
-  let extraHeight = [0, 15, 50, 85, 120, 120][enterCount]
-
-
-  const marginTop = useSharedValue(outerProps.currentMessage._id === messages[0]?messages[0]._id ? 300 : 0:0)
-
-  useEffect(function () {
-
-
-    if(messages[0]){
-      marginTop.value = outerProps.currentMessage._id === messages[0]._id ? 300 : 0
-    }
-   
-  })
-
-
-  // const transYValue = useDerivedValue(() => {
-
-  //   if (totalBlockHeight.current < (height * 0.3)) {
-  //     return 0 - extraHeight
-  //   }
-  //   else if (totalBlockHeight.current < (height * 0.5)) {
-  //     return -keyboardHeight / 2 - extraHeight
-  //   }
-  //   else {
-  //     return -inputHeight.value - keyboardHeight - extraHeight
-  //   }
-  // })
-
-
-  const transYValue = useDerivedValue(() => {
-
-    return -inputHeight.value - keyboardHeight - extraHeight
-
-  })
+function MessageBlock({ Message, outerProps, inputHeight, keyboardHeight, ...props }) {
 
 
   const messageBlockStyle = useAnimatedStyle(() => {
+
+
     return {
-      transform: [{ translateY: withTiming(transYValue.value, { duration: 100 }) }],
-      marginTop: marginTop.value
+      transform: [{ translateY: withTiming(-inputHeight.value, { duration: 100 }) }],
       //  opacity: opacity.value
     }
 
   })
 
 
-
-  useEffect(function () {
-
-    // console.log(">>>>>", totalBlockHeight.current)
-    return function () {
-      //  alert(  blockHeightRef.current)
-      //  console.log("==+++++++++++=", totalBlockHeight.current)
-      //  console.log("==========", totalBlockHeight.current)
-
-      totalBlockHeight.current = totalBlockHeight.current - blockHeightRef.current
-
-
-    }
-
-  }, [])
-
-
-
   return (
-
-    <View style={[messageBlockStyle]}
-
-      onLayout={function (e) {
-
-
-
-        blockHeightRef.current = e.nativeEvent.layout.height //+ imageHeight
-
-        //     console.log(">>>", e.nativeEvent.layout.height, blockHeightRef.current)
-
-        totalBlockHeight.current = totalBlockHeight.current + blockHeightRef.current
-      }}
-
-    >
-      <Message {...outerProps}
-
-
-        containerStyle={{
+    <>
+      <View style={[messageBlockStyle]}>
+        <Message {...outerProps} containerStyle={{
 
           left: {
             //     backgroundColor: "skyblue",
@@ -1436,9 +1385,9 @@ function MessageBlock({ Message, messages, inputRef, inputText, outerProps, inpu
             transform: [{ translateX: 0 }]
           }
         }}
-      />
-    </View>
-
+        />
+      </View>
+    </>
   )
 
 }
@@ -1539,7 +1488,7 @@ function BubbleBlock({ token, item, bgColor, setMessages, canMoveDown, ...props 
 
 }
 
-function ImageBlock({ token, scrollRef, item, navigation, route, currentMessage, imageMessageArr, userName, setMessages, canMoveDown, inputRef, ...props }) {
+function ImageBlock({ token, scrollRef, item, navigation, route, currentMessage, imageMessageArr, userName, setMessages, canMoveDown, ...props }) {
 
   const viewRef = useAnimatedRef()
   const [visible, setVisible] = useState(false)
@@ -1571,11 +1520,6 @@ function ImageBlock({ token, scrollRef, item, navigation, route, currentMessage,
           messages: imageMessageArr,
           // setMessages,
         })
-
-      }}
-      onPressIn={function () {
-
-        inputRef.current.blur()
 
       }}
       onLongPress={function () {

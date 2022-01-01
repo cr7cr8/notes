@@ -199,7 +199,7 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
 
   socket.on("connect", function () {
     console.log(`socket ${socket.id + " " + userName} is connected`)
-    socket.emit("helloFromClient")
+   // socket.emit("helloFromClient",userName)
 
     axios.get(`${url}/api/user/fecthunread`, { headers: { "x-auth-token": token } }).then(response => {
 
@@ -310,10 +310,9 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
 
 
 
-  socket.on("helloFromServer", function (data) {
-    console.log("hello on client", data)
-
-  })
+  // socket.on("helloFromServer", function (data) {
+  //   console.log("hello on client", data)
+  // })
 
 
   socket.on("notifyUser", function (sender, msgArr) {

@@ -669,8 +669,8 @@ export function ChatScreen({ navigation, route, ...props }) {
           return (
 
             <MessageBlock inputRef={inputRef} inputText={inputText}
-              Message={Message} outerProps={props} inputHeight={inputHeight} keyboardHeight={keyboardHeight} totalBlockHeight={totalBlockHeight}
-              messages={messages} />
+              Message={Message} outerProps={props} inputHeight={inputHeight} keyboardHeight={keyboardHeight} totalBlockHeight={totalBlockHeight} />
+
           )
 
 
@@ -692,10 +692,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
           //return <Text selectable={true} style={{fontSize:20}}>{props.currentMessage.text}</Text>
 
-          return <MessageText {...props}
-
-
-            textStyle={{ left: { fontSize: 20, lineHeight: 30, color: "black" }, right: { fontSize: 20, lineHeight: 30, color: "black" } }} />
+          return <MessageText {...props} textStyle={{ left: { fontSize: 20, lineHeight: 30, color: "black" }, right: { fontSize: 20, lineHeight: 30, color: "black" } }} />
 
           //return <MessageTextBlock {...props} />
           //   return <Pressable onPress={function () { console.log(props.currentMessage.text) }}>
@@ -900,7 +897,7 @@ export function ChatScreen({ navigation, route, ...props }) {
                   // textInputAutoFocus={true}
 
 
-             //     multiline={true}
+                  multiline={true}
                   disableComposer={false}
                   textInputProps={{
                     // multiline: true,
@@ -1320,7 +1317,29 @@ function ScaleView(props) {
 }
 
 
-function MessageBlock({ Message, messages, inputRef, inputText, outerProps, inputHeight, keyboardHeight, totalBlockHeight, ...props }) {
+function MessageBlock({ Message, inputRef, inputText, outerProps, inputHeight, keyboardHeight, totalBlockHeight, ...props }) {
+
+
+
+
+  //   const currentMessage = outerProps.currentMessage
+
+
+  //   let imageWidth = currentMessage.imageWidth || 0
+  //   let imageHeight = currentMessage.imageHeight || 0
+
+  //   if (imageWidth && imageHeight && (imageWidth <= imageHeight)) {
+  //     imageWidth = imageWidth * 200 / imageHeight
+  //     imageHeight = 200
+  //   }
+  //   else if (imageWidth && imageHeight && (imageWidth > imageHeight)) {
+
+  //     imageHeight = imageHeight * 200 / imageWidth
+  //     imageWidth = 200
+  //   }
+
+  // console.log("imageHeight", imageHeight)
+
 
 
 
@@ -1333,48 +1352,64 @@ function MessageBlock({ Message, messages, inputRef, inputText, outerProps, inpu
   let extraHeight = [0, 15, 50, 85, 120, 120][enterCount]
 
 
-  const marginTop = useSharedValue(outerProps.currentMessage._id === messages[0]?messages[0]._id ? 300 : 0:0)
-
-  useEffect(function () {
-
-
-    if(messages[0]){
-      marginTop.value = outerProps.currentMessage._id === messages[0]._id ? 300 : 0
-    }
-   
-  })
-
-
-  // const transYValue = useDerivedValue(() => {
-
-  //   if (totalBlockHeight.current < (height * 0.3)) {
-  //     return 0 - extraHeight
-  //   }
-  //   else if (totalBlockHeight.current < (height * 0.5)) {
-  //     return -keyboardHeight / 2 - extraHeight
-  //   }
-  //   else {
-  //     return -inputHeight.value - keyboardHeight - extraHeight
-  //   }
-  // })
 
 
   const transYValue = useDerivedValue(() => {
 
-    return -inputHeight.value - keyboardHeight - extraHeight
+    if (totalBlockHeight.current < (height * 0.3)) {
+      return 0 - extraHeight
+    }
+    else if (totalBlockHeight.current < (height * 0.5)) {
+      return -keyboardHeight / 2 - extraHeight
+    }
 
+    // else if (totalBlockHeight.current < (height / 2 + 120)) {
+    //   return -keyboardHeight / 1.5
+    // }
+
+    // if (totalBlockHeight.current < (height / 2)) {
+    //   return -inputHeight.value - keyboardHeight
+    // }
+    else {
+      return -inputHeight.value - keyboardHeight - extraHeight
+    }
   })
+
 
 
   const messageBlockStyle = useAnimatedStyle(() => {
     return {
       transform: [{ translateY: withTiming(transYValue.value, { duration: 100 }) }],
-      marginTop: marginTop.value
       //  opacity: opacity.value
     }
 
   })
 
+  // useEffect(function () {
+
+  //   setTimeout(() => {
+  //     if (totalBlockHeight.current < (height / 2)) {
+  //       //    transYValue.value = 0
+  //       transYValue.value = -inputHeight.value - keyboardHeight
+  //     }
+  //     else if (totalBlockHeight.current < (height / 2 + 60)) {
+  //       //    transYValue.value = -keyboardHeight / 2.5
+  //       transYValue.value = -inputHeight.value - keyboardHeight
+  //     }
+
+  //     else if (totalBlockHeight.current < (height / 2 + 120)) {
+  //       //   transYValue.value = -keyboardHeight / 1.5
+  //       transYValue.value = -inputHeight.value - keyboardHeight
+  //     }
+
+  //     else {
+  //       transYValue.value = -inputHeight.value - keyboardHeight
+  //     }
+
+  //   }, 100);
+
+
+  // })
 
 
   useEffect(function () {
@@ -1404,7 +1439,7 @@ function MessageBlock({ Message, messages, inputRef, inputText, outerProps, inpu
 
         blockHeightRef.current = e.nativeEvent.layout.height //+ imageHeight
 
-        //     console.log(">>>", e.nativeEvent.layout.height, blockHeightRef.current)
+   //     console.log(">>>", e.nativeEvent.layout.height, blockHeightRef.current)
 
         totalBlockHeight.current = totalBlockHeight.current + blockHeightRef.current
       }}

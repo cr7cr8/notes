@@ -32,13 +32,15 @@ import { HomeScreen, DetailScreen } from "./HomeScreen";
 
 
 
-import React, { useState, useRef, useEffect, useContext, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext, useLayoutEffect} from 'react';
 
 import { createSharedElementStackNavigator } from 'react-navigation-shared-element';
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
 
 
-import { AppState, StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Pressable, TouchableHighlight, TouchableWithoutFeedback, ImageBackground } from 'react-native';
+import { AppState, StyleSheet, Dimensions, TouchableOpacity, 
+  SafeAreaView,
+  TouchableNativeFeedback, Pressable, TouchableHighlight, TouchableWithoutFeedback, ImageBackground } from 'react-native';
 
 import ReAnimated, {
   useAnimatedStyle, useSharedValue, useDerivedValue,
