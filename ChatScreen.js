@@ -936,7 +936,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
             return (
               <>
-                <SendBtn outerProps={props} Send={Send} inputText={inputText} inputHeight={inputHeight} inputRef={inputRef} />
+                <SendBtn outerProps={props} Send={Send} inputText={inputText} inputHeight={inputHeight} inputRef={inputRef} keyboardHeight={keyboardHeight} />
               </>
             )
 
@@ -1235,7 +1235,37 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
 
-function SendBtn({ outerProps, inputText, inputHeight, inputRef, ...props }) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function SendBtn({ outerProps, inputText, inputHeight, inputRef, keyboardHeight, ...props }) {
 
 
   const viewTranslateX = useDerivedValue(() => {
@@ -1268,11 +1298,6 @@ function SendBtn({ outerProps, inputText, inputHeight, inputRef, ...props }) {
 
 
   return (
-
-
-
-
-
 
     <Send {...outerProps}
       containerStyle={{
@@ -1317,13 +1342,45 @@ function SendBtn({ outerProps, inputText, inputHeight, inputRef, ...props }) {
               inputHeight.value = 60
               inputRef.current.blur()
             }
-            else if (inputHeight.value === 0) {
-
-                
+            else if (inputHeight.value !== 0) {
+              inputHeight.value = 0
+              inputRef.current.blur()
             }
+
+            // if (inputHeight.value === 0 && keyboardHeight === 0) {
+            //   inputHeight.value = 60
+            //   inputRef.current.blur()
+            // }
+            // else if (inputHeight.value !== 0 && keyboardHeight === 0) {
+            //   inputHeight.value = 0
+            //   inputRef.current.focus()
+            // }
+            // else if (inputHeight.value === 0 && keyboardHeight !== 0) {
+            //   inputHeight.value = 0
+            //   inputRef.current.blur()
+            // }
+
+
             // inputHeight.value = inputHeight.value === 0 ? 60 : 0
             // inputRef.current.blur()
 
+          }}
+        />
+
+
+        <Icon
+          name='remove-circle-outline'
+          type='ionicon'
+          color='#517fa4'
+          size={50}
+          containerStyle={{
+            backgroundColor: 'skyblue', width: 60, height: 60,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "absolute",
+            top: 0,
+            left: 60,
           }}
         />
 
