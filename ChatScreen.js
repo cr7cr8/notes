@@ -442,16 +442,17 @@ export function ChatScreen({ navigation, route, ...props }) {
   }, [inputHeight.value])
 
 
-  useEffect(function () {
+  // useEffect(function () {
 
-    if (inputText.slice(-1) !== "\n") { return };
-    // console.log(inputHeight.value)
-    setTimeout(() => {
 
-      scrollRef.current && scrollRef.current.scrollToOffset({ offset: 9999, animated: true })
+  //   if (inputText.slice(-1) !== "\n") { return };
+  //   // console.log(inputHeight.value)
+  //   setTimeout(() => {
 
-    }, 1000);
-  }, [inputText])
+  //     scrollRef.current && scrollRef.current.scrollToOffset({ offset: 9999, animated: true })
+
+  //   }, 1000);
+  // }, [inputText])
 
 
 
@@ -900,7 +901,7 @@ export function ChatScreen({ navigation, route, ...props }) {
                   // textInputAutoFocus={true}
 
 
-             //     multiline={true}
+                  //     multiline={true}
                   disableComposer={false}
                   textInputProps={{
                     // multiline: true,
@@ -931,6 +932,17 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         renderSend={
           function (props) {
+
+
+            return (
+              <>
+                <SendBtn outerProps={props} Send={Send} inputText={inputText} inputHeight={inputHeight} inputRef={inputRef} />
+              </>
+            )
+
+
+
+
 
             return (
               <Send {...props}
@@ -1201,18 +1213,6 @@ export function ChatScreen({ navigation, route, ...props }) {
 
       {/* </View> */}
 
-
-
-
-
-
-
-
-
-
-
-
-
       {/* <OverlayDownloader overLayOn={overLayOn} setOverLayOn={setOverLayOn} uri={uri} fileName={Date.now() + ".jpg"} /> */}
 
     </>
@@ -1235,89 +1235,133 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
 
+function SendBtn({ outerProps, inputText, inputHeight, inputRef, ...props }) {
 
 
+  const viewTranslateX = useDerivedValue(() => {
+
+    return inputText ? -60 : 0
+
+  })
 
 
+  const viewStyle = useAnimatedStyle(() => {
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-ChatScreen.sharedElements = (route, otherRoute, showing) => {
-
-  let messageArr = []
-  if (otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.messages) {
-    messageArr = otherRoute.route.params.messages.map(item => {
-      return { id: item._id, animation: "move", resize: "auto", align: "left" }
-    })
-
-  }
-
-  return [
-    { id: route.params.item.name, animation: "move", resize: "auto", align: "left", },
-    // ...messageArr,   // turn back image transition off
-  ]
-};
-
-function ScaleView(props) {
-
-  const scale = useSharedValue(0)
-  const scaleStyle = useAnimatedStyle(() => {
     return {
-      transform: [
-        { scale: withTiming(scale.value, { duration: 200 }) },
-        //   {translateX: withTiming(interpolate(scale.value, [0, 1], [-100, 0]), {duration: 2000 }) }
-      ],
-      //  opacity: withTiming(scale.value, {duration: 200 }),
-      overflow: "hidden",
+      height: 60,
+      width: 60,
+      backgroundColor: "orange",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "flex-start",
+
+      flexDirection: "row",
+
+      transform: [{ translateX: viewTranslateX.value }],
+
+      //  overflow: "hidden"
+
     }
   })
 
-  useEffect(function () {
-    scale.value = 1
-  }, [])
+
 
   return (
-    <View style={scaleStyle}    >
-      {props.children}
-    </View>
+
+
+
+
+
+
+    <Send {...outerProps}
+      containerStyle={{
+        //    alignSelf: !inputText || inputText.indexOf("\n") === -1 ? "center" : "flex-end",
+        alignSelf: "center",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "row",
+        margin: 0,
+        padding: 0,
+        backgroundColor: "red",
+        width: 60,
+        height: 60,
+        overflow: "hidden",
+        // transform:[{translateX:50}],
+        // zIndex:100
+      }}
+    >
+
+
+      <View style={[viewStyle]}>
+
+        <Icon
+          name='add-circle-outline'
+          type='ionicon'
+          color='#517fa4'
+          size={50}
+          containerStyle={{
+            backgroundColor: '#517fa4', backgroundColor: "pink", width: 60, height: 60,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "absolute",
+            top: 0,
+            left: 0,
+
+          }}
+          onPress={function () {
+
+            if (inputHeight.value === 0) {
+              inputHeight.value = 60
+              inputRef.current.blur()
+            }
+            else if (inputHeight.value === 0) {
+
+                
+            }
+            // inputHeight.value = inputHeight.value === 0 ? 60 : 0
+            // inputRef.current.blur()
+
+          }}
+        />
+
+
+        <Icon
+          name='send'
+          type='ionicon'
+          color='#517fa4'
+          size={50}
+          containerStyle={{
+            backgroundColor: 'skyblue', width: 60, height: 60,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "absolute",
+            top: 0,
+            left: 60,
+          }}
+        />
+
+
+      </View>
+
+    </Send>
+
+
+
+
   )
 }
+
+
+
+
+
+
+
+
 
 
 function MessageBlock({ Message, messages, inputRef, inputText, outerProps, inputHeight, keyboardHeight, totalBlockHeight, ...props }) {
@@ -1333,15 +1377,21 @@ function MessageBlock({ Message, messages, inputRef, inputText, outerProps, inpu
   let extraHeight = [0, 15, 50, 85, 120, 120][enterCount]
 
 
-  const marginTop = useSharedValue(outerProps.currentMessage._id === messages[0]?messages[0]._id ? 300 : 0:0)
+  const marginTop = useSharedValue(
+    outerProps.currentMessage._id === messages[0]
+      ? (messages[0]._id && (messages.length < 5))
+        ? 300
+        : 0
+      : 0
+  )
 
   useEffect(function () {
 
 
-    if(messages[0]){
-      marginTop.value = outerProps.currentMessage._id === messages[0]._id ? 300 : 0
+    if (messages[0]) {
+      marginTop.value = (outerProps.currentMessage._id === messages[0]._id && (messages.length < 5)) ? 300 : 0
     }
-   
+
   })
 
 
@@ -1442,8 +1492,6 @@ function MessageBlock({ Message, messages, inputRef, inputText, outerProps, inpu
   )
 
 }
-
-
 
 function BubbleBlock({ token, item, bgColor, setMessages, canMoveDown, ...props }) {
 
@@ -1631,6 +1679,27 @@ function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, i
 
   const { setSnackBarHeight, setSnackMsg } = useContext(Context)
 
+  const overlayScale = useSharedValue(0.5)
+  const viewStyle = useAnimatedStyle(() => {
+
+
+    return {
+
+      width: 100,
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "space-around",
+      alignItems: "center",
+      backgroundColor: "gray",
+      // transform: [{ scale: withTiming(overlayScale.value) }],
+      overflow: "hidden",
+    }
+
+  })
+  useEffect(function () {
+
+    overlayScale.value = 2
+  }, [])
 
 
   return <Overlay isVisible={visible} fullScreen={false}
@@ -1644,7 +1713,7 @@ function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, i
     onBackdropPress={function () { setVisible(false) }}
   >
     <ScaleView>
-      <View style={{ width: 100, display: "flex", flexDirection: "row", justifyContent: "space-around", alignItems: "center", backgroundColor: "gray" }} >
+      <View style={[viewStyle]} >
 
         <Icon
           name={isText ? "copy-outline" : "arrow-down-circle-outline"}
@@ -1714,8 +1783,6 @@ function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, i
 
 }
 
-
-
 async function pickImage(setMessages, userName, item, socket) {
   let result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -1768,10 +1835,6 @@ async function pickImage(setMessages, userName, item, socket) {
       }).then(data => {
         socket.emit("sendMessage", { sender: userName, toPerson: item.name, msgArr: [data] })
       })
-
-
-
-
   }
 };
 
@@ -1824,7 +1887,6 @@ async function takePhoto(setMessages, userName, item, socket) {
     // todo: send image to server
   }
 }
-
 
 async function downloadFromUri(uri, setSnackMsg, setSnackBarHeight) {
 
@@ -1911,3 +1973,52 @@ async function uploadImage({ localUri, filename, sender, toPerson, imageWidth, i
 
 
 
+
+
+
+
+
+
+
+
+function ScaleView(props) {
+
+  const scale = useSharedValue(0)
+  const scaleStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { scale: withTiming(scale.value, { duration: 200 }) },
+        //   {translateX: withTiming(interpolate(scale.value, [0, 1], [-100, 0]), {duration: 2000 }) }
+      ],
+      //  opacity: withTiming(scale.value, {duration: 200 }),
+      overflow: "hidden",
+    }
+  })
+
+  useEffect(function () {
+    scale.value = 1
+  }, [])
+
+  return (
+    <View style={scaleStyle}    >
+      {props.children}
+    </View>
+  )
+}
+
+
+ChatScreen.sharedElements = (route, otherRoute, showing) => {
+
+  let messageArr = []
+  if (otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.messages) {
+    messageArr = otherRoute.route.params.messages.map(item => {
+      return { id: item._id, animation: "move", resize: "auto", align: "left" }
+    })
+
+  }
+
+  return [
+    { id: route.params.item.name, animation: "move", resize: "auto", align: "left", },
+    // ...messageArr,   // turn back image transition off
+  ]
+};
