@@ -1,3 +1,39 @@
+import {
+  StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Keyboard, Pressable, Vibration, UIManager, findNodeHandle,
+
+  SafeAreaView,
+  KeyboardAvoidingView,
+
+} from 'react-native';
+
+
+import ReAnimated, {
+  useAnimatedStyle, useSharedValue, useDerivedValue,
+  withTiming, cancelAnimation, runOnUI, useAnimatedReaction, runOnJS,
+  useAnimatedGestureHandler,
+  interpolate,
+  withDelay,
+  withSpring,
+  useAnimatedScrollHandler,
+  Extrapolate,
+  //interpolateColors,
+
+  useAnimatedProps,
+  withSequence,
+  withDecay,
+  measure,
+  useAnimatedRef,
+  withRepeat
+
+} from 'react-native-reanimated';
+import React, { useState, useRef, useEffect, useContext, useCallback } from 'react';
+
+const { View, Text, Image: ImageV, ScrollView: ScrollV, } = ReAnimated
+
+
+
+
+
 const url = "http://192.168.0.100";
 
 
@@ -40,6 +76,36 @@ export function hexify(color) {
     ("0" + g.toString(16)).slice(-2) +
     ("0" + b.toString(16)).slice(-2);
 }
+
+
+
+
+
+export function ScaleView(props) {
+
+  const scale = useSharedValue(0)
+  const scaleStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { scale: withTiming(scale.value, { duration: 200 }) },
+        //   {translateX: withTiming(interpolate(scale.value, [0, 1], [-100, 0]), {duration: 2000 }) }
+      ],
+      //  opacity: withTiming(scale.value, {duration: 200 }),
+      overflow: "hidden",
+    }
+  })
+
+  useEffect(function () {
+    scale.value = 1
+  }, [])
+
+  return (
+    <View style={scaleStyle}    >
+      {props.children}
+    </View>
+  )
+}
+
 
 
 

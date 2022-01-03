@@ -390,9 +390,9 @@ export function ChatScreen({ navigation, route, ...props }) {
   const micBarStyle = useAnimatedStyle(() => {
 
     return {
-      width: withTiming(micBarWidth.value, { duration: 100 }),
+      //   width: withTiming(micBarWidth.value, { duration: 100 }),
 
-      //  width: withRepeat(withTiming(micBarWidth.value, { duration: 1000 }), -1, true),
+      width: withRepeat(withTiming(micBarWidth.value, { duration: 1000 }), -1, true),
 
       height: 60,
       backgroundColor: "orange",
@@ -401,39 +401,12 @@ export function ChatScreen({ navigation, route, ...props }) {
       zIndex: 100,
       display: "flex",
       alignItems: "center",
-      justifyContent: "center",
+      justifyContent: "flex-end",
       overflow: "hidden",
       // display:"relative",
     }
   })
 
-
-  const minBarTextIndex = useSharedValue(0)
-  const micBarTextStyle0 = useAnimatedStyle(() => {
-    return {
-      display:minBarTextIndex.value===0?"block":"none"
-    }
-  })
-  const micBarTextStyle1 = useAnimatedStyle(() => {
-    return {
-      display:minBarTextIndex.value===1?"block":"none"
-    }
-  })
-  const micBarTextStyle2 = useAnimatedStyle(() => {
-    return {
-      display:minBarTextIndex.value===2?"block":"none"
-    }
-  })
-  const micBarTextStyle3 = useAnimatedStyle(() => {
-    return {
-      display:minBarTextIndex.value===3?"block":"none"
-    }
-  })
-  const micBarTextStyle4 = useAnimatedStyle(() => {
-    return {
-      display:minBarTextIndex.value===4?"block":"none"
-    }
-  })
 
 
 
@@ -846,12 +819,28 @@ export function ChatScreen({ navigation, route, ...props }) {
         }
         onPressActionButton={
           function () {
+            // setTimeout(
+            //   () => {
+            //     setTimeout(() => {
+            //       scrollRef.current.scrollToOffset({ offset: 9999, animated: true })
+            //     }, 0)
+            //   }, 0);
 
+            // inputHeight.value = inputHeight.value === 0
+            //   ? 60
+            //   : 0
+            //    inputHeight.value = 0
+            //    inputRef.current.blur()
 
             micBarWidth.value = micBarWidth.value === 0
               ? width - 120
               : 0
 
+            //setPaddingHeight(pre => { return pre === 60 ? 120 : 60 })
+
+
+
+            //   opacity.value = opacity.value === 0.5 ? 1 : 0.5
           }
         }
 
@@ -867,19 +856,30 @@ export function ChatScreen({ navigation, route, ...props }) {
               <>
                 <PanGestureHandler onGestureEvent={backGesture}>
                   <View style={[micBarStyle]} >
+                    {<Button containerStyle={{ height: 60, width: width - 120, opacity: 0, backgroundColor: "green", overflow: "hidden" }}
+                      buttonStyle={{ width: width - 120, height: 60 }}
+                      title={micBarText}
+                      onPressIn={async function () {
 
-                    {/* <View style={{height:60, width:width-120, backgroundColor:"purple", display:"flex",alignItems:"center",justifyContent:"center"}}> */}
-                    <Text style={[micBarTextStyle0]}>hold to talk</Text>
-                    <Text style={[micBarTextStyle1]}>recording</Text>
-                    <Text style={[micBarTextStyle2]}>recording.</Text>
-                    <Text style={[micBarTextStyle3]}>recording..</Text>
-                    <Text style={[micBarTextStyle4]}>recording...</Text>
+                        audioZIndex.value = 200
+                        //todo hold to talk
+                        // setMicBarText("recording")
+                        // console.log("in")
+                        // await startRecording(setRecording)
+                      }}
+                      onPressOut={async function () {
+                        // setMicBarText("hold to talk")
+                        // console.log("out")
+                        // await stopRecording(recording, setRecording)
 
-                    {/* </View> */}
 
 
+                        //   recording.sound.replayAsync()
 
+                      }}
+                      onPress={function () { }}
 
+                    />}
                   </View>
                 </PanGestureHandler>
                 <Composer {...props}
@@ -921,10 +921,112 @@ export function ChatScreen({ navigation, route, ...props }) {
         renderSend={
           function (props) {
 
+
             return (
               <>
                 <SendBtn outerProps={props} Send={Send} inputText={inputText} inputHeight={inputHeight} inputRef={inputRef} keyboardHeight={keyboardHeight} />
               </>
+            )
+
+
+
+
+
+            return (
+              <Send {...props}
+
+                //   ref={(element) => { console.log(element) }}
+                containerStyle={{
+                  //    alignSelf: !inputText || inputText.indexOf("\n") === -1 ? "center" : "flex-end",
+                  alignSelf: "center",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  margin: 0,
+                  padding: 0,
+                  backgroundColor: "red",
+                  width: 60,
+                  height: 60,
+                  // transform:[{translateX:50}],
+                  // zIndex:100
+                }}
+
+                textStyle={{
+
+                  marginBottom: 0,
+                  marginLeft: 0,
+                  marginRight: 0,
+                }}
+              />
+
+
+            )
+
+
+
+            return (
+              <Send {...props}
+
+                //   ref={(element) => { console.log(element) }}
+                containerStyle={{
+                  alignSelf: !inputText || inputText.indexOf("\n") === -1 ? "center" : "flex-end",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  margin: 0,
+                  padding: 0,
+                  // transform:[{translateX:50}],
+                  // zIndex:100
+                }}>
+
+                <View style={
+                  [sendBtnStyle]
+                }>
+
+                  <Icon
+                    onPress={function () {
+                      canMoveDown.current = true; pickImage(setMessages, userName, item, socket)
+                    }}
+                    name="image-outline"
+                    type='ionicon'
+                    color='#517fa4'
+                    size={inputText ? 0 : 50}
+                  />
+
+
+                  <Icon
+                    onPress={function () { canMoveDown.current = true; takePhoto(setMessages, userName, item, socket) }}
+                    name="camera-outline"
+                    type='ionicon'
+                    color='#517fa4'
+                    size={inputText ? 0 : 50}
+                  />
+
+
+                  <Icon
+                    onPress={function () { }}
+                    name="film-outline"
+                    type='ionicon'
+                    color='#517fa4'
+                    size={inputText ? 0 : 50}
+                  />
+
+                  <Icon
+                    {...(!inputText) && {
+                      onPress: function () { expandWidth.value = expandWidth.value === 50 ? 200 : 50 }
+                    }}
+
+                    name={inputText ? 'send' : expandWidth.value === 50 ? 'add-circle-outline' : 'remove-circle-outline'}
+                    type='ionicon'
+                    color='#517fa4'
+                    size={inputText ? 45 : 50}
+                  //    containerStyle={{backgroundColor:'#517fa4',}}
+                  />
+
+                </View>
+              </Send>
             )
           }
         }
@@ -1088,7 +1190,7 @@ export function ChatScreen({ navigation, route, ...props }) {
         }
 
       />
-
+     
 
     </>
   )
