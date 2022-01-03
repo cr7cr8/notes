@@ -28,7 +28,8 @@ import ReAnimated, {
   withDecay,
   measure,
   useAnimatedRef,
-  withRepeat
+  withRepeat,
+  Easing,
 
 } from 'react-native-reanimated';
 //import Svg, { Circle, Rect, SvgUri } from 'react-native-svg';
@@ -375,7 +376,6 @@ export function ChatScreen({ navigation, route, ...props }) {
 
   const inputHeight = useSharedValue(0)
 
-
   useEffect(function () {
 
     // console.log(inputHeight.value)
@@ -403,37 +403,29 @@ export function ChatScreen({ navigation, route, ...props }) {
       alignItems: "center",
       justifyContent: "center",
       overflow: "hidden",
+
+      // flexDirection: "row"
       // display:"relative",
     }
   })
 
+  const isReleased = useSharedValue(1)
+  const releasedStyle = useAnimatedStyle(() => {
+    return {
+      display: isReleased.value === 1 ? "flex" : "none",
+      color: "white",
+      fontSize: 20,
+    }
+  })
 
-  const minBarTextIndex = useSharedValue(0)
-  const micBarTextStyle0 = useAnimatedStyle(() => {
+  const onHoldStyle = useAnimatedStyle(() => {
+
     return {
-      display:minBarTextIndex.value===0?"block":"none"
+      display: isReleased.value === 1 ? "none" : "flex"
     }
+
   })
-  const micBarTextStyle1 = useAnimatedStyle(() => {
-    return {
-      display:minBarTextIndex.value===1?"block":"none"
-    }
-  })
-  const micBarTextStyle2 = useAnimatedStyle(() => {
-    return {
-      display:minBarTextIndex.value===2?"block":"none"
-    }
-  })
-  const micBarTextStyle3 = useAnimatedStyle(() => {
-    return {
-      display:minBarTextIndex.value===3?"block":"none"
-    }
-  })
-  const micBarTextStyle4 = useAnimatedStyle(() => {
-    return {
-      display:minBarTextIndex.value===4?"block":"none"
-    }
-  })
+
 
 
 
@@ -464,38 +456,78 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
 
-  const audioZIndex = useSharedValue(-10)
   const backGesture = useAnimatedGestureHandler({
 
 
     onStart: (event, obj) => {
+      isReleased.value = 0
+      obj.translationX = event.translationX
+      obj.translationY = event.translationY
 
-
+      runOnJS(callStartRecording)()
 
     },
     onActive: (event, obj) => {
-      console.log(event)
+      isReleased.value = 0
+      obj.translationX = event.translationX
+      obj.translationY = event.translationY
+
+
     },
     onEnd: (event, obj) => {
+      obj.translationX = event.translationX
+      obj.translationY = event.translationY
 
 
-      audioZIndex.value = -10
+
 
     },
     onFail: (event, obj) => {
+      obj.translationX = event.translationX
+      obj.translationY = event.translationY
 
+      console.log("gesture fail")
     },
     onCancel: (event, obj) => {
+      obj.translationX = event.translationX
+      obj.translationY = event.translationY
+
+
+      console.log("gesture cancel")
+
 
     },
     onFinish: (event, obj) => {
 
+      if ((obj.translationY < -60) && (isReleased.value === 0)) {
+        runOnJS(callCancelRecording)()
+      }
+      else if ((obj.translationX < -60) && (isReleased.value === 0)) {
+        runOnJS(callCancelRecording)()
+        micBarWidth.value = 0
+      }
+      else if ((obj.translationY >= -60) && (isReleased.value === 0)) {
+        runOnJS(callStopRecording)()
+      }
+
+
+      isReleased.value = 1
     }
 
   })
 
 
+  function callStartRecording() {
+    startRecording(recording, setRecording)
+  }
 
+  function callStopRecording() {
+    stopRecording({ messages, setMessages, recording, setRecording, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice })
+  }
+
+  function callCancelRecording() {
+    cancelRecording(recording, setRecording)
+  }
 
 
 
@@ -868,12 +900,36 @@ export function ChatScreen({ navigation, route, ...props }) {
                 <PanGestureHandler onGestureEvent={backGesture}>
                   <View style={[micBarStyle]} >
 
+
+                    <Text style={[releasedStyle]}>Hold to talk</Text>
+
+                    <View style={[onHoldStyle]}>
+                      <LinearProgress style={{ height: 60, width: width - 120 }} />
+                      <Text style={{
+                        fontSize: 20,
+                        color: "white",
+                        position: "absolute",
+                      }}>recording,move up to cancel</Text>
+                    </View>
+
+                    {/* <Text style={[micBarTextStyle1]}>recording</Text> */}
+                    {/* <Button title="Aaddd" loading={true} buttonStyle={{ color: "yellow",backgroundColor:"pink" }}
+                         loadingStyle={{ color: "red" }}
+                      iconContainerStyle={{color:"red"}}
+                      textInputProps={{ style: { color: "yellow" } }}
+                      containerStyle={{ color: "yellow", backgroundColor:"pink" }}
+                      titleStyle={{color:"yellow"}}
+                      disabledTitleStyle={{color:"red"}}
+                      
+                    //   disabled={true}
+                    /> */}
+
                     {/* <View style={{height:60, width:width-120, backgroundColor:"purple", display:"flex",alignItems:"center",justifyContent:"center"}}> */}
-                    <Text style={[micBarTextStyle0]}>hold to talk</Text>
-                    <Text style={[micBarTextStyle1]}>recording</Text>
+                    {/* <Text style={[micBarTextStyle0]}>hold to talk</Text> */}
+                    {/* <Text style={[micBarTextStyle1]}>recording</Text>
                     <Text style={[micBarTextStyle2]}>recording.</Text>
                     <Text style={[micBarTextStyle3]}>recording..</Text>
-                    <Text style={[micBarTextStyle4]}>recording...</Text>
+                    <Text style={[micBarTextStyle4]}>recording...</Text> */}
 
                     {/* </View> */}
 
@@ -1055,6 +1111,12 @@ export function ChatScreen({ navigation, route, ...props }) {
             )
           }
         }
+
+        renderMessageAudio={function (message) {
+
+
+          return <Button title="Fsdf" />
+        }}
 
 
 
@@ -1875,7 +1937,7 @@ async function uploadImage({ localUri, filename, sender, toPerson, imageWidth, i
 
 }
 
-async function startRecording(setRecording) {
+async function startRecording0(setRecording) {
   try {
     console.log('Requesting permissions..');
     await Audio.requestPermissionsAsync();
@@ -1894,9 +1956,48 @@ async function startRecording(setRecording) {
   }
 }
 
+async function startRecording(recording, setRecording) {
+  try {
+    if (recording) { 
+      setRecording(undefined);
+      await recording.stopAndUnloadAsync();
+      return 
+    }
+    console.log('Requesting permissions..');
+    await Audio.requestPermissionsAsync();
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: true,
+      playsInSilentModeIOS: true,
+    });
+    console.log('Starting recording..');
+    const { recording } = await Audio.Recording.createAsync(
+      Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
+    );
+    setRecording(recording);
+    console.log('Recording started');
+  } catch (err) {
+    console.error('Failed to start recording', err);
+    setRecording(undefined);
+    if (recording) {
+      await recording.stopAndUnloadAsync();
+    }
+
+  }
+}
 
 
-async function stopRecording(recording, setRecording) {
+
+
+
+
+
+
+
+
+
+
+
+async function stopRecording0({ recording, setRecording }) {
   console.log('Stopping recording..');
   setRecording(undefined);
   await recording.stopAndUnloadAsync();
@@ -1912,6 +2013,93 @@ async function stopRecording(recording, setRecording) {
 
 
 
+async function stopRecording({ messages, setMessages, recording, setRecording, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice }) {
+
+  try {
+    setRecording(undefined);
+    if (!recording) { return }
+    await recording.stopAndUnloadAsync();
+
+    const { sound, status } = await recording.createNewLoadedSoundAsync();
+    await sound.replayAsync()
+    const uri = recording.getURI();
+    // console.log(recording)
+
+    console.log('Recording stopped and stored at', uri);
+
+
+    const time = Date.now()
+
+
+    const audioMsg = {
+      _id: time,
+      text: '',
+      createdAt: time,
+      createdTime: time,
+
+      user: { _id: userName },
+      audio: uri
+    }
+
+
+
+
+    canMoveDown.current = true
+
+    setMessages(pre => {
+      if (pre.length >= 20) {
+        previousMessages.current = previousMessages.current.concat(pre.slice(0, pre.length - 10))
+        if (!shouldDisplayNotice && (previousMessages.current.length > 0)) { setShouldDisplayNotice(true) }
+        return GiftedChat.prepend(pre.slice(-10), { ...audioMsg, isLocal: true })
+      }
+      else {
+        return GiftedChat.prepend(pre, { ...audioMsg, isLocal: true })
+      }
+
+    })
+  }
+  catch (err) {
+    console.error('error in stopRecording', err);
+    setRecording(undefined);
+    if (recording) {
+      await recording.stopAndUnloadAsync();
+    }
+
+  }
+
+
+
+
+  // await recording.stopAndUnloadAsync();
+
+  // const { sound, status } = await recording.createNewLoadedSoundAsync();
+  // await sound.replayAsync()
+  // const uri = recording.getURI();
+  // console.log(recording)
+
+  // console.log('Recording stopped and stored at', uri);
+}
+
+
+
+async function cancelRecording(recording, setRecording) {
+  console.log('Cancel recording..');
+  try {
+    if (recording) {
+      await recording.stopAndUnloadAsync();
+      setRecording(undefined);
+    }
+  }
+  catch (err) {
+    console.error('error in cancelRecording', err);
+    setRecording(undefined);
+    if (recording) {
+      await recording.stopAndUnloadAsync();
+    }
+
+  }
+
+}
 
 
 

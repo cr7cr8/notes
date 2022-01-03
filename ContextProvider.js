@@ -133,6 +133,21 @@ export default function ContextProvider(props) {
 
   useEffect(async function () {
 
+    console.log(FileSystem.cacheDirectory)
+
+    FileSystem.readDirectoryAsync(FileSystem.cacheDirectory+"Audio/").then(data => {
+      console.log(data)
+      if (data) {
+        data.forEach(filename => {
+          FileSystem.deleteAsync(FileSystem.cacheDirectory+"Audio/" + filename, { idempotent: true })
+        })
+      }
+    })
+
+
+
+
+
     const info = await FileSystem.getInfoAsync(FileSystem.documentDirectory + "MessageFolder/")
 
     if (!info.exists) {
@@ -149,6 +164,7 @@ export default function ContextProvider(props) {
     else {
       return info2
     }
+
 
     //FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
 
@@ -199,7 +215,7 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
 
   socket.on("connect", function () {
     console.log(`socket ${socket.id + " " + userName} is connected`)
-   // socket.emit("helloFromClient",userName)
+    // socket.emit("helloFromClient",userName)
 
     axios.get(`${url}/api/user/fecthunread`, { headers: { "x-auth-token": token } }).then(response => {
 
