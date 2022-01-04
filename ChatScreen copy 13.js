@@ -1230,21 +1230,21 @@ function AudioMessage({ message, ...props }) {
 
   const currentMessage = message.currentMessage
 
-  // const [sound, setSound] = useState()
+  const [sound, setSound] = useState()
 
-  // useEffect(function () {
-  //   Audio.Sound.createAsync(
-  //     { uri: currentMessage.audio },
-  //     { shouldPlay: false },
-  //     function (data) {
-  //       console.log(data)
-  //     }
-  //   ).then(
-  //     ({ sound, status }) => {
-  //       setSound(sound)
-  //       console.log(status)
-  //     })
-  // }, [])
+  useEffect(function () {
+    Audio.Sound.createAsync(
+      { uri: currentMessage.audio },
+      { shouldPlay: false },
+      function (data) {
+        console.log(data)
+      }
+    ).then(
+      ({ sound, status }) => {
+        setSound(sound)
+        console.log(status)
+      })
+  }, [])
 
 
   // console.log(currentMessage.audio)
@@ -1268,18 +1268,9 @@ function AudioMessage({ message, ...props }) {
 
 
       try {
-
-        Audio.Sound.createAsync(
-          { uri: currentMessage.audio },
-          { shouldPlay: true },
-          function (data) {
-            //  console.log(data)
-          }
-        )
-
-        //console.log(Date.now())
+        console.log(Date.now())
         // console.log(currentMessage.audio)
-        //sound.playAsync()
+        sound.playAsync()
 
 
 
@@ -2044,39 +2035,31 @@ async function uploadImage({ localUri, filename, sender, toPerson, imageWidth, i
 }
 
 
-async function startRecording() {
-  recording = new Audio.Recording()
+async function startRecording(recording, setRecording) {
   try {
+    if (recording) {
+      setRecording(undefined);
+      await recording.stopAndUnloadAsync();
+      return
+    }
     console.log('Requesting permissions..');
-
-
-
-
     await Audio.requestPermissionsAsync();
     await Audio.setAudioModeAsync({
       allowsRecordingIOS: true,
       playsInSilentModeIOS: true,
     });
     console.log('Starting recording..');
-    await recording.prepareToRecordAsync(
+    const { recording } = await Audio.Recording.createAsync(
       Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
     );
-    await recording.startAsync();
+    setRecording(recording);
     console.log('Recording started');
-  }
-  catch (err) {
-
-    if (recording.isPreparedToRecord && recording.isPreparedToRecord()) {
+  } catch (err) {
+    console.error('Failed to start recording', err);
+    setRecording(undefined);
+    if (recording) {
       await recording.stopAndUnloadAsync();
-      recording = new Audio.Recording()
-      console.error('Failed to start recording1111', err);
-
     }
-    else {
-      recording = new Audio.Recording()
-      console.error('Failed to start recording222', err);
-    }
-
 
   }
 }
@@ -2084,23 +2067,19 @@ async function startRecording() {
 
 
 
-async function stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice }) {
-
-  // if (!(recording.isPreparedToRecord && recording.isPreparedToRecord())) {
-  //   return recording = new Audio.Recording()
-  // }
-
+async function stopRecording({ messages, setMessages, recording, setRecording, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice }) {
 
   try {
-    console.log('Stopping recording..');
-    const { durationMillis } = await recording.stopAndUnloadAsync();
+    setRecording(undefined);
+    if (!recording) { return }
+    await recording.stopAndUnloadAsync();
 
-    console.log(durationMillis)
+    const { sound, status } = await recording.createNewLoadedSoundAsync();
+    // await sound.replayAsync()
     const uri = recording.getURI();
+    // console.log(recording)
 
     console.log('Recording stopped and stored at', uri);
-    recording = new Audio.Recording()
-
 
 
     const time = Date.now()
@@ -2113,8 +2092,7 @@ async function stopRecording({ messages, setMessages, userName, item, previousMe
       createdTime: time,
 
       user: { _id: userName },
-      audio: uri,
-      durationMillis:durationMillis,
+      audio: uri
     }
 
 
@@ -2136,10 +2114,10 @@ async function stopRecording({ messages, setMessages, userName, item, previousMe
   }
   catch (err) {
     console.error('error in stopRecording', err);
-    recording = new Audio.Recording()
-    // if (recording) {
-    //   await recording.stopAndUnloadAsync();
-    // }
+    setRecording(undefined);
+    if (recording) {
+      await recording.stopAndUnloadAsync();
+    }
 
   }
 
@@ -2158,44 +2136,22 @@ async function stopRecording({ messages, setMessages, userName, item, previousMe
 
 
 
-function cancelRecording() {
-  // console.log('Cancel recording..');
+async function cancelRecording(recording, setRecording) {
+  console.log('Cancel recording..');
+  try {
+    if (recording) {
+      await recording.stopAndUnloadAsync();
+      setRecording(undefined);
+    }
+  }
+  catch (err) {
+    console.error('error in cancelRecording', err);
+    setRecording(undefined);
+    if (recording) {
+      await recording.stopAndUnloadAsync();
+    }
 
-  // if (!recording) {
-  //   recording = new Audio.Recording()
-  // }
-
-  // else if (recording.isPreparedToRecord && recording.isPreparedToRecord()) {
-  recording.stopAndUnloadAsync()
-    .then((data) => {
-
-      recording = new Audio.Recording()
-    })
-    .catch((err) => {
-
-      recording = new Audio.Recording()
-    });
-
-
-  // }
-  // else {
-  //   recording = new Audio.Recording()
-  // }
-
-  // try {
-  //   if (recording) {
-  //     await recording.stopAndUnloadAsync();
-
-  //   }
-  // }
-  // catch (err) {
-  //   console.error('error in cancelRecording', err);
-
-  //   if (recording) {
-  //     await recording.stopAndUnloadAsync();
-  //   }
-
-  // }
+  }
 
 }
 

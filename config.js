@@ -110,3 +110,45 @@ export function ScaleView(props) {
 
 
 export default url;
+
+
+
+
+
+
+
+/*
+async function startRecording0(setRecording) {
+  try {
+    console.log('Requesting permissions..');
+    await Audio.requestPermissionsAsync();
+    await Audio.setAudioModeAsync({
+      allowsRecordingIOS: true,
+      playsInSilentModeIOS: true,
+    });
+    console.log('Starting recording..');
+    const { recording } = await Audio.Recording.createAsync(
+      Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
+    );
+    setRecording(recording);
+    console.log('Recording started');
+  } catch (err) {
+    console.error('Failed to start recording', err);
+  }
+}
+
+
+async function stopRecording0({ recording, setRecording }) {
+  console.log('Stopping recording..');
+  setRecording(undefined);
+  await recording.stopAndUnloadAsync();
+
+  const { sound, status } = await recording.createNewLoadedSoundAsync();
+  await sound.replayAsync()
+  const uri = recording.getURI();
+  console.log(recording)
+
+  console.log('Recording stopped and stored at', uri);
+}
+
+*/

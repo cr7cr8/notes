@@ -133,17 +133,24 @@ export default function ContextProvider(props) {
 
   useEffect(async function () {
 
-    console.log(FileSystem.cacheDirectory)
+    
 
-    FileSystem.readDirectoryAsync(FileSystem.cacheDirectory+"Audio/").then(data => {
-      console.log(data)
-      if (data) {
-        data.forEach(filename => {
-          FileSystem.deleteAsync(FileSystem.cacheDirectory+"Audio/" + filename, { idempotent: true })
-        })
-      }
-    })
 
+    const infoAudio = await FileSystem.getInfoAsync(FileSystem.cacheDirectory + "Audio/")
+    if (infoAudio.exists) {
+      FileSystem.readDirectoryAsync(FileSystem.cacheDirectory + "Audio/").then(data => {
+        console.log(data)
+        if (data) {
+          data.forEach(filename => {
+            FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/" + filename, { idempotent: true })
+          })
+        }
+      })
+    }
+
+
+
+ 
 
 
 
