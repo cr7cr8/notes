@@ -2044,158 +2044,174 @@ async function uploadImage({ localUri, filename, sender, toPerson, imageWidth, i
 }
 
 
-async function startRecording() {
+function startRecording() {
   recording = new Audio.Recording()
   try {
     console.log('Requesting permissions..');
 
 
+    // await Audio.setAudioModeAsync({
+    //   allowsRecordingIOS: true,
+    //   playsInSilentModeIOS: true,
+    // });
 
 
-    await Audio.requestPermissionsAsync();
-    await Audio.setAudioModeAsync({
-      allowsRecordingIOS: true,
-      playsInSilentModeIOS: true,
-    });
     console.log('Starting recording..');
-    await recording.prepareToRecordAsync(
-      Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
-    );
-    await recording.startAsync();
-    console.log('Recording started');
+
+    Audio.requestPermissionsAsync()
+      .then((info) => {
+
+        console.log("permissions", info)
+
+        if (info.granted) {
+          return recording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY)
+        }
+        else {
+          return Promise.reject("recording permissions denied")
+        }
+
+      })
+      .then(info => {
+
+        console.log("about to record", info)
+
+        if (info.canRecord && (!info.isRecording)) {
+          return recording.startAsync()
+        }
+        else {
+          return Promise.reject("cannot start recording")
+        }
+
+      })
+      .then(info => {
+        return info
+      })
+      .catch(err => {
+        console.log(err)
+      })
+
   }
   catch (err) {
-
-    if (recording.isPreparedToRecord && recording.isPreparedToRecord()) {
-      await recording.stopAndUnloadAsync();
-      recording = new Audio.Recording()
-      console.error('Failed to start recording1111', err);
-
-    }
-    else {
-      recording = new Audio.Recording()
-      console.error('Failed to start recording222', err);
-    }
-
-
+    console.log(err)
   }
 }
 
 
 
 
-async function stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice }) {
-
-  // if (!(recording.isPreparedToRecord && recording.isPreparedToRecord())) {
-  //   return recording = new Audio.Recording()
-  // }
+function stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice }) {
 
 
   try {
     console.log('Stopping recording..');
-    const { durationMillis } = await recording.stopAndUnloadAsync();
 
-    console.log(durationMillis)
-    const uri = recording.getURI();
+    recording.getStatusAsync()
+      .then(info => {
 
-    console.log('Recording stopped and stored at', uri);
-    recording = new Audio.Recording()
+        console.log("about to stop Recording", info)
+        if (info.isRecording) {
+          return recording.stopAndUnloadAsync()
+        }
+        else {
+          recording = new Audio.Recording()
+          return Promise.reject(info)
+        }
+      })
+      .then(info => {
+        console.log("recording stopped", info)
+        if (info.isDoneRecording) {
+          const durationMillis = info.durationMillis
+          const uri = recording.getURI();
 
+          recording = new Audio.Recording()
 
+          const time = Date.now()
+          const audioMsg = {
+            _id: time,
+            text: '',
+            createdAt: time,
+            createdTime: time,
+            user: { _id: userName },
+            audio: uri,
+            durationMillis: durationMillis,
+          }
 
-    const time = Date.now()
+          canMoveDown.current = true
+          setMessages(pre => {
+            if (pre.length >= 20) {
+              previousMessages.current = previousMessages.current.concat(pre.slice(0, pre.length - 10))
+              if (!shouldDisplayNotice && (previousMessages.current.length > 0)) { setShouldDisplayNotice(true) }
+              return GiftedChat.prepend(pre.slice(-10), { ...audioMsg, isLocal: true })
+            }
+            else {
+              return GiftedChat.prepend(pre, { ...audioMsg, isLocal: true })
+            }
+          })
 
+        }
+        else {
+          recording = new Audio.Recording()
+          return Promise.reject(info)
+        }
 
-    const audioMsg = {
-      _id: time,
-      text: '',
-      createdAt: time,
-      createdTime: time,
+      })
+      .catch(err => {
+        console.log("cannot stop recording", err)
+      })
 
-      user: { _id: userName },
-      audio: uri,
-      durationMillis:durationMillis,
-    }
-
-
-
-
-    canMoveDown.current = true
-
-    setMessages(pre => {
-      if (pre.length >= 20) {
-        previousMessages.current = previousMessages.current.concat(pre.slice(0, pre.length - 10))
-        if (!shouldDisplayNotice && (previousMessages.current.length > 0)) { setShouldDisplayNotice(true) }
-        return GiftedChat.prepend(pre.slice(-10), { ...audioMsg, isLocal: true })
-      }
-      else {
-        return GiftedChat.prepend(pre, { ...audioMsg, isLocal: true })
-      }
-
-    })
   }
   catch (err) {
     console.error('error in stopRecording', err);
     recording = new Audio.Recording()
-    // if (recording) {
-    //   await recording.stopAndUnloadAsync();
-    // }
+
 
   }
 
-
-
-
-  // await recording.stopAndUnloadAsync();
-
-  // const { sound, status } = await recording.createNewLoadedSoundAsync();
-  // await sound.replayAsync()
-  // const uri = recording.getURI();
-  // console.log(recording)
-
-  // console.log('Recording stopped and stored at', uri);
 }
 
 
 
 function cancelRecording() {
-  // console.log('Cancel recording..');
+  console.log('Cancel recording..');
 
-  // if (!recording) {
-  //   recording = new Audio.Recording()
-  // }
 
-  // else if (recording.isPreparedToRecord && recording.isPreparedToRecord()) {
-  recording.stopAndUnloadAsync()
-    .then((data) => {
+  recording.getStatusAsync()
+    .then(info => {
 
-      recording = new Audio.Recording()
+      console.log("about to cancel Recording", info)
+      if (info.isRecording) {
+        return recording.stopAndUnloadAsync()
+      }
+      else {
+        recording = new Audio.Recording()
+        return Promise.reject(info)
+      }
     })
-    .catch((err) => {
+    .then(info => {
+      console.log("recording cancelled", info)
+      if (info.isDoneRecording) {
+        // const durationMillis = info.durationMillis
+         const uri = recording.getURI();
+         console.log("cancel uri===>>>>>>>>",uri)
 
-      recording = new Audio.Recording()
-    });
+         FileSystem.deleteAsync(uri, { idempotent: true }).then(()=>{
+
+          console.log("caneled file deleted ")
+         })
+
+   
+
+      }
+      else {
+        recording = new Audio.Recording()
+        return Promise.reject(info)
+      }
+    })
+    .catch(err => {
+      console.log("cancel error",err)
+    })
 
 
-  // }
-  // else {
-  //   recording = new Audio.Recording()
-  // }
-
-  // try {
-  //   if (recording) {
-  //     await recording.stopAndUnloadAsync();
-
-  //   }
-  // }
-  // catch (err) {
-  //   console.error('error in cancelRecording', err);
-
-  //   if (recording) {
-  //     await recording.stopAndUnloadAsync();
-  //   }
-
-  // }
 
 }
 
