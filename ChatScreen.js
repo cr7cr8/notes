@@ -1547,7 +1547,7 @@ function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef,
 
     }
   })
-
+ 
 
 
   return (
