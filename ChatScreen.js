@@ -89,7 +89,7 @@ import SnackBar, { SnackContext } from "./SnackBar";
 
 import jwtDecode from 'jwt-decode';
 
-import url, { hexToRgbA, hexify, uniqByKeepFirst, ScaleView } from "./config";
+import url, { hexToRgbA, hexToRgbA2, hexify, uniqByKeepFirst, ScaleView } from "./config";
 import { Path } from 'react-native-svg';
 
 
@@ -126,6 +126,7 @@ import { Path } from 'react-native-svg';
 
 
 let recording = new Audio.Recording();
+let audioSound = new Audio.Sound();
 
 export function ChatScreen({ navigation, route, ...props }) {
 
@@ -146,6 +147,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
   const avatarString = multiavatar(item.name)
   const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
+  const bgColor2 = hexify(hexToRgbA2(avatarString.match(/#[a-zA-z0-9]*/)[0]))
 
   const { token, userName, socket, setSnackBarHeight, setSnackMsg, appState, unreadCountObj, setUnreadCountObj, } = useContext(Context)
   const [shouldDisplayNotice, setShouldDisplayNotice] = useState(true)
@@ -395,7 +397,7 @@ export function ChatScreen({ navigation, route, ...props }) {
       //  width: withRepeat(withTiming(micBarWidth.value, { duration: 1000 }), -1, true),
 
       height: 60,
-      backgroundColor: "orange",
+      backgroundColor: bgColor,
       position: "absolute",
       left: 60,
       zIndex: 100,
@@ -413,7 +415,7 @@ export function ChatScreen({ navigation, route, ...props }) {
   const releasedStyle = useAnimatedStyle(() => {
     return {
       display: isReleased.value === 1 ? "flex" : "none",
-      color: "white",
+      color: "#666",
       fontSize: 20,
     }
   })
@@ -421,7 +423,10 @@ export function ChatScreen({ navigation, route, ...props }) {
   const onHoldStyle = useAnimatedStyle(() => {
 
     return {
-      display: isReleased.value === 1 ? "none" : "flex"
+      display: isReleased.value === 1 ? "none" : "flex",
+      alignItems:"center",
+      justifyContent:"center"
+      //    color: "#666",
     }
 
   })
@@ -435,12 +440,18 @@ export function ChatScreen({ navigation, route, ...props }) {
       height: withTiming(inputHeight.value, { duration: 100 }),
 
 
-      backgroundColor: "yellow",
+      backgroundColor: bgColor,
       // position: "absolute",
       // bottom: 0,
+      //position:"absolute",
+      //bottom:60,
+      //left:0,
       width,
       opacity: 1,
-      display: "flex"
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "space-around",
+      alignItems: "center",
       // overflow: "hidden"
     }
 
@@ -570,10 +581,11 @@ export function ChatScreen({ navigation, route, ...props }) {
           ref: (element) => { scrollRef.current = element },
           onScroll: function (e) {
             //   scrollY.value = e.nativeEvent.contentOffset.y
-            if (e.nativeEvent.contentOffset.y < scrollY.value) {
-              inputHeight.value = 0
-            }
 
+            // if (e.nativeEvent.contentOffset.y < scrollY.value) {
+            //   inputHeight.value = 0
+            // }
+            inputHeight.value = 0
             scrollY.value = e.nativeEvent.contentOffset.y
 
             if (e.nativeEvent.contentOffset.y === 0) {
@@ -811,7 +823,7 @@ export function ChatScreen({ navigation, route, ...props }) {
                 containerStyle={{
 
                   opacity: 1,
-                  backgroundColor: "green",
+                  backgroundColor: "white",
                   marginVertical: 0,
 
                 }}
@@ -821,7 +833,7 @@ export function ChatScreen({ navigation, route, ...props }) {
                   alignItems: 'center',
                   display: "flex",
                   justifyContent: "flex-start",
-                  backgroundColor: "yellow",
+                  backgroundColor: bgColor,
                   width,
                   minHeight: 60,
                   padding: 0,
@@ -853,7 +865,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
             return <Actions {...props}
               containerStyle={{
-                backgroundColor: "blue",
+                backgroundColor: bgColor,
                 width: 60, height: 60, marginLeft: 0, marginBottom: 0, marginRight: 0,
                 alignItems: "center",
                 justifyContent: "center"
@@ -880,7 +892,7 @@ export function ChatScreen({ navigation, route, ...props }) {
         onPressActionButton={
           function () {
 
-
+            inputHeight.value = 0
             micBarWidth.value = micBarWidth.value === 0
               ? width - 120
               : 0
@@ -905,15 +917,18 @@ export function ChatScreen({ navigation, route, ...props }) {
                     <Text style={[releasedStyle]}>Hold to talk</Text>
 
                     <View style={[onHoldStyle]}>
-                      <LinearProgress style={{ height: 60, width: width - 120 }} />
-                      <Text style={{
-                        fontSize: 20,
-                        color: "white",
-                        position: "absolute",
-                      }}>recording,move up to cancel</Text>
+                      <LinearProgress style={{ height: 60, width: width - 120 }} color="#aaa"/>
+                      
+                        <Text style={{
+                          fontSize: 20,
+                          color: "#666",
+                          position: "absolute",
+                          textAlign: "center",
+                        }}>Move up to cancel</Text>
+                     
                     </View>
 
-         
+
 
                   </View>
                 </PanGestureHandler>
@@ -929,7 +944,10 @@ export function ChatScreen({ navigation, route, ...props }) {
                   textInputProps={{
                     // multiline: true,
                     numberOfLines: Math.min([...inputText].filter(c => c === "\n").length + 1, 5),
-                    style: { backgroundColor: "green", minHeight: 60, width: width - 120, paddingHorizontal: 8, fontSize: 20, lineHeight: 25, },
+                    style: { backgroundColor: "white", minHeight: 52, width: width - 120, paddingHorizontal: 8, fontSize: 20, lineHeight: 25,
+                  
+                  
+                  },
                     onPressIn: function () {
                       inputRef.current.blur(); inputRef.current.focus(); expandWidth.value = 50;
                       inputHeight.value = 0
@@ -958,7 +976,11 @@ export function ChatScreen({ navigation, route, ...props }) {
 
             return (
               <>
-                <SendBtn outerProps={props} Send={Send} inputText={inputText} inputHeight={inputHeight} inputRef={inputRef} keyboardHeight={keyboardHeight} />
+                <SendBtn outerProps={props} Send={Send} inputText={inputText} inputHeight={inputHeight} inputRef={inputRef} keyboardHeight={keyboardHeight}
+
+                  micBarWidth={micBarWidth}
+                  bgColor={bgColor}
+                />
               </>
             )
           }
@@ -1048,21 +1070,21 @@ export function ChatScreen({ navigation, route, ...props }) {
 
               <Icon
                 onPress={function () {
-                  canMoveDown.current = true; pickImage(setMessages, userName, item, socket)
+                  canMoveDown.current = true; inputHeight.value = 0; pickImage(setMessages, userName, item, socket)
                 }}
                 name="image-outline"
                 type='ionicon'
                 color='#517fa4'
-                size={inputText ? 0 : 50}
+                size={50}
               />
 
 
               <Icon
-                onPress={function () { canMoveDown.current = true; takePhoto(setMessages, userName, item, socket) }}
+                onPress={function () { canMoveDown.current = true; inputHeight.value = 0; takePhoto(setMessages, userName, item, socket) }}
                 name="camera-outline"
                 type='ionicon'
                 color='#517fa4'
-                size={inputText ? 0 : 50}
+                size={50}
               />
 
 
@@ -1103,8 +1125,8 @@ export function ChatScreen({ navigation, route, ...props }) {
             message={message}
 
             item={item} userName={userName}
-
-
+            bgColor2={bgColor2}
+            bgColor={bgColor}
             setMessages={setMessages}
             isText={false} isImage={false} isAudio={true}
             canMoveDown={canMoveDown}
@@ -1192,7 +1214,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
 
-function AudioMessage({ message, item, userName, token, setMessages, canMoveDown, isText, isImage, isAudio, ...props }) {
+function AudioMessage({ message, item, userName, token, setMessages, canMoveDown, isText, isImage, isAudio, bgColor, bgColor2, ...props }) {
 
 
   const viewRef = useAnimatedRef()
@@ -1203,7 +1225,7 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
 
   const currentMessage = message.currentMessage
 
-  const audioMsg = useRef()
+  //const audioMsg = useRef()
 
   const audioDuration = Number.parseFloat(currentMessage.durationMillis / 1000).toFixed(1)
 
@@ -1212,7 +1234,6 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
   const [disabled, setDisabled] = useState(true)
 
   const viewStyle1 = useAnimatedStyle(() => {
-
 
     return {
       display: isPlaying.value ? "flex" : "none",
@@ -1247,26 +1268,72 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
 
   })
 
+
+  const loadAudio = useCallback(function () {
+
+
+    audioSound.getStatusAsync().then(info => {
+      if (!info.isLoaded) {
+
+        audioSound.setOnPlaybackStatusUpdate(function (info) {
+
+          //  console.log(info)
+          isPlaying.value = info.isPlaying
+        });
+
+        audioSound.loadAsync({ uri: currentMessage.audio }, { shouldPlay: true }, true);
+      }
+      else {
+
+        audioSound.unloadAsync().then(info => {
+
+          audioSound = new Audio.Sound();
+          audioSound.setOnPlaybackStatusUpdate(function (info) {
+            //     console.log(info)
+            isPlaying.value = info.isPlaying
+          });
+
+          audioSound.loadAsync({ uri: currentMessage.audio }, { shouldPlay: true }, true);
+
+        })
+      }
+
+
+    })
+
+
+
+
+  }, [])
+
+  const unloadAudio = useCallback(function () {
+
+
+    audioSound.getStatusAsync().then(info => {
+      if (info.isLoaded) {
+
+
+
+        audioSound.unloadAsync().then(info => {
+          isPlaying.value = info.isPlaying
+        })
+      }
+
+
+
+    })
+
+
+
+
+  }, [])
+
+
+
+
   useEffect(function () {
     if (!currentMessage.mongooseID) {
-
-      Audio.Sound.createAsync(
-        { uri: currentMessage.audio },
-        { shouldPlay: false },
-        function (data) { },
-        true,
-      )
-        .then(
-          ({ sound, status }) => {
-
-            audioMsg.current = sound
-            setDisabled(false)
-            // audioMsg.current.setOnPlaybackStatusUpdate(info => {
-            //   isPlaying.value = info.isPlaying
-            //   // console.log(">>>>>", info)
-            // })
-          })
-
+      setDisabled(false)
     }
     else {
 
@@ -1274,12 +1341,8 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
       //  console.log(currentMessage.audio)
       FileSystem.getInfoAsync(currentMessage.audio).then(info => {
         if (info.exists) {
-          Audio.Sound.createAsync(
-            { uri: currentMessage.audio },
-            { shouldPlay: false },
-            function (data) { },
-            true,
-          ).then(({ sound, status }) => { audioMsg.current = sound; setDisabled(false) })
+
+          setDisabled(false)
         }
         else {
           const uri = `${url}/api/audio/download/${currentMessage.mongooseID}`
@@ -1288,28 +1351,16 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
           const downloadResumable = FileSystem.createDownloadResumable(
             uri, fileUri, { headers: { "x-auth-token": token } },
             function ({ totalBytesExpectedToWrite, totalBytesWritten }) {
-              console.log(totalBytesWritten + " / " + totalBytesExpectedToWrite)
+              //  console.log(totalBytesWritten + " / " + totalBytesExpectedToWrite)
             }
           );
 
           downloadResumable.downloadAsync(uri, fileUri, { headers: { "x-auth-token": token } })
             .then(({ status }) => {
               if (status == 200) {
+                setDisabled(false)
 
-                Audio.Sound.createAsync(
-                  { uri: currentMessage.audio },
-                  { shouldPlay: false },
-                  function (data) { },
-                  true,
-                ).then(({ sound, status }) => {
-                  audioMsg.current = sound;
-                  setDisabled(false)
-
-                  axios.get(`${url}/api/audio/delete/${currentMessage.mongooseID}`)
-
-                })
-
-
+                axios.get(`${url}/api/audio/delete/${currentMessage.mongooseID}`)
 
               }
             })
@@ -1318,42 +1369,17 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
         }
       })
 
-      // Audio.Sound.createAsync(
-      //   { uri: `${url}/api/audio/download/${currentMessage.mongooseID}` },
-      //   { shouldPlay: false },
-      //   function (data) { },
-      //   true,
-      // )
-      //   .then(
-      //     ({ sound, status }) => {
-
-      //   console.log(sound)
-      // sound.unloadAsync().then(info=>{
-
-      //   console.log(info)
-      // })
-
-
-      // audioMsg.current = sound
-      // audioMsg.current.setOnPlaybackStatusUpdate(info => {
-      //   isPlaying.value = info.isPlaying
-      //   // console.log(">>>>>", info)
-      // })
-
-      // console.log(status)
-
-      //  })
 
     }
 
 
     return function () {
-      if (audioMsg.current) {
+      audioSound.getStatusAsync().then(info => {
+        if (info.isLoaded) {
+          audioSound.unloadAsync()
 
-        audioMsg.current.unloadAsync().catch(err => console.log(err))
-
-      }
-
+        }
+      })
     }
 
   }, [])
@@ -1367,34 +1393,41 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
       <View ref={element => { viewRef.current = element }}>
         <View style={[viewStyle1]}>
 
-          <LinearProgress style={{
-            minWidth: 90,
-            width: audioDuration * 10 * 1.5,
-            maxWidth: 300,
-            height: 60,
-            position: "absolute", top: 0, left: 0
-          }} />
-          <Button title={audioDuration} type="clear"
+          <LinearProgress
 
+            color="#aaa"
+            // trackColor={currentMessage.isLocal ? "lightgreen" : bgColor}
+            // trackColor={bgColor2}
+            style={{
+              minWidth: 90,
+              width: audioDuration * 10 * 1.5,
+              maxWidth: 300,
+              height: 60,
+              position: "absolute", top: 0, left: 0,
+
+            }} />
+
+
+
+
+
+          <Button title={audioDuration}
+
+
+            titleStyle={{ color: "#666" }}
+            type="clear"
             containerStyle={{ flex: 1, backgroundColor: "transparent" }}
 
             icon={{
               name: 'stop-circle-outline',
               type: 'ionicon',
               size: 40,
-              color: 'white',
+              color: '#666',
             }}
 
             onPress={function () {
-              audioMsg.current.getStatusAsync().then(info => {
+              unloadAudio()
 
-                if (!info.isPlaying) {
-                  audioMsg.current.replayAsync()
-                }
-                else {
-                  audioMsg.current.stopAsync()
-                }
-              })
             }}
             onLongPress={function () {
 
@@ -1422,26 +1455,27 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
 
         <View style={[viewStyle2]}>
           <Button title={audioDuration}
-
+            titleStyle={{ color: "#666" }}
+            type="clear"
             containerStyle={{ flex: 1 }}
+
+            disabledTitleStyle={{ color: "#aaa" }}
+            disabledStyle={{ backgroundColor: "#aaa" }}
+
+
+
             disabled={disabled}
             icon={{
               name: 'play-circle-outline',
               type: 'ionicon',
               size: 40,
-              color: 'white',
+              color: disabled ? '#aaa' : '#666',
             }}
 
             onPress={function () {
-              audioMsg.current.getStatusAsync().then(info => {
 
-                if (!info.isPlaying) {
-                  audioMsg.current.replayAsync()
-                }
-                else {
-                  audioMsg.current.stopAsync()
-                }
-              })
+              loadAudio()
+
             }}
             onLongPress={function () {
 
@@ -1484,12 +1518,7 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
   )
 }
 
-
-
-
-
-
-function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef, ...props }) {
+function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef, micBarWidth, bgColor, ...props }) {
 
 
   const viewTranslateX = useDerivedValue(() => {
@@ -1505,7 +1534,7 @@ function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef,
     return {
       height: 60,
       width: 60,
-      backgroundColor: "orange",
+      backgroundColor: bgColor,
       display: "flex",
       alignItems: "center",
       justifyContent: "flex-start",
@@ -1533,7 +1562,7 @@ function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef,
         flexDirection: "row",
         margin: 0,
         padding: 0,
-        backgroundColor: "red",
+        backgroundColor: bgColor,
         width: 60,
         height: 60,
         overflow: "hidden",
@@ -1551,7 +1580,7 @@ function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef,
           color='#517fa4'
           size={50}
           containerStyle={{
-            backgroundColor: '#517fa4', backgroundColor: "pink", width: 60, height: 60,
+            backgroundColor: '#517fa4', backgroundColor: bgColor, width: 60, height: 60,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -1564,14 +1593,17 @@ function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef,
 
             if (inputHeight.value === 0 && keyboardHeight === 0) {
               inputHeight.value = 60
+              micBarWidth.value = 0
               // inputRef.current.blur()
             }
             else if (inputHeight.value !== 0 && keyboardHeight === 0) {
               inputHeight.value = 0
+              micBarWidth.value = 0
 
             }
             else if (keyboardHeight !== 0) {
               inputHeight.value = 0
+              micBarWidth.value = 0
               inputRef.current.blur()
             }
 
@@ -1591,7 +1623,7 @@ function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef,
           color='#517fa4'
           size={50}
           containerStyle={{
-            backgroundColor: 'skyblue', width: 60, height: 60,
+            backgroundColor: bgColor, width: 60, height: 60,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -2389,6 +2421,7 @@ function stopRecording({ messages, setMessages, userName, item, previousMessages
       })
       .catch(err => {
         console.log("cannot stop recording", err)
+        recording = new Audio.Recording()
       })
 
   }

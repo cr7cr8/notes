@@ -36,7 +36,7 @@ const { View, Text, Image: ImageV, ScrollView: ScrollV, } = ReAnimated
 
 const url = "http://192.168.0.100";
 
-
+export default url
 
 export function uniqByKeepFirst(a, key) {
   let seen = new Set();
@@ -61,6 +61,20 @@ export function hexToRgbA(hex) {
   throw new Error('Bad Hex');
 }
 
+export function hexToRgbA2(hex) {
+  var c;
+  if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+    c = hex.substring(1).split('');
+    if (c.length == 3) {
+      c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+    }
+    c = '0x' + c.join('');
+    return 'rgba(' + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',') + ',0.99)';
+  }
+  throw new Error('Bad Hex');
+}
+
+
 export function hexify(color) {
   var values = color
     .replace(/rgba?\(/, '')
@@ -75,6 +89,27 @@ export function hexify(color) {
     ("0" + r.toString(16)).slice(-2) +
     ("0" + g.toString(16)).slice(-2) +
     ("0" + b.toString(16)).slice(-2);
+}
+
+
+
+
+
+export function moveArr(arr, old_index, new_index) {
+  while (old_index < 0) {
+    old_index += arr.length;
+  }
+  while (new_index < 0) {
+    new_index += arr.length;
+  }
+  if (new_index >= arr.length) {
+    let k = new_index - arr.length;
+    while ((k--) + 1) {
+      arr.push(undefined);
+    }
+  }
+  arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
+  return arr;
 }
 
 
@@ -109,7 +144,7 @@ export function ScaleView(props) {
 
 
 
-export default url;
+
 
 
 

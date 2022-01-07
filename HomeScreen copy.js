@@ -45,12 +45,19 @@ const { width, height } = Dimensions.get('screen');
 import { LinearGradient } from 'expo-linear-gradient';
 
 
-import url, { hexToRgbA, hexify, moveArr, uniqByKeepFirst } from "./config";
+import url, { hexToRgbA, hexify } from "./config";
 import { SharedElement } from 'react-navigation-shared-element';
 import { Context } from "./ContextProvider";
 import axios from 'axios';
 
 
+function uniqByKeepFirst(a, key) {
+  let seen = new Set();
+  return a.filter(item => {
+    let k = key(item);
+    return seen.has(k) ? false : seen.add(k);
+  });
+}
 
 
 
@@ -842,6 +849,13 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
           </PanGestureHandler>
         </Pressable>
 
+
+
+
+
+
+
+
       </View>
       <Overlay isVisible={!panEnabled && allPanelArr.current.length > 7} fullScreen={true} overlayStyle={{ opacity: 0.5, display: "flex", justifyContent: "center", alignItems: "center" }}  >
         <LinearProgress color="primary" value={1} variant={"indeterminate"} />
@@ -855,7 +869,10 @@ function SinglePanel_({ item, setMainEnabled, setListRefEnabled, mainRef, listRe
 
 
 
+
+
 HomeScreen.sharedElements = (route, otherRoute, showing) => {
+
 
   return route.params && route.params.item && route.params.item.name && [
     { id: route.params.item.name, animation: "move", resize: "auto", align: "left", }, // ...messageArr,   // turn back image transition off
@@ -869,4 +886,50 @@ HomeScreen.sharedElements = (route, otherRoute, showing) => {
 
 
 
+function moveArr(arr, old_index, new_index) {
+  while (old_index < 0) {
+    old_index += arr.length;
+  }
+  while (new_index < 0) {
+    new_index += arr.length;
+  }
+  if (new_index >= arr.length) {
+    let k = new_index - arr.length;
+    while ((k--) + 1) {
+      arr.push(undefined);
+    }
+  }
+  arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
+  return arr;
+}
 
+
+
+
+// function hexToRgbA(hex) {
+//   var c;
+//   if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+//     c = hex.substring(1).split('');
+//     if (c.length == 3) {
+//       c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+//     }
+//     c = '0x' + c.join('');
+//     return 'rgba(' + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',') + ',0.3)';
+//   }
+//   throw new Error('Bad Hex');
+// }
+// function hexify(color) {
+//   var values = color
+//     .replace(/rgba?\(/, '')
+//     .replace(/\)/, '')
+//     .replace(/[\s+]/g, '')
+//     .split(',');
+//   var a = parseFloat(values[3] || 1),
+//     r = Math.floor(a * parseInt(values[0]) + (1 - a) * 255),
+//     g = Math.floor(a * parseInt(values[1]) + (1 - a) * 255),
+//     b = Math.floor(a * parseInt(values[2]) + (1 - a) * 255);
+//   return "#" +
+//     ("0" + r.toString(16)).slice(-2) +
+//     ("0" + g.toString(16)).slice(-2) +
+//     ("0" + b.toString(16)).slice(-2);
+// }

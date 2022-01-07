@@ -276,19 +276,8 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
             // })
 
           })
-
-
       })
-
-
-
-
     })
-
-
-
-
-
   })
 
 
