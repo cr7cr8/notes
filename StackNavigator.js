@@ -131,6 +131,20 @@ export default function StackNavigator() {
 
 
 
+                const infoAudio = await FileSystem.getInfoAsync(FileSystem.cacheDirectory + "Audio/")
+                if (infoAudio.exists) {
+                  FileSystem.readDirectoryAsync(FileSystem.cacheDirectory + "Audio/").then(data => {
+                    console.log(data)
+                    if (data) {
+                      data.forEach(filename => {
+                        FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/" + filename, { idempotent: true })
+                      })
+                    }
+                  })
+                }
+
+
+
                 await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
                 await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
                 await FileSystem.deleteAsync(FileSystem.documentDirectory + "ImagePicker/", { idempotent: true })
@@ -138,6 +152,10 @@ export default function StackNavigator() {
 
                 FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
                 FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/")
+
+
+
+
 
 
               }} title={userName} />), // color="#fff" 
@@ -170,6 +188,22 @@ export default function StackNavigator() {
               headerTransparent: true,
               headerRight: () => {
                 return <Button onPress={async function () {
+
+
+                  const infoAudio = await FileSystem.getInfoAsync(FileSystem.cacheDirectory + "Audio/")
+                  if (infoAudio.exists) {
+                    FileSystem.readDirectoryAsync(FileSystem.cacheDirectory + "Audio/").then(data => {
+                      console.log(data)
+                      if (data) {
+                        data.forEach(filename => {
+                          FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/" + filename, { idempotent: true })
+                        })
+                      }
+                    })
+                  }
+
+
+
 
                   await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
                   await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })

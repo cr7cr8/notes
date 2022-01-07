@@ -133,24 +133,24 @@ export default function ContextProvider(props) {
 
   useEffect(async function () {
 
-    
-
-
-    const infoAudio = await FileSystem.getInfoAsync(FileSystem.cacheDirectory + "Audio/")
-    if (infoAudio.exists) {
-      FileSystem.readDirectoryAsync(FileSystem.cacheDirectory + "Audio/").then(data => {
-        console.log(data)
-        if (data) {
-          data.forEach(filename => {
-            FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/" + filename, { idempotent: true })
-          })
-        }
-      })
-    }
 
 
 
- 
+    // const infoAudio = await FileSystem.getInfoAsync(FileSystem.cacheDirectory + "Audio/")
+    // if (infoAudio.exists) {
+    //   FileSystem.readDirectoryAsync(FileSystem.cacheDirectory + "Audio/").then(data => {
+    //     console.log(data)
+    //     if (data) {
+    //       data.forEach(filename => {
+    //         FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/" + filename, { idempotent: true })
+    //       })
+    //     }
+    //   })
+    // }
+
+
+
+
 
 
 
@@ -327,6 +327,10 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
         })
 
 
+
+
+
+
     });
 
   })
@@ -341,9 +345,14 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
   socket.on("notifyUser", function (sender, msgArr) {
     if ((socket.listeners("displayMessage" + sender).length === 0) || appState.current === "background" || appState.current === "inactive") {
       Notifications.scheduleNotificationAsync({
+        identifier: "default",
         content: {
           title: sender,
-          body: msgArr[0].image ? "[image] made by local" : msgArr[0].text + " made by local",
+          body: msgArr[0].image
+            ? "[image] made by local"
+            : msgArr[0].audio
+              ? "[audio] made by local"
+              : msgArr[0].text + " made by local",
         },
         trigger: null// { seconds: 2 },
       });
@@ -355,6 +364,9 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
 
   socket.on("saveUnread", function (sender, msgArr) {
 
+
+
+
     if ((socket.listeners("displayMessage" + sender).length === 0) || appState.current === "background" || appState.current === "inactive") {
 
 
@@ -363,7 +375,7 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
       const folderUri = FileSystem.documentDirectory + "UnreadFolder/" + sender + "/"
       msgArr.forEach((msg) => {
 
-        //console.log(msg)
+        // console.log(msg)
 
         const fileUri = FileSystem.documentDirectory + "UnreadFolder/" + sender + "/" + sender + "---" + msg.createdTime
 

@@ -200,7 +200,7 @@ async function downloadFromBase64(uri, fileName, setBtnText) {
 
   const asset = await MediaLibrary.createAssetAsync(fileUri)
   let album = await MediaLibrary.getAlbumAsync('expoDownload')
-  if (album == null) { await MediaLibrary.createAlbumAsync('expoDownload', asset, true) }
+  if (album == null) { await MediaLibrary.createAlbumAsync('expoDownload', asset, false) }
   else {
     await MediaLibrary.addAssetsToAlbumAsync([asset], album, false)
   }
@@ -222,9 +222,9 @@ async function downloadFromLocal(uri, fileName, setBtnText) {
 
   const asset = await MediaLibrary.createAssetAsync(uri)
   let album = await MediaLibrary.getAlbumAsync('expoDownload')
-  if (album == null) { await MediaLibrary.createAlbumAsync('expoDownload', asset, true) }
+  if (album == null) { await MediaLibrary.createAlbumAsync('expoDownload', asset, false) }
   else {
-    await MediaLibrary.addAssetsToAlbumAsync([asset], album, true)
+    await MediaLibrary.addAssetsToAlbumAsync([asset], album, false)
   }
 
   setBtnText("100%")

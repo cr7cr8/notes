@@ -69,7 +69,7 @@ import {
 
 
 } from 'react-native-gifted-chat'
-import { Video, AVPlaybackStatus } from 'expo-av';
+import { Video, AVPlaybackStatus, Audio } from 'expo-av';
 
 import Image from 'react-native-scalable-image';
 
@@ -79,7 +79,7 @@ import * as MediaLibrary from 'expo-media-library';
 import { OverlayDownloader } from "./OverlayDownloader";
 import { Overlay } from 'react-native-elements/dist/overlay/Overlay';
 
-import { Audio } from 'expo-av';
+
 
 
 //import Snackbar from 'expo-snackbar';
@@ -472,6 +472,7 @@ export function ChatScreen({ navigation, route, ...props }) {
       obj.translationX = event.translationX
       obj.translationY = event.translationY
 
+      //console.log(event.translationX)
 
     },
     onEnd: (event, obj) => {
@@ -518,11 +519,11 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
   function callStartRecording() {
-    startRecording(recording)
+    startRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice })
   }
 
   function callStopRecording() {
-    stopRecording({ messages, setMessages, recording, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice })
+    stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice, socket })
   }
 
   function callCancelRecording() {
@@ -912,29 +913,7 @@ export function ChatScreen({ navigation, route, ...props }) {
                       }}>recording,move up to cancel</Text>
                     </View>
 
-                    {/* <Text style={[micBarTextStyle1]}>recording</Text> */}
-                    {/* <Button title="Aaddd" loading={true} buttonStyle={{ color: "yellow",backgroundColor:"pink" }}
-                         loadingStyle={{ color: "red" }}
-                      iconContainerStyle={{color:"red"}}
-                      textInputProps={{ style: { color: "yellow" } }}
-                      containerStyle={{ color: "yellow", backgroundColor:"pink" }}
-                      titleStyle={{color:"yellow"}}
-                      disabledTitleStyle={{color:"red"}}
-                      
-                    //   disabled={true}
-                    /> */}
-
-                    {/* <View style={{height:60, width:width-120, backgroundColor:"purple", display:"flex",alignItems:"center",justifyContent:"center"}}> */}
-                    {/* <Text style={[micBarTextStyle0]}>hold to talk</Text> */}
-                    {/* <Text style={[micBarTextStyle1]}>recording</Text>
-                    <Text style={[micBarTextStyle2]}>recording.</Text>
-                    <Text style={[micBarTextStyle3]}>recording..</Text>
-                    <Text style={[micBarTextStyle4]}>recording...</Text> */}
-
-                    {/* </View> */}
-
-
-
+         
 
                   </View>
                 </PanGestureHandler>
@@ -1114,37 +1093,24 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         renderMessageAudio={function (message) {
 
-          const currentMessage = message.currentMessage
+          //const currentMessage = message.currentMessage
 
-          console.log(currentMessage.audio)
-
-
-          return <AudioMessage message={message} />
-
-          // return (
-          //   <Button title="Fsdf" onPress={async function () {
-
-          //     const sound = new Audio.Sound();
-
-          //     try {
-          //       await sound.loadAsync(require(currentMessage.audio));
-          //       await sound.playAsync();
-          //       // Your sound is playing!
-
-          //       // Don't forget to unload the sound from memory
-          //       // when you are done using the Sound object
-          //       await sound.unloadAsync();
-          //     } catch (error) {
-          //       // An error occurred!
-          //     }
+          //   console.log(currentMessage.audio)
 
 
+          return <AudioMessage
+
+            message={message}
+
+            item={item} userName={userName}
 
 
+            setMessages={setMessages}
+            isText={false} isImage={false} isAudio={true}
+            canMoveDown={canMoveDown}
+            token={token}
 
-          //   }} />
-          // )
-
+          />
 
 
 
@@ -1226,82 +1192,297 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
 
-function AudioMessage({ message, ...props }) {
+function AudioMessage({ message, item, userName, token, setMessages, canMoveDown, isText, isImage, isAudio, ...props }) {
+
+
+  const viewRef = useAnimatedRef()
+  const [visible, setVisible] = useState(false)
+  const [top, setTop] = useState(60)
+  const [left, setLeft] = useState(0)
+
 
   const currentMessage = message.currentMessage
 
-  // const [sound, setSound] = useState()
+  const audioMsg = useRef()
 
-  // useEffect(function () {
-  //   Audio.Sound.createAsync(
-  //     { uri: currentMessage.audio },
-  //     { shouldPlay: false },
-  //     function (data) {
-  //       console.log(data)
-  //     }
-  //   ).then(
-  //     ({ sound, status }) => {
-  //       setSound(sound)
-  //       console.log(status)
-  //     })
-  // }, [])
+  const audioDuration = Number.parseFloat(currentMessage.durationMillis / 1000).toFixed(1)
+
+  const isPlaying = useSharedValue(false)
+
+  const [disabled, setDisabled] = useState(true)
+
+  const viewStyle1 = useAnimatedStyle(() => {
 
 
-  // console.log(currentMessage.audio)
+    return {
+      display: isPlaying.value ? "flex" : "none",
+      flexDirection: "row",
+      justifyContent: "flex-start",
+      alignItems: "center",
+      height: 60,
+      minWidth: 90,
+      width: audioDuration * 10 * 1.5,
+      maxWidth: 300,
+      //   opacity: withTiming(viewOpacity.value, { duration: 200 })
+    }
 
-  // const sound = new Audio.Sound();
-  //       sound.loadAsync({})
+
+  })
 
 
-  // sound.createAsync(
-  //   { uri: currentMessage.audio },
-  //   { shouldPlay: true }
-  // )
+  const viewStyle2 = useAnimatedStyle(() => {
+
+
+    return {
+      display: isPlaying.value ? "none" : "flex",
+      flexDirection: "row",
+      justifyContent: "flex-start",
+      alignItems: "center",
+      height: 60,
+      minWidth: 90,
+      width: audioDuration * 10 * 1.5,
+      maxWidth: 300,
+    }
+
+
+  })
+
+  useEffect(function () {
+    if (!currentMessage.mongooseID) {
+
+      Audio.Sound.createAsync(
+        { uri: currentMessage.audio },
+        { shouldPlay: false },
+        function (data) { },
+        true,
+      )
+        .then(
+          ({ sound, status }) => {
+
+            audioMsg.current = sound
+            setDisabled(false)
+            // audioMsg.current.setOnPlaybackStatusUpdate(info => {
+            //   isPlaying.value = info.isPlaying
+            //   // console.log(">>>>>", info)
+            // })
+          })
+
+    }
+    else {
+
+
+      //  console.log(currentMessage.audio)
+      FileSystem.getInfoAsync(currentMessage.audio).then(info => {
+        if (info.exists) {
+          Audio.Sound.createAsync(
+            { uri: currentMessage.audio },
+            { shouldPlay: false },
+            function (data) { },
+            true,
+          ).then(({ sound, status }) => { audioMsg.current = sound; setDisabled(false) })
+        }
+        else {
+          const uri = `${url}/api/audio/download/${currentMessage.mongooseID}`
+          const fileUri = currentMessage.audio
+
+          const downloadResumable = FileSystem.createDownloadResumable(
+            uri, fileUri, { headers: { "x-auth-token": token } },
+            function ({ totalBytesExpectedToWrite, totalBytesWritten }) {
+              console.log(totalBytesWritten + " / " + totalBytesExpectedToWrite)
+            }
+          );
+
+          downloadResumable.downloadAsync(uri, fileUri, { headers: { "x-auth-token": token } })
+            .then(({ status }) => {
+              if (status == 200) {
+
+                Audio.Sound.createAsync(
+                  { uri: currentMessage.audio },
+                  { shouldPlay: false },
+                  function (data) { },
+                  true,
+                ).then(({ sound, status }) => {
+                  audioMsg.current = sound;
+                  setDisabled(false)
+
+                  axios.get(`${url}/api/audio/delete/${currentMessage.mongooseID}`)
+
+                })
+
+
+
+              }
+            })
+
+
+        }
+      })
+
+      // Audio.Sound.createAsync(
+      //   { uri: `${url}/api/audio/download/${currentMessage.mongooseID}` },
+      //   { shouldPlay: false },
+      //   function (data) { },
+      //   true,
+      // )
+      //   .then(
+      //     ({ sound, status }) => {
+
+      //   console.log(sound)
+      // sound.unloadAsync().then(info=>{
+
+      //   console.log(info)
+      // })
+
+
+      // audioMsg.current = sound
+      // audioMsg.current.setOnPlaybackStatusUpdate(info => {
+      //   isPlaying.value = info.isPlaying
+      //   // console.log(">>>>>", info)
+      // })
+
+      // console.log(status)
+
+      //  })
+
+    }
+
+
+    return function () {
+      if (audioMsg.current) {
+
+        audioMsg.current.unloadAsync().catch(err => console.log(err))
+
+      }
+
+    }
+
+  }, [])
+
 
 
 
 
   return (
+    <>
+      <View ref={element => { viewRef.current = element }}>
+        <View style={[viewStyle1]}>
+
+          <LinearProgress style={{
+            minWidth: 90,
+            width: audioDuration * 10 * 1.5,
+            maxWidth: 300,
+            height: 60,
+            position: "absolute", top: 0, left: 0
+          }} />
+          <Button title={audioDuration} type="clear"
+
+            containerStyle={{ flex: 1, backgroundColor: "transparent" }}
+
+            icon={{
+              name: 'stop-circle-outline',
+              type: 'ionicon',
+              size: 40,
+              color: 'white',
+            }}
+
+            onPress={function () {
+              audioMsg.current.getStatusAsync().then(info => {
+
+                if (!info.isPlaying) {
+                  audioMsg.current.replayAsync()
+                }
+                else {
+                  audioMsg.current.stopAsync()
+                }
+              })
+            }}
+            onLongPress={function () {
 
 
-    <Button title="play" onPress={async function () {
+              const handle = findNodeHandle(viewRef.current);
+              UIManager.measure(handle, (fx, fy, compoWidth, compoHeight, px, py) => {
 
+                if ((py - 18 + (compoHeight - 9) / 2) >= (height / 2)) {
+                  setTop(Math.max(py - 72, 0))
+                }
+                else {
+                  setTop(Math.min(height - 132, py - 18 + compoHeight))
+                }
+                setLeft(currentMessage.user._id !== "myself" ? 52 : width - compoWidth + 52)
 
-      try {
-
-        Audio.Sound.createAsync(
-          { uri: currentMessage.audio },
-          { shouldPlay: true },
-          function (data) {
-            //  console.log(data)
-          }
-        )
-
-        //console.log(Date.now())
-        // console.log(currentMessage.audio)
-        //sound.playAsync()
+              })
+              setTimeout(() => { setVisible(true) }, 10);
 
 
 
-        // await sound.loadAsync(require(currentMessage.audio));
-        // await sound.playAsync();
-        // // Your sound is playing!
-
-        // // Don't forget to unload the sound from memory
-        // // when you are done using the Sound object
-        // await sound.unloadAsync();
-      } catch (error) {
-        // An error occurred!
-      }
+            }}
+          />
+        </View>
 
 
-    }} />
+        <View style={[viewStyle2]}>
+          <Button title={audioDuration}
+
+            containerStyle={{ flex: 1 }}
+            disabled={disabled}
+            icon={{
+              name: 'play-circle-outline',
+              type: 'ionicon',
+              size: 40,
+              color: 'white',
+            }}
+
+            onPress={function () {
+              audioMsg.current.getStatusAsync().then(info => {
+
+                if (!info.isPlaying) {
+                  audioMsg.current.replayAsync()
+                }
+                else {
+                  audioMsg.current.stopAsync()
+                }
+              })
+            }}
+            onLongPress={function () {
+
+
+              const handle = findNodeHandle(viewRef.current);
+              UIManager.measure(handle, (fx, fy, compoWidth, compoHeight, px, py) => {
+
+                if ((py - 18 + (compoHeight - 9) / 2) >= (height / 2)) {
+                  setTop(Math.max(py - 72, 0))
+                }
+                else {
+                  setTop(Math.min(height - 132, py - 18 + compoHeight))
+                }
+                setLeft(currentMessage.user._id !== "myself" ? 52 : width - compoWidth + 52)
+
+              })
+              setTimeout(() => { setVisible(true) }, 10);
+
+
+
+            }}
+          />
+
+
+        </View>
+      </View>
+
+      <OverlayCompo
+        item={item}
+        userName={userName}
+        visible={visible} setVisible={setVisible}
+        top={top} left={left}
+        currentMessage={currentMessage}
+        setMessages={setMessages}
+        isText={false} isImage={false} isAudio={true}
+        canMoveDown={canMoveDown}
+        token={token}
+      />
+    </>
   )
 }
-
-
-
-
 
 
 
@@ -1430,15 +1611,6 @@ function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef,
 
   )
 }
-
-
-
-
-
-
-
-
-
 
 function MessageBlock({ Message, messages, inputRef, inputText, outerProps, inputHeight, keyboardHeight, totalBlockHeight, ...props }) {
 
@@ -1647,7 +1819,7 @@ function BubbleBlock({ token, item, bgColor, setMessages, canMoveDown, ...props 
       </View>
 
 
-      <OverlayCompo
+      {(!currentMessage.image) && (!currentMessage.audio) && <OverlayCompo
         item={item}
         visible={visible} setVisible={setVisible}
         top={top} left={left}
@@ -1656,7 +1828,7 @@ function BubbleBlock({ token, item, bgColor, setMessages, canMoveDown, ...props 
         isText={true} isImage={false}
         canMoveDown={canMoveDown}
         token={token}
-      />
+      />}
 
     </>
   )
@@ -1750,7 +1922,7 @@ function ImageBlock({ token, scrollRef, item, navigation, route, currentMessage,
   </>
 }
 
-function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, isText, isImage, setMessages, userName, item, canMoveDown, ...props }) {
+function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, isText, isImage, isAudio, setMessages, userName, item, canMoveDown, ...props }) {
 
 
   const { setSnackBarHeight, setSnackMsg } = useContext(Context)
@@ -1773,7 +1945,6 @@ function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, i
 
   })
   useEffect(function () {
-
     overlayScale.value = 2
   }, [])
 
@@ -1812,6 +1983,14 @@ function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, i
             else if ((isImage) && (currentMessage.user._id === userName)) {
               downloadFromLocal(currentMessage.image, setSnackMsg, setSnackBarHeight)
             }
+            else if (isAudio) {
+
+
+              downloadFromLocal(currentMessage.audio, setSnackMsg, setSnackBarHeight)
+
+
+            }
+
             setVisible(false)
           }}
         />
@@ -1847,6 +2026,27 @@ function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, i
 
 
             }
+            else if (isAudio) {
+
+
+              setMessages(messages => { return messages.filter(msg => { return msg._id !== currentMessage._id }) })
+
+
+
+
+
+              setTimeout(() => {
+
+
+                const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
+                const fileUri = folderUri + item.name + "---" + currentMessage.createdTime
+                FileSystem.deleteAsync(fileUri, { idempotent: true })
+
+                FileSystem.deleteAsync(currentMessage.audio, { idempotent: true })
+              }, 800);
+            }
+
+
 
           }}
         />
@@ -1897,7 +2097,7 @@ async function pickImage(setMessages, userName, item, socket) {
     const fileUri = folderUri + item.name + "---" + imageMsg.createdTime
     FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...imageMsg, isLocal: true }))
 
-    // todo: send image to server
+
 
     uploadImage({ localUri: result.uri, filename: time, sender: userName, toPerson: item.name, imageWidth: result.width, imageHeight: result.height })
       .then(response => {
@@ -1959,8 +2159,6 @@ async function takePhoto(setMessages, userName, item, socket) {
         socket.emit("sendMessage", { sender: userName, toPerson: item.name, msgArr: [data] })
       })
 
-
-    // todo: send image to server
   }
 }
 
@@ -1999,6 +2197,11 @@ async function downloadFromLocal(uri, setSnackMsg, setSnackBarHeight) {
 
 
 
+  const isImage = Boolean(uri.match(/\.(jpg|JPG|png|PNG|jpeg|JPEG)$/i))
+  const isAudio = Boolean(uri.match(/\.(m4a|mp3|3gp)$/i))
+
+
+
   const { granted } = await MediaLibrary.requestPermissionsAsync().catch(e => { console.log(e) })
   if (!granted) { return }
 
@@ -2006,12 +2209,16 @@ async function downloadFromLocal(uri, setSnackMsg, setSnackBarHeight) {
   setSnackBarHeight(60)
 
 
+
   const asset = await MediaLibrary.createAssetAsync(uri)
-  let album = await MediaLibrary.getAlbumAsync('expoDownload')
-  if (album == null) { await MediaLibrary.createAlbumAsync('expoDownload', asset, true) }
+  let album = await MediaLibrary.getAlbumAsync(isAudio ? 'expoAudio' : 'expoDownload')
+
+  if (album == null) { await MediaLibrary.createAlbumAsync(isAudio ? "expoAudio" : 'expoDownload', asset, false) }
   else {
-    await MediaLibrary.addAssetsToAlbumAsync([asset], album, true)
+    await MediaLibrary.addAssetsToAlbumAsync([asset], album, false)
   }
+
+  ///
 
 
 
@@ -2044,10 +2251,17 @@ async function uploadImage({ localUri, filename, sender, toPerson, imageWidth, i
 }
 
 
-function startRecording() {
+function startRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice }) {
   recording = new Audio.Recording()
+
+  // recording.setOnRecordingStatusUpdate(function (info) {
+  //   if (info.isRecording && info.durationMillis >= 2000) {
+  //   }
+  // })
+
+
   try {
-    console.log('Requesting permissions..');
+    //   console.log('Requesting permissions..');
 
 
     // await Audio.setAudioModeAsync({
@@ -2056,12 +2270,12 @@ function startRecording() {
     // });
 
 
-    console.log('Starting recording..');
+    //   console.log('Starting recording..');
 
     Audio.requestPermissionsAsync()
       .then((info) => {
 
-        console.log("permissions", info)
+        //  console.log("permissions", info)
 
         if (info.granted) {
           return recording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY)
@@ -2073,7 +2287,7 @@ function startRecording() {
       })
       .then(info => {
 
-        console.log("about to record", info)
+        // console.log("about to record", info)
 
         if (info.canRecord && (!info.isRecording)) {
           return recording.startAsync()
@@ -2096,19 +2310,16 @@ function startRecording() {
   }
 }
 
-
-
-
-function stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice }) {
+function stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice, socket }) {
 
 
   try {
-    console.log('Stopping recording..');
+    //   console.log('Stopping recording..');
 
     recording.getStatusAsync()
       .then(info => {
 
-        console.log("about to stop Recording", info)
+        //     console.log("about to stop Recording", info)
         if (info.isRecording) {
           return recording.stopAndUnloadAsync()
         }
@@ -2118,10 +2329,12 @@ function stopRecording({ messages, setMessages, userName, item, previousMessages
         }
       })
       .then(info => {
-        console.log("recording stopped", info)
+        //     console.log("recording stopped", info)
         if (info.isDoneRecording) {
           const durationMillis = info.durationMillis
           const uri = recording.getURI();
+
+
 
           recording = new Audio.Recording()
 
@@ -2148,6 +2361,25 @@ function stopRecording({ messages, setMessages, userName, item, previousMessages
             }
           })
 
+          const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
+          const fileUri = folderUri + item.name + "---" + audioMsg.createdTime
+          FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...audioMsg, isLocal: true }))
+
+
+
+          const filename = uri.split("/").pop()
+          uploadAudio({ localUri: uri, filename: filename || Date.now() + ".m4a", sender: userName, toPerson: item.name, durationMillis })
+            .then(response => {
+              //  console.log(response.data)
+
+              socket.emit("sendMessage", {
+                sender: userName, toPerson: item.name,
+                msgArr: [{ ...audioMsg, sender: userName,/*audio: response.data.filename,*/ mongooseID: response.data.mongooseID }]
+              })
+
+            })
+
+
         }
         else {
           recording = new Audio.Recording()
@@ -2161,7 +2393,7 @@ function stopRecording({ messages, setMessages, userName, item, previousMessages
 
   }
   catch (err) {
-    console.error('error in stopRecording', err);
+    //    console.error('error in stopRecording', err);
     recording = new Audio.Recording()
 
 
@@ -2170,15 +2402,33 @@ function stopRecording({ messages, setMessages, userName, item, previousMessages
 }
 
 
+function uploadAudio({ localUri, filename, sender, toPerson, durationMillis }) {
+
+  const formData = new FormData();
+  formData.append('file', { uri: localUri, name: filename, type: "audio/m4a" });
+  formData.append("obj", JSON.stringify({ ownerName: sender, toPerson, filename, sender, durationMillis }))
+
+  return axios.post(`${url}/api/audio/uploadaudio`, formData, { headers: { 'content-type': 'multipart/form-data', /*"x-auth-token": token*/ }, })
+    .then(response => {
+
+      //  FileSystem.deleteAsync(localUri, { idempotent: true })
+      return response
+    })
+
+
+
+}
+
+
 
 function cancelRecording() {
-  console.log('Cancel recording..');
+  //  console.log('Cancel recording..');
 
 
   recording.getStatusAsync()
     .then(info => {
 
-      console.log("about to cancel Recording", info)
+      ////     console.log("about to cancel Recording", info)
       if (info.isRecording) {
         return recording.stopAndUnloadAsync()
       }
@@ -2188,18 +2438,18 @@ function cancelRecording() {
       }
     })
     .then(info => {
-      console.log("recording cancelled", info)
+      //    console.log("recording cancelled", info)
       if (info.isDoneRecording) {
         // const durationMillis = info.durationMillis
-         const uri = recording.getURI();
-         console.log("cancel uri===>>>>>>>>",uri)
+        const uri = recording.getURI();
+        //      console.log("cancel uri===>>>>>>>>",uri)
 
-         FileSystem.deleteAsync(uri, { idempotent: true }).then(()=>{
+        FileSystem.deleteAsync(uri, { idempotent: true }).then(() => {
 
-          console.log("caneled file deleted ")
-         })
+          //      console.log("caneled file deleted ")
+        })
 
-   
+
 
       }
       else {
@@ -2208,16 +2458,12 @@ function cancelRecording() {
       }
     })
     .catch(err => {
-      console.log("cancel error",err)
+      console.log("cancel error", err)
     })
 
 
 
 }
-
-
-
-
 
 
 ChatScreen.sharedElements = (route, otherRoute, showing) => {
