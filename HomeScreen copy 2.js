@@ -457,23 +457,11 @@ function SinglePanel_({ item, setListRefEnabled, listRef, scrollY,
     onActive: (event, obj) => {
 
 
-      if ((event.translationX < -5) && (coverTransX.value !== 0 || Math.abs(event.translationY) < 3)) {
+      if ((event.translationX > 0) && (coverTransX.value !== 0 || Math.abs(event.translationY) < 5)) {
         zIndex.value = 10
         coverTransX.value = event.translationX
 
       }
-
-
-      // if ((event.translationX > 0) && (coverTransX.value !== 0 || Math.abs(event.translationY) < 5)) {
-      //   zIndex.value = 10
-      //   coverTransX.value = event.translationX
-
-      // }
-
-
-
-
-
       // else if ((event.translationX < -50) && (coverTransX.value === 0 || Math.abs(event.translationY) < 5)) {
 
 
@@ -484,9 +472,9 @@ function SinglePanel_({ item, setListRefEnabled, listRef, scrollY,
     },
     onEnd: (event, obj) => {
 
-      if (coverTransX.value <= -80) {
+      if (coverTransX.value >= 80) {
 
-        coverTransX.value = withTiming(-width)
+        coverTransX.value = withTiming(width)
         runOnJS(setCountingDown)()
 
       }
@@ -816,6 +804,8 @@ function SinglePanel_({ item, setListRefEnabled, listRef, scrollY,
                     : <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
                   }
 
+
+
                 </SharedElement>
               </TouchableOpacity>
 
@@ -850,7 +840,7 @@ function NameText({ item, ...props }) {
 
 
   const { token, latestMsgObj, setLatestMsgObj, userName, latestChattingMsg } = useContext(Context)
-
+  
 
   const [textToShow, setTextToShow] = useState("")
 
@@ -957,7 +947,12 @@ function NameText({ item, ...props }) {
   )
 
 
-
+  // return (
+  //   <View>
+  //     <Text style={{ fontSize: 20, }}>{item.name}</Text>
+  //     {Boolean(latestMsgObj[item.name]) && <Text style={{ fontSize: 18, color: "#666", lineHeight: 20, width: width - 100, overflow: "hidden" }} ellipsizeMode='tail' numberOfLines={1} >{latestMsgObj[item.name]}</Text>}
+  //   </View>
+  // )
 }
 
 

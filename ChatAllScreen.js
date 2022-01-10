@@ -9,8 +9,7 @@ import {
 
   SafeAreaView,
   KeyboardAvoidingView,
-  BackHandler,
-  Alert
+
 } from 'react-native';
 
 import ReAnimated, {
@@ -129,11 +128,7 @@ import { Path } from 'react-native-svg';
 let recording = new Audio.Recording();
 let audioSound = new Audio.Sound();
 
-export function ChatScreen({ navigation, route, ...props }) {
-
-
-
-
+export function ChatAllScreen({ navigation, route, ...props }) {
 
 
   const item = route.params.item
@@ -154,7 +149,7 @@ export function ChatScreen({ navigation, route, ...props }) {
   const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
   const bgColor2 = hexify(hexToRgbA2(avatarString.match(/#[a-zA-z0-9]*/)[0]))
 
-  const { token, userName, socket, setSnackBarHeight, setSnackMsg, appState, unreadCountObj, setUnreadCountObj, latestMsgObj, latestChattingMsg, setLatestMsgObj } = useContext(Context)
+  const { token, userName, socket, setSnackBarHeight, setSnackMsg, appState, unreadCountObj, setUnreadCountObj, latestMsgObj, setLatestMsgObj } = useContext(Context)
   const [shouldDisplayNotice, setShouldDisplayNotice] = useState(true)
   const canMoveDown = useRef(true)
 
@@ -177,9 +172,6 @@ export function ChatScreen({ navigation, route, ...props }) {
 
   const totalBlockHeight = useRef(0)
 
-
-
-
   //display message
   useEffect(function () {
 
@@ -187,8 +179,6 @@ export function ChatScreen({ navigation, route, ...props }) {
 
       canMoveDown.current = true
       let msgArr_ = msgArr.map(msg => {
-
-        latestChattingMsg.current = msg
 
         return {
           ...msg,
@@ -545,7 +535,7 @@ export function ChatScreen({ navigation, route, ...props }) {
   }
 
   function callStopRecording() {
-    stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice, socket, latestChattingMsg })
+    stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice, socket, setLatestMsgObj })
   }
 
   function callCancelRecording() {
@@ -1000,7 +990,7 @@ export function ChatScreen({ navigation, route, ...props }) {
         onSend={
           function (messages) {
 
-
+            console.log(item.name)
 
 
             if (!messages[0].image && !messages[0].audio && !messages[0].video) {
@@ -1019,7 +1009,7 @@ export function ChatScreen({ navigation, route, ...props }) {
             // }
 
 
-            const messages_ = messages.map(msg => { return { ...msg, createdTime: Date.parse(msg.createdAt), sender: userName, toPerson: item.name } })
+            const messages_ = messages.map(msg => { return { ...msg, createdTime: Date.parse(msg.createdAt), sender: userName } })
             if (userName !== item.name) { socket.emit("sendMessage", { sender: userName, toPerson: item.name, msgArr: messages_ }) }
 
 
@@ -1061,10 +1051,7 @@ export function ChatScreen({ navigation, route, ...props }) {
                 messages_.forEach(msg => {
                   const fileUri = folderUri + item.name + "---" + msg.createdTime
                   FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...msg, isLocal: true }))
-                  latestChattingMsg.current = msg
-
-
-                  // latestChattingMsg(pre => { return { ...pre, [item.name]: "\u2b05 " + msg.text } }) // causing slow down
+               //   setLatestMsgObj(pre => { return { ...pre, [item.name]: "\u2b05 " + msg.text } })
                 })
               })
 
@@ -1086,7 +1073,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
               <Icon
                 onPress={function () {
-                  canMoveDown.current = true; inputHeight.value = 0; pickImage(setMessages, userName, item, socket, latestChattingMsg)
+                  canMoveDown.current = true; inputHeight.value = 0; pickImage(setMessages, userName, item, socket, setLatestMsgObj)
                 }}
                 name="image-outline"
                 type='ionicon'
@@ -1096,7 +1083,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
               <Icon
-                onPress={function () { canMoveDown.current = true; inputHeight.value = 0; takePhoto(setMessages, userName, item, socket, latestChattingMsg) }}
+                onPress={function () { canMoveDown.current = true; inputHeight.value = 0; takePhoto(setMessages, userName, item, socket, setLatestMsgObj) }}
                 name="camera-outline"
                 type='ionicon'
                 color='#517fa4'
@@ -1543,7 +1530,7 @@ function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef,
   const viewTranslateX = useDerivedValue(() => {
 
     return inputText ? -60 : 0
-    // return -60
+
   })
 
 
@@ -1569,11 +1556,9 @@ function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef,
 
 
 
-
   return (
 
     <Send {...outerProps}
-
       containerStyle={{
         //    alignSelf: !inputText || inputText.indexOf("\n") === -1 ? "center" : "flex-end",
         alignSelf: "center",
@@ -1595,7 +1580,6 @@ function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef,
 
       <View style={[viewStyle]}>
 
-
         <Icon
           name='add-circle-outline'
           type='ionicon'
@@ -1616,7 +1600,7 @@ function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef,
             if (inputHeight.value === 0 && keyboardHeight === 0) {
               inputHeight.value = 60
               micBarWidth.value = 0
-              inputRef.current.blur()
+              // inputRef.current.blur()
             }
             else if (inputHeight.value !== 0 && keyboardHeight === 0) {
               inputHeight.value = 0
@@ -1631,15 +1615,19 @@ function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef,
 
 
           }}
-
-
         />
+
+
+
+
+
+
 
         <Icon
           name='send'
           type='ionicon'
           color='#517fa4'
-          size={40}
+          size={50}
           containerStyle={{
             backgroundColor: bgColor, width: 60, height: 60,
             display: "flex",
@@ -2109,7 +2097,7 @@ function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, i
 
 }
 
-async function pickImage(setMessages, userName, item, socket, latestChattingMsg) {
+async function pickImage(setMessages, userName, item, socket, setLatestMsgObj) {
   let result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
     allowsEditing: true,
@@ -2133,12 +2121,11 @@ async function pickImage(setMessages, userName, item, socket, latestChattingMsg)
       text: '',
       createdAt: time,
       createdTime: time,
-      sender: userName,
+
       user: { _id: userName },
       image: result.uri,
       imageWidth: result.width,     //"data:image/png;base64," + result.base64,
-      imageHeight: result.height,
-      toPerson: item.name,
+      imageHeight: result.height
     }
 
 
@@ -2161,14 +2148,12 @@ async function pickImage(setMessages, userName, item, socket, latestChattingMsg)
 
       }).then(data => {
         socket.emit("sendMessage", { sender: userName, toPerson: item.name, msgArr: [data] })
-        latestChattingMsg.current = imageMsg
-
-        //   latestChattingMsg(pre => { return { ...pre, [item.name]: "\u2b05 [image]" } })
+        setLatestMsgObj(pre => { return { ...pre, [item.name]: "\u2b05 [image]" } })
       })
   }
 };
 
-async function takePhoto(setMessages, userName, item, socket, latestChattingMsg) {
+async function takePhoto(setMessages, userName, item, socket, setLatestMsgObj) {
   let result = await ImagePicker.launchCameraAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
     allowsEditing: true,
@@ -2187,12 +2172,11 @@ async function takePhoto(setMessages, userName, item, socket, latestChattingMsg)
       text: '',
       createdAt: time,
       createdTime: time,
-      sender: userName,
+
       user: { _id: userName },
       image: result.uri,     //"data:image/png;base64," + result.base64,
       imageWidth: result.width,     //"data:image/png;base64," + result.base64,
-      imageHeight: result.height,
-      toPerson: item.name,
+      imageHeight: result.height
     }
 
     setMessages(pre => { return [...pre, { ...imageMsg, isLocal: true }] })
@@ -2212,8 +2196,7 @@ async function takePhoto(setMessages, userName, item, socket, latestChattingMsg)
 
       }).then(data => {
         socket.emit("sendMessage", { sender: userName, toPerson: item.name, msgArr: [data] })
-        latestChattingMsg.current = imageMsg
-        //   latestChattingMsg(pre => { return { ...pre, [item.name]: "\u2b05 [image]" } })
+        setLatestMsgObj(pre => { return { ...pre, [item.name]: "\u2b05 [image]" } })
       })
 
   }
@@ -2367,7 +2350,7 @@ function startRecording({ messages, setMessages, userName, item, previousMessage
   }
 }
 
-function stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice, socket, latestChattingMsg }) {
+function stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice, socket, setLatestMsgObj }) {
 
 
   try {
@@ -2402,10 +2385,8 @@ function stopRecording({ messages, setMessages, userName, item, previousMessages
             createdAt: time,
             createdTime: time,
             user: { _id: userName },
-            sender: userName,
             audio: uri,
             durationMillis: durationMillis,
-            toPerson: item.name,
           }
 
           canMoveDown.current = true
@@ -2423,8 +2404,7 @@ function stopRecording({ messages, setMessages, userName, item, previousMessages
           const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
           const fileUri = folderUri + item.name + "---" + audioMsg.createdTime
           FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...audioMsg, isLocal: true }))
-          latestChattingMsg.current = audioMsg
-          //    latestChattingMsg(pre => { return { ...pre, [item.name]: "\u2b05 [audio]" } })
+          setLatestMsgObj(pre => { return { ...pre, [item.name]: "\u2b05 [audio]" } })
 
 
           const filename = uri.split("/").pop()

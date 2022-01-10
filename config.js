@@ -187,3 +187,113 @@ async function stopRecording0({ recording, setRecording }) {
 }
 
 */
+
+
+
+
+
+
+
+
+
+
+
+
+// useEffect(() => {
+//   const unsubscribe1 = navigation.addListener('focus', () => {
+//     //console.log(latestChattingMsg.current)
+
+
+
+
+
+//     //   if (latestChattingMsg.current) {
+//     //     const obj = latestChattingMsg.current
+//     //     latestChattingMsg.current = ""
+//     //     const sender = obj.sender === userName ? obj.toPerson : obj.sender
+//     //     let objText = ""
+//     //     if (obj.audio) {
+//     //       objText = "[audio]"
+//     //     }
+//     //     else if (obj.image) {
+//     //       objText = "[image]"
+//     //     }
+//     //     else if (obj.text) {
+//     //       objText = obj.text
+//     //     }
+//     //     if (obj.sender === userName) { objText = "\u2b05 " + objText }
+
+//     //  //   setImmediate(function () {
+
+//     //       setTimeout(() => {
+//     //         setLatestMsgObj(pre => {
+
+//     //           return { ...pre, [sender]: objText }
+//     //         })
+//     //       }, 0);
+//     // //    })
+//     //   }
+
+
+
+
+
+//     //console.log("xxx", Date.now(), chattingUser.current)
+//     /*
+//     if (chattingUser.current) {
+//       const sender = chattingUser.current
+
+//       const folderUri = FileSystem.documentDirectory + "MessageFolder/" + sender + "/"
+
+
+//       FileSystem.readDirectoryAsync(folderUri).then(msgNameArr => {
+
+
+//         msgNameArr.sort()
+//         const lastName = msgNameArr.pop()
+//         console.log(lastName)
+
+//         if (lastName) {
+//           FileSystem.readAsStringAsync(folderUri + lastName).then(data => {
+
+
+//             // console.log(data)
+//             const obj = JSON.parse(data)
+
+//             let objText = ""
+
+//             if (obj.audio) {
+//               objText = "[audio]"
+//             }
+//             else if (obj.image) {
+//               objText = "[image]"
+//             }
+//             else if (obj.text) {
+//               objText = obj.text
+//             }
+
+//             if (obj.sender === userName) { objText = "\u2b05 " + objText }
+
+//             Boolean(objText) && setLatestMsgObj(pre => { return { ...pre, [sender]: objText } })
+//           })
+
+//         }
+
+
+
+//       })
+
+
+
+//     }
+// */
+//   });
+
+//   // const unsubscribe2 = navigation.addListener('blur', () => {
+//   //  console.log("---", Date.now(), chattingUser.current)
+//   // });
+
+//   return function () { unsubscribe1(); }
+// }, [navigation]);
+
+

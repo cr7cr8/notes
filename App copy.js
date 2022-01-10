@@ -32,17 +32,15 @@ import { HomeScreen, DetailScreen } from "./HomeScreen";
 
 
 
-import React, { useState, useRef, useEffect, useContext, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext, useLayoutEffect} from 'react';
 
 import { createSharedElementStackNavigator } from 'react-navigation-shared-element';
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
 
 
-import {
-  AppState, StyleSheet, Dimensions, TouchableOpacity,
+import { AppState, StyleSheet, Dimensions, TouchableOpacity, 
   SafeAreaView,
-  TouchableNativeFeedback, Pressable, TouchableHighlight, TouchableWithoutFeedback, ImageBackground
-} from 'react-native';
+  TouchableNativeFeedback, Pressable, TouchableHighlight, TouchableWithoutFeedback, ImageBackground } from 'react-native';
 
 import ReAnimated, {
   useAnimatedStyle, useSharedValue, useDerivedValue,
@@ -122,8 +120,33 @@ Notifications.setNotificationHandler({
 
 
 
+// TaskManager.defineTask(BACKGROUND_FETCH_TASK, ({ data, error }) => {
 
+//   console.log(`Got background fetch call at: ${new Date().toISOString()}`)
+//   checkStatusAsync()
+//   return BackgroundFetch.BackgroundFetchResult.NewData;
 
+// });
+
+async function registerBackgroundFetchAsync() {
+  return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
+    minimumInterval: 1, // 1 minutes
+    stopOnTerminate: false, // android only,
+    startOnBoot: true, // android only
+  });
+}
+
+async function unregisterBackgroundFetchAsync() {
+  return BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
+}
+
+// async function checkStatusAsync() {
+//   const status = await BackgroundFetch.getStatusAsync();
+//   const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_FETCH_TASK);
+//   console.log(status)
+//   console.log(isRegistered)
+
+// };
 
 function AppStarter() {
 
@@ -145,36 +168,95 @@ function AppStarter() {
 
 
 
+  useEffect(function () {
 
 
+    if (socket) {
+
+      //     // TaskManager.defineTask(BACKGROUND_FETCH_TASK, ({ data, error }) => {
+      //     //   console.log(`Got background fetch call at: ${new Date().toISOString()}`)
+      //     //   socket.emit("helloFromClient", new Date().toISOString())
+      //     //   return BackgroundFetch.BackgroundFetchResult.NewData;
+      //     // });
+      //     // setTimeout(registerBackgroundFetchAsync,1000)  
+
+      //  socket.on("saveUnread", function (sender, msgArr) {
+
+      //   if ((socket.listeners("displayMessage" + sender).length === 0) || appState.current === "background" || appState.current === "inactive") {
+
+      //     msgArr.forEach((msg, index) => {
+      //       console.log("index", index)
+      //       const fileUri = FileSystem.documentDirectory + "UnreadFolder/" + sender + "/" + sender + "---" + msg.createdTime
+
+      //       FileSystem.getInfoAsync(folderUri)
+      //         .then(info => {
+
+      //           if (!info.exists) {
+      //             return FileSystem.makeDirectoryAsync(folderUri)
+      //           }
+      //           else {
+      //             return info
+      //           }
+      //         })
+      //         .then(() => {
+      //           return FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg))
+
+
+      //         })
+      //         .then(() => {
+      //           FileSystem.readDirectoryAsync(folderUri).then(data => {
+      //             console.log("---", data)
+      //           })
+      //         })
+
+
+      //     });
+
+
+
+
+      //   }
+
+
+      //  })
+
+
+      // socket.on("checkListeners", function (sender, msgArr) {
+      //   if ((socket.listeners("displayMessage" + sender).length === 0) || appState.current === "background" || appState.current === "inactive") {
+      //     Notifications.scheduleNotificationAsync({
+      //       content: {
+      //         title: sender,
+      //         body: msgArr[0].text + " made by local",
+      //       },
+      //       trigger: null// { seconds: 2 },
+      //     });
+      //   }
+      // })
+
+
+
+    } //ifsocket
+
+
+  }, [socket])
+
+
+  // useEffect(function () {
+  //   return unregisterBackgroundFetchAsync
+  // }, [])
 
   useEffect(function () {
 
     if (token && notiToken && socket) {
-    
+      // console.log("hihihihi")
 
+      Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
 
-
-//only works on android version 8+
-      // Notifications.setNotificationChannelAsync('default1', {
-      //   name: 'default1',
-      //   importance: Notifications.AndroidImportance.MAX,
-      //   vibrationPattern: [0, 250, 250, 250],
-      //   lightColor: '#FF231F7C',
-      // }).then((aaa) => {
-
-      // //  console.log(aaa)
-      //   Notifications.getNotificationChannelAsync("default1").then(channel => {
-
-      //     console.log(channel)
-      //   })
-
-
-
-      // });
-
-
-      //////////////////////////////////////
       //socket.emit("sendNotiToken", notiToken)
 
     }
@@ -195,37 +277,15 @@ function AppStarter() {
 
       AsyncStorage.getItem("notiToken").then(notiToken => {
 
-
-
-        if ((typeof notiToken === "string") && (notiToken !== "[Error: Fetching the token failed: SERVICE_NOT_AVAILABLE]")) {
-
-
-          //console.log("async storage notitoken is:", notiToken)
+        if (notiToken) {
           setNotiToken(notiToken)
         }
         else {
           registerForPushNotificationsAsync().then(notiToken => {
-
-
-
-            if ((typeof notiToken === "string") && (notiToken !== "[Error: Fetching the token failed: SERVICE_NOT_AVAILABLE]")) {
-
-              //console.log("register notitoken is:", notiToken)
-              setNotiToken(notiToken)
-              AsyncStorage.setItem("notiToken", notiToken)
-            }
-            else {
-              // alert("notiToken not avaliable")
-              // console.log("notiToken not avaliable")
-            }
-
+            setNotiToken(notiToken)
+            AsyncStorage.setItem("notiToken", notiToken)
           })
-            .catch(err => {
-              console.log("error in app.js get notitoken", err)
-            })
         }
-      }).catch(err => {
-        console.log("error in get notitoken", err)
       })
 
 
@@ -248,8 +308,8 @@ function AppStarter() {
 
   useEffect(function () {
 
-    if (token && notiToken && (typeof notiToken === "string") && (notiToken !== "[Error: Fetching the token failed: SERVICE_NOT_AVAILABLE]")) {
-      console.log(`${Constants.deviceName} ${userName} sending notiToken  ${notiToken}`)
+    if (token && notiToken) {
+      console.log("sending notiToken", userName, notiToken)
       axios.post(`${url}/api/user/updatenotitoken`, { notiToken: notiToken }, { headers: { "x-auth-token": token } })
     }
   }, [token, notiToken])
@@ -260,7 +320,18 @@ function AppStarter() {
   if (initialRouter) {
     return (
       <>
-        <NavigationContainer  >
+        <NavigationContainer
+
+        // linking={{
+        //   prefixes: ['https://mychat.com', 'mychat://'],
+        //   config: {
+        //     screens: {
+        //       Home: 'feed/:sort',
+        //     },
+        //   },
+        // }}
+
+        >
           <StackNavigator />
         </NavigationContainer>
         <SnackBar />
@@ -274,51 +345,9 @@ function AppStarter() {
 }
 
 
-function registerForPushNotificationsAsync() {
-  let token;
-  if (Constants.isDevice) {
-    Notifications.getPermissionsAsync().then(({ status: existingStatus }) => {
-
-      let finalStatus = existingStatus;
-      if (existingStatus !== 'granted') {
-        Notifications.requestPermissionsAsync().then(({ status }) => {
-          finalStatus = status;
-
-        })
-      }
-      if (finalStatus !== 'granted') {
-        console.log('Failed to get push token for push notification!');
-        alert('Failed to get push token for push notification!');
-        return;
-      }
-
-    })
-      .catch(err => { console.log(err) })
 
 
-    return Notifications.getExpoPushTokenAsync().then(({ data }) => {
-      token = data
-      if (!token) {
-        console.log('Unable to get notiToken on client site');
-        alert('Unable to get notiToken on client site');
-      }
-      return token;
-    })
-      .catch(err => {
-        //  console.log("====>", err)
-        return err
-
-      })
-  }
-  else {
-    alert('Must use physical device for Push Notifications');
-  }
-}
-
-
-
-
-async function registerForPushNotificationsAsync0() {
+async function registerForPushNotificationsAsync() {
   let token;
   if (Constants.isDevice) {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();

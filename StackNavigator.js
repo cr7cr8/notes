@@ -11,6 +11,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RegScreen } from "./RegScreen";
 import { HomeScreen } from "./HomeScreen";
 import { ChatScreen } from "./ChatScreen";
+//import { ChatAllScreen } from "./ChatAllScreen";
+
 import { ImageScreen } from "./ImageScreen";
 import * as FileSystem from 'expo-file-system';
 import { Context } from "./ContextProvider"
@@ -67,6 +69,7 @@ export default function StackNavigator() {
       headerStyle: {
         height: getStatusBarHeight() > 24 ? 70 : 60,
         elevation: 1,
+        backgroundColor:"wheat"
       },
 
 
@@ -82,6 +85,8 @@ export default function StackNavigator() {
     <>
 
       <Stack.Navigator
+     
+
         initialRouteName={initialRouter}
 
 
@@ -131,28 +136,28 @@ export default function StackNavigator() {
 
 
 
-                const infoAudio = await FileSystem.getInfoAsync(FileSystem.cacheDirectory + "Audio/")
-                if (infoAudio.exists) {
-                  FileSystem.readDirectoryAsync(FileSystem.cacheDirectory + "Audio/").then(data => {
-                    console.log(data)
-                    if (data) {
-                      data.forEach(filename => {
-                        FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/" + filename, { idempotent: true })
-                      })
-                    }
-                  })
-                }
+                // const infoAudio = await FileSystem.getInfoAsync(FileSystem.cacheDirectory + "Audio/")
+                // if (infoAudio.exists) {
+                //   FileSystem.readDirectoryAsync(FileSystem.cacheDirectory + "Audio/").then(data => {
+                //     console.log(data)
+                //     if (data) {
+                //       data.forEach(filename => {
+                //         FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/" + filename, { idempotent: true })
+                //       })
+                //     }
+                //   })
+                // }
 
 
 
                 await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
                 await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
                 await FileSystem.deleteAsync(FileSystem.documentDirectory + "ImagePicker/", { idempotent: true })
-
+                await FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/", { idempotent: true })
 
                 FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
                 FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/")
-
+                FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "Audio/")
 
 
 
@@ -190,28 +195,16 @@ export default function StackNavigator() {
                 return <Button onPress={async function () {
 
 
-                  const infoAudio = await FileSystem.getInfoAsync(FileSystem.cacheDirectory + "Audio/")
-                  if (infoAudio.exists) {
-                    FileSystem.readDirectoryAsync(FileSystem.cacheDirectory + "Audio/").then(data => {
-                      console.log(data)
-                      if (data) {
-                        data.forEach(filename => {
-                          FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/" + filename, { idempotent: true })
-                        })
-                      }
-                    })
-                  }
-
-
 
 
                   await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
                   await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
                   await FileSystem.deleteAsync(FileSystem.documentDirectory + "ImagePicker/", { idempotent: true })
-
+                  await FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/", { idempotent: true })
 
                   FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
                   FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/")
+                  FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "Audio/")
 
 
                 }} title="folder" />

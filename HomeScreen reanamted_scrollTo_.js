@@ -20,7 +20,7 @@ import ReAnimated, {
   withDelay,
   withSpring,
   useAnimatedScrollHandler,
-
+  //useAnimatedRef,
   //interpolateColors,
 
   useAnimatedProps,
@@ -50,7 +50,7 @@ import { SharedElement } from 'react-navigation-shared-element';
 import { Context } from "./ContextProvider";
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/core';
-
+import { getStatusBarHeight } from 'react-native-status-bar-height';
 
 
 
@@ -61,21 +61,24 @@ export function HomeScreen({ navigation, route }) {
 
 
 
+  const totalHeight = peopleList.length * 80 + (getStatusBarHeight() > 24 ? 70 : 60)
+
+
+  //console.log(totalHeight)
 
 
 
-
-
-
-
-  const listRef1 = useRef()
-
+  //const listRef1 = useRef()
+  const listRef1 = useAnimatedRef();
+  const scrollY = useSharedValue(0)
 
 
   const allPanelArr = useRef([])
 
+  useDerivedValue(() => {
+    scrollToV(listRef1, 0, scrollY.value, true);
+  });
 
-  const scrollY = useSharedValue(0)
 
   const [refresh, setRefresh] = useState(true)
 
@@ -165,6 +168,17 @@ export function HomeScreen({ navigation, route }) {
       //StickyHeaderComponent={() => { return <Text>aaa</Text> }}
       // stickyHeaderIndices={[7]}
 
+      onLayout={function (e) {
+
+
+      }}
+      onContentSizeChange={function (e) {
+
+        console.log(e)
+
+      }}
+
+
 
       ref={listRef1}
 
@@ -176,7 +190,7 @@ export function HomeScreen({ navigation, route }) {
         backgroundColor: "wheat",
 
       }}
-      onScroll={function (e) { scrollY.value = e.nativeEvent.contentOffset.y; }}
+    //  onScroll={function (e) { scrollY.value = e.nativeEvent.contentOffset.y; }}
     >
 
       {peopleList.map((item, index) => {
@@ -203,7 +217,7 @@ export function HomeScreen({ navigation, route }) {
 
             navigation={navigation}
             route={route}
-
+            totalHeight={totalHeight}
           />
         )
 
@@ -326,7 +340,7 @@ class SinglePanel extends React.Component {
         self={this}
 
 
-
+        totalHeight={this.props.totalHeight}
 
         navigation={this.props.navigation}
         route={this.props.route}
@@ -343,7 +357,7 @@ class SinglePanel extends React.Component {
 
 function SinglePanel_({ item, setListRefEnabled, listRef, scrollY,
   //bgColor,
-
+  totalHeight,
   // panelIndex,
   panelKey,
   getPanelIndex,
@@ -446,15 +460,28 @@ function SinglePanel_({ item, setListRefEnabled, listRef, scrollY,
     timeout.current && clearTimeout(timeout.current)
   }
 
+  function show(a) {
+    "worklet"
+    console.log(a)
+  }
+
 
   const coverGesture = useAnimatedGestureHandler({
 
     onStart: (event, obj) => {
 
       runOnJS(settingMovePermission)()
+      // obj.preScrollY = Math.min(Math.max(0, scrollY.value), totalHeight - height)
+      // show(obj.preScrollY)
+      // show(scrollY.value)
+      // show("------")
 
     },
     onActive: (event, obj) => {
+
+
+      //scrollY.value = obj.preScrollY - event.translationY;
+
 
 
       if ((event.translationX < -5) && (coverTransX.value !== 0 || Math.abs(event.translationY) < 3)) {
@@ -483,7 +510,7 @@ function SinglePanel_({ item, setListRefEnabled, listRef, scrollY,
 
     },
     onEnd: (event, obj) => {
-
+      //  scrollY.value = scrollY.value - event.translationY;
       if (coverTransX.value <= -80) {
 
         coverTransX.value = withTiming(-width)
@@ -515,11 +542,6 @@ function SinglePanel_({ item, setListRefEnabled, listRef, scrollY,
 
 
 
-  function show(a) {
-    "worklet"
-    console.log(a)
-  }
-
   const enableAutoMoving = useSharedValue(false)
   function scrollTo(initialScrollY, initialTranY, direction = "goUp") {
 
@@ -537,6 +559,40 @@ function SinglePanel_({ item, setListRefEnabled, listRef, scrollY,
 
     }
   }
+
+  function scrollingUp() {
+    // "worklet"
+    if (enableAutoMoving.value) {
+
+
+      scrollY.value = Math.max(scrollY.value - 1, 0)
+
+      if (scrollY.value > 0) {
+        transY.value = transY.value - 1
+      }
+
+      // scrollingUp()
+      setTimeout(() => {
+        scrollingUp()
+      }, 0);
+    }
+  }
+  function scrollingDown() {
+    //  "worklet"
+    if (enableAutoMoving.value) {
+
+
+      scrollY.value = Math.min(scrollY.value + 1, totalHeight - height)
+      if (scrollY.value < totalHeight - height) {
+        transY.value = transY.value + 1
+      }
+      //  scrollingDown()
+      setTimeout(() => {
+        scrollingDown()
+      }, 0);
+    }
+  }
+
 
   function settingMovePermission() {
 
@@ -653,7 +709,9 @@ function SinglePanel_({ item, setListRefEnabled, listRef, scrollY,
       if (event.absoluteY <= movingUpLine) {
         if (!enableAutoMoving.value) {
           enableAutoMoving.value = true
-          runOnJS(scrollTo)(scrollY.value, transY.value, "goUp")
+          //  runOnJS(scrollTo)(scrollY.value, transY.value, "goUp")
+          runOnJS(scrollingUp)()
+
         }
 
       }
@@ -677,7 +735,8 @@ function SinglePanel_({ item, setListRefEnabled, listRef, scrollY,
       else if (obj.preAbsY >= movingDownLine) {
         if (!enableAutoMoving.value) {
           enableAutoMoving.value = true
-          runOnJS(scrollTo)(scrollY.value, transY.value, "goDown")
+          //  runOnJS(scrollTo)(scrollY.value, transY.value, "goDown")
+          runOnJS(scrollingDown)()
         }
       }
 
@@ -772,58 +831,66 @@ function SinglePanel_({ item, setListRefEnabled, listRef, scrollY,
             // }
           }}
 
+          onLongPress={function () {
+
+            coverTransX.value = withTiming(-width)
+            //
+          }}
+
           onPressOut={function () {
             coverBgcolor.value = "white"
           }}
         >
-          <PanGestureHandler
+          {/* <PanGestureHandler
 
-            enabled={panEnabled}
+            activeOffsetX={[-40, 40]}
+         
+            //  enabled={false}
             minPointers={1} shouldCancelWhenOutside={true} //simultaneousHandlers={[mainRef, listRef]}
-            simultaneousHandlers={[listRef]}
+            //   simultaneousHandlers={[listRef]}
 
 
-            onGestureEvent={coverGesture} >
+            onGestureEvent={coverGesture} > */}
 
 
 
-            <View style={[coverPanelStyle]}   >
-              {/* <Pressable onPress={function () { console.log("dddsdsd") }}> <View > */}
-              <Badge
-                value={unreadCountObj[item.name] || 0}
-                status="error"
-                containerStyle={{
-                  position: 'absolute', top: 10, left: 58, zIndex: 100,
-                  transform: [{ scale: Boolean(unreadCountObj[item.name]) ? 1.2 : 0 }],
-                  display: "flex", justifyContent: "center", alignItems: "center"
-                }}
-                badgeStyle={{
-                  //     color: "blue",
-                  //      position: 'absolute', top: 10, left: 60, zIndex: 100,
-                  //      backgroundColor:"yellow",
-                  // transform: [{ scale: 1.8 }],
-                  display: "flex", justifyContent: "center", alignItems: "center"
-                }}
-                textStyle={{
-                  transform: [{ translateY: -2 }],
-                }}
-              />
+          <View style={[coverPanelStyle]}   >
+            {/* <Pressable onPress={function () { console.log("dddsdsd") }}> <View > */}
+            <Badge
+              value={unreadCountObj[item.name] || 0}
+              status="error"
+              containerStyle={{
+                position: 'absolute', top: 10, left: 58, zIndex: 100,
+                transform: [{ scale: Boolean(unreadCountObj[item.name]) ? 1.2 : 0 }],
+                display: "flex", justifyContent: "center", alignItems: "center"
+              }}
+              badgeStyle={{
+                //     color: "blue",
+                //      position: 'absolute', top: 10, left: 60, zIndex: 100,
+                //      backgroundColor:"yellow",
+                // transform: [{ scale: 1.8 }],
+                display: "flex", justifyContent: "center", alignItems: "center"
+              }}
+              textStyle={{
+                transform: [{ translateY: -2 }],
+              }}
+            />
 
-              <TouchableOpacity onPress={function () { console.log(Date.now()) }}>
-                <SharedElement id={item.name}  >
-                  {item.hasAvatar
-                    ? <Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}` }} resizeMode="cover" style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }} />
-                    : <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
-                  }
+            <TouchableOpacity onPress={function () { console.log(Date.now()) }}>
+              <SharedElement id={item.name}  >
+                {item.hasAvatar
+                  ? <Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}` }} resizeMode="cover" style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }} />
+                  : <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+                }
 
-                </SharedElement>
-              </TouchableOpacity>
+              </SharedElement>
+            </TouchableOpacity>
 
-              <NameText item={item} />
+            <NameText item={item} />
 
-              {/* </View> </Pressable>*/}
-            </View>
-          </PanGestureHandler>
+            {/* </View> </Pressable>*/}
+          </View>
+          {/* </PanGestureHandler> */}
         </Pressable>
 
       </View>

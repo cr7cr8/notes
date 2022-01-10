@@ -54,10 +54,9 @@ import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 
 
-
 import * as Notifications from 'expo-notifications';
 
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from "axios";
 import jwtDecode from 'jwt-decode';
 import { io } from "socket.io-client";
@@ -84,6 +83,8 @@ export default function ContextProvider(props) {
 
 
   const [peopleList, setPeopleList] = useState(list)
+  const [latestMsgObj, setLatestMsgObj] = useState({})
+
   const [unreadCountObj, setUnreadCountObj] = useState({})
 
 
@@ -105,8 +106,8 @@ export default function ContextProvider(props) {
   const appState = useRef(AppState.currentState);
   //const result = SyncStorage.get('token');
 
-
-
+  const chattingUser = useRef("")
+  const latestChattingMsg = useRef("")
 
 
 
@@ -121,7 +122,7 @@ export default function ContextProvider(props) {
         }
       })
 
-      assignListenning({ socket, token, setPeopleList, userName, appState, unreadCountObj, setUnreadCountObj })
+      assignListenning({ socket, token, setPeopleList, userName, appState, unreadCountObj, setUnreadCountObj, latestMsgObj, setLatestMsgObj, setNotiToken })
       setSocket(socket)
     }
     if (!token && socket) {
@@ -132,27 +133,6 @@ export default function ContextProvider(props) {
   }, [token])
 
   useEffect(async function () {
-
-
-
-
-    // const infoAudio = await FileSystem.getInfoAsync(FileSystem.cacheDirectory + "Audio/")
-    // if (infoAudio.exists) {
-    //   FileSystem.readDirectoryAsync(FileSystem.cacheDirectory + "Audio/").then(data => {
-    //     console.log(data)
-    //     if (data) {
-    //       data.forEach(filename => {
-    //         FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/" + filename, { idempotent: true })
-    //       })
-    //     }
-    //   })
-    // }
-
-
-
-
-
-
 
 
     const info = await FileSystem.getInfoAsync(FileSystem.documentDirectory + "MessageFolder/")
@@ -172,6 +152,14 @@ export default function ContextProvider(props) {
       return info2
     }
 
+    const info3 = await FileSystem.getInfoAsync(FileSystem.cacheDirectory + "Audio/")
+    if (!info3.exists) {
+      await FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "Audio/")
+    }
+    else {
+      return info3
+    }
+
 
     //FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
 
@@ -187,6 +175,8 @@ export default function ContextProvider(props) {
     url,
     socket, setSocket,
     appState,
+    chattingUser,
+    latestChattingMsg,
 
     token, setToken,
     notiToken, setNotiToken,
@@ -194,6 +184,9 @@ export default function ContextProvider(props) {
 
     peopleList,
     setPeopleList,
+
+    latestMsgObj,
+    setLatestMsgObj,
 
     unreadCountObj,
     setUnreadCountObj,
@@ -218,13 +211,51 @@ export default function ContextProvider(props) {
 }
 
 
-function assignListenning({ socket, token, setPeopleList, userName, appState, unreadCountObj, setUnreadCountObj }) {
+function assignListenning({ socket, token, setPeopleList, userName, appState, unreadCountObj, setUnreadCountObj, latestMsgObj, setLatestMsgObj, setNotiToken }) {
 
   socket.on("connect", function () {
-    console.log(`socket ${socket.id + " " + userName} is connected`)
-    // socket.emit("helloFromClient",userName)
+
+    console.log(`${Constants.deviceName} ${userName} socket ${socket.id} is connected`)
+
+    AsyncStorage.getItem("notiToken").then(notiToken => {
+
+      registerForPushNotificationsAsync().then(newNotiToken => {
+
+        //console.log("reconnect notitoken is:", newNotiToken)
+        if ((typeof newNotiToken === "string") && (newNotiToken !== "[Error: Fetching the token failed: SERVICE_NOT_AVAILABLE]") && (notiToken !== newNotiToken)) {
+
+          //console.log("register notitoken is:", notiToken)
+          setNotiToken(newNotiToken)
+          AsyncStorage.setItem("notiToken", newNotiToken)
+        }
+        else if ((typeof newNotiToken === "string") && (newNotiToken === notiToken)) {
+          console.log(Constants.deviceName, "reconnect notitoken same")
+          // console.log("notiToken not avaliable")
+        }
+        else if (typeof newNotiToken !== "string") {
+          console.log(Constants.deviceName, "reconnect notitoken fail")
+        }
+
+      })
+        .catch(err => {
+          console.log(Constants.deviceName, "error in context.js get notitoken", err)
+        })
+
+
+    })
+
+
+
 
     axios.get(`${url}/api/user/fecthunread`, { headers: { "x-auth-token": token } }).then(response => {
+
+      const obj = {}
+      response.data.forEach(people => {
+        obj[people] = null
+      })
+      setLatestMsgObj(pre => { return { ...obj, ...pre } })
+
+
 
       const msgArr = response.data
       if (msgArr.length === 0) { setPeopleList(pre => [...pre]); return } //causing recount unread in homepage return }
@@ -258,22 +289,32 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
             else { return info }
           })
           .then(() => {
-            FileSystem.writeAsStringAsync(fileUri2, JSON.stringify(msg))
+            return FileSystem.writeAsStringAsync(fileUri2, JSON.stringify(msg))
+          })
+          .then(() => {
+            setLatestMsgObj(pre => {
+
+              let objText = ""
+
+              if (msg.audio) {
+                objText = "[audio]"
+              }
+              else if (msg.image) {
+                objText = "[image]"
+              }
+              else if (msg.text) {
+                objText = msg.text
+              }
+
+              return { ...pre, [msg.sender]: objText }
+            })
+
           })
           .then(() => {
 
             if (index === msgArr.length - 1) setPeopleList(pre => [...pre]) //causing recount unread in homepage
 
 
-
-            // setUnreadCountObj(unreadCountObj => {
-            //   msgArr.forEach(msg => {
-            //     const sender = msg.sender
-            //     if (!unreadCountObj[sender]) { unreadCountObj[sender] = 0 }
-            //     unreadCountObj[sender]++
-            //   })
-            //   return { ...unreadCountObj }
-            // })
 
           })
       })
@@ -285,6 +326,13 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
 
     axios.get(`${url}/api/user/fetchuserlist`, { headers: { "x-auth-token": token } }).then(response => {
       setPeopleList(pre => { return response.data })
+
+      const obj = {}
+      response.data.forEach(people => {
+        obj[people] = null
+      })
+
+      setLatestMsgObj(pre => { return { ...obj, ...pre } })
     })
   })
 
@@ -312,14 +360,35 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
           }
         })
         .then(() => {
-          FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg))
+          return FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg))
         })
+        .then(() => {
+
+
+          if (socket.listeners("displayMessage" + sender).length === 0) {
+            setLatestMsgObj(pre => {
 
 
 
+              let objText = ""
+
+              if (msg.audio) {
+                objText = "[audio]"
+              }
+              else if (msg.image) {
+                objText = "[image]"
+              }
+              else if (msg.text) {
+                objText = msg.text
+              }
+
+              return { ...pre, [msg.sender]: objText }
+            })
+          }
 
 
 
+        })
     });
 
   })
@@ -334,7 +403,7 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
   socket.on("notifyUser", function (sender, msgArr) {
     if ((socket.listeners("displayMessage" + sender).length === 0) || appState.current === "background" || appState.current === "inactive") {
       Notifications.scheduleNotificationAsync({
-        identifier: "default",
+        identifier: "default1",
         content: {
           title: sender,
           body: msgArr[0].image
@@ -426,5 +495,48 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
 
 
 
+}
+
+
+
+function registerForPushNotificationsAsync() {
+  let token;
+  if (Constants.isDevice) {
+    Notifications.getPermissionsAsync().then(({ status: existingStatus }) => {
+
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        Notifications.requestPermissionsAsync().then(({ status }) => {
+          finalStatus = status;
+
+        })
+      }
+      if (finalStatus !== 'granted') {
+        console.log('Failed to get push token for push notification!');
+        alert('Failed to get push token for push notification!');
+        return;
+      }
+
+    })
+      .catch(err => { console.log(err) })
+
+
+    return Notifications.getExpoPushTokenAsync().then(({ data }) => {
+      token = data
+      if (!token) {
+        console.log('Unable to get notiToken on client site');
+        alert('Unable to get notiToken on client site');
+      }
+      return token;
+    })
+      .catch(err => {
+        //   console.log("====>", err)
+        return err
+
+      })
+  }
+  else {
+    alert('Must use physical device for Push Notifications');
+  }
 }
 
