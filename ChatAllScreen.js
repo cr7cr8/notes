@@ -847,7 +847,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
                   height: "100%",
 
                 }}
-
+ 
               >
                 {props.children}
 
@@ -990,7 +990,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
         onSend={
           function (messages) {
 
-            console.log(item.name)
+
 
 
             if (!messages[0].image && !messages[0].audio && !messages[0].video) {
@@ -1010,7 +1010,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
 
             const messages_ = messages.map(msg => { return { ...msg, createdTime: Date.parse(msg.createdAt), sender: userName } })
-            if (userName !== item.name) { socket.emit("sendMessage", { sender: userName, toPerson: item.name, msgArr: messages_ }) }
+            if (userName !== item.name) { socket.emit("sendToAll",  { sender: userName, toPerson: item.name, msgArr: messages_ }) }
 
 
             canMoveDown.current = true
@@ -1026,34 +1026,29 @@ export function ChatAllScreen({ navigation, route, ...props }) {
               }
 
             })
-            // inputRef.current.blur()
-            //  inputRef.current.focus()
-            // setTimeout(() => {
-
-
-            // }, 0);
+ 
 
 
 
-            const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
+            // const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
 
-            FileSystem.getInfoAsync(folderUri)
-              .then(info => {
-                if (!info.exists) {
-                  return FileSystem.makeDirectoryAsync(folderUri)
-                }
-                else {
-                  return info
-                }
-              })
-              .then(() => {
+            // FileSystem.getInfoAsync(folderUri)
+            //   .then(info => {
+            //     if (!info.exists) {
+            //       return FileSystem.makeDirectoryAsync(folderUri)
+            //     }
+            //     else {
+            //       return info
+            //     }
+            //   })
+            //   .then(() => {
 
-                messages_.forEach(msg => {
-                  const fileUri = folderUri + item.name + "---" + msg.createdTime
-                  FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...msg, isLocal: true }))
-               //   setLatestMsgObj(pre => { return { ...pre, [item.name]: "\u2b05 " + msg.text } })
-                })
-              })
+            //     messages_.forEach(msg => {
+            //       const fileUri = folderUri + item.name + "---" + msg.createdTime
+            //       FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...msg, isLocal: true }))
+            //    //   setLatestMsgObj(pre => { return { ...pre, [item.name]: "\u2b05 " + msg.text } })
+            //     })
+            //   })
 
 
 
@@ -2507,7 +2502,7 @@ function cancelRecording() {
 }
 
 
-ChatScreen.sharedElements = (route, otherRoute, showing) => {
+ChatAllScreen.sharedElements = (route, otherRoute, showing) => {
 
   let messageArr = []
   if (otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.messages) {

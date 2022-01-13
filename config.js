@@ -30,7 +30,7 @@ import React, { useState, useRef, useEffect, useContext, useCallback } from 'rea
 
 const { View, Text, Image: ImageV, ScrollView: ScrollV, } = ReAnimated
 
-
+import * as FileSystem from 'expo-file-system';
 
 
 
@@ -123,6 +123,9 @@ export function ScaleView(props) {
     return {
       transform: [
         { scale: withTiming(scale.value, { duration: 200 }) },
+
+
+
         //   {translateX: withTiming(interpolate(scale.value, [0, 1], [-100, 0]), {duration: 2000 }) }
       ],
       //  opacity: withTiming(scale.value, {duration: 200 }),
@@ -130,12 +133,12 @@ export function ScaleView(props) {
     }
   })
 
-  useEffect(function () {
-    scale.value = 1
-  }, [])
+  // useEffect(function () {
+
+  // }, [])
 
   return (
-    <View style={scaleStyle}    >
+    <View style={scaleStyle} onLayout={function () { scale.value = 1 }}  >
       {props.children}
     </View>
   )
@@ -143,11 +146,112 @@ export function ScaleView(props) {
 
 
 
+export function ScaleAcitveView({ active, onPress, ...props }) {
+
+  // const scale = useSharedValue(active ? 0.7 : 1)
+
+  const scale_ = useSharedValue(0)
+
+  const scale = useDerivedValue(() => {
+    return active ? 0.8 : scale_.value
+  })
+
+  useEffect(function () {
+    scale_.value = 1
+
+  }, [])
+
+  // const viewStyle = useAnimatedStyle(() => {
+
+  //   return {
+  //     elevation: 15,
+  //   }
+  // })
 
 
 
 
+  const scaleStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { scale: withTiming(scale.value, { duration: 200 }) },
 
+        //   {translateX: withTiming(interpolate(scale.value, [0, 1], [-100, 0]), {duration: 2000 }) }
+      ],
+
+      //  opacity: withTiming(scale.value, {duration: 200 }),
+      overflow: "hidden",
+    }
+  })
+
+
+  return (
+
+    <View style={scaleStyle}>
+      {props.children}
+    </View>
+
+  )
+}
+
+export function createFolder(name) {
+
+
+  return Promise.all(
+
+    [
+      FileSystem.getInfoAsync(FileSystem.documentDirectory + "MessageFolder/" + name + "/")
+        .then(({ exists }) => {
+          if (!exists) {
+            return FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/" + name + "/", { intermediates: true })
+          }
+        })
+        .catch(err => console.log("config.js ==>>", err)),
+
+      FileSystem.getInfoAsync(FileSystem.documentDirectory + "UnreadFolder/" + name + "/")
+        .then(({ exists }) => {
+          if (!exists) {
+            return FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/" + name + "/", { intermediates: true })
+          }
+        })
+        .catch(err => console.log("config.js ==>>", err)),
+
+      FileSystem.getInfoAsync(FileSystem.cacheDirectory + "Audio/" + name + "/")
+        .then(({ exists }) => {
+          if (!exists) {
+            return FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "Audio/" + name + "/", { intermediates: true })
+          }
+        })
+        .catch(err => console.log("config.js ==>>", err)),
+
+      FileSystem.getInfoAsync(FileSystem.cacheDirectory + "ImagePicker/" + name + "/")
+        .then(({ exists }) => {
+          if (!exists) {
+            return FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "ImagePicker/" + name + "/", { intermediates: true })
+          }
+        })
+        .catch(err => console.log("config.js ==>>", err)),
+
+
+
+    ]
+  )
+}
+
+export function deleteFolder(name) {
+
+  return Promise.all(
+    [
+      FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/" + name, { idempotent: true }),
+      FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/" + name, { idempotent: true }),
+      FileSystem.deleteAsync(FileSystem.cacheDirectory + "ImagePicker/" + name, { idempotent: true }),
+      FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/" + name, { idempotent: true }),
+
+    ]
+  )
+
+
+}
 
 
 

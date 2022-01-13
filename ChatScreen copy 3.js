@@ -149,8 +149,8 @@ export function ChatScreen({ navigation, route, ...props }) {
   const scrollRef = useRef()
 
   const inputRef = useRef()
+  const [inputText, setInputText] = useState("")
 
-  const inputText = useRef("")
 
   const expandWidth = useSharedValue(50)
 
@@ -760,7 +760,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         keyboardShouldPersistTaps={"never"}
 
-        //     text={inputText}
+        text={inputText}
         onInputTextChanged={text => {
           if (text === "") {
             sendBtnWidth.value = 0
@@ -768,23 +768,25 @@ export function ChatScreen({ navigation, route, ...props }) {
           else {
             sendBtnWidth.value = 60
           }
-          inputText.current = text
 
-
+          setInputText(pre => {
+            return text
+          })
         }}
 
         minComposerHeight={60}
 
         messagesContainerStyle={{
 
-
+          //paddingBottom: paddingHeight,
           height: "100%",
 
-
+          //     height: height - titleBarHeight - BOTTOM_HEIGHT - keyboardHeight - inputHeight.value - 60,
+          //height: height - titleBarHeight - BOTTOM_HEIGHT - keyboardHeight - paddingHeight,
 
           height: height - titleBarHeight - BOTTOM_HEIGHT - 60,
-          // backgroundColor: "brown",
-
+          //   backgroundColor: "brown",
+          backgroundColor: "lightgrey",
           marginEnd: 0,
         }}
 
@@ -920,7 +922,7 @@ export function ChatScreen({ navigation, route, ...props }) {
                   disableComposer={false}
                   textInputProps={{
                     // multiline: true,
-                    numberOfLines: Math.min([...inputText.current].filter(c => c === "\n").length + 1, 5),
+                    numberOfLines: Math.min([...inputText].filter(c => c === "\n").length + 1, 5),
                     style: {
                       backgroundColor: "white", minHeight: 52, width: width - 120, paddingHorizontal: 8, fontSize: 20, lineHeight: 25,
 
@@ -954,13 +956,13 @@ export function ChatScreen({ navigation, route, ...props }) {
 
             return (
               <>
+              
 
 
-
-                <SendBtn outerProps={props} Send={Send} inputHeight={inputHeight} inputRef={inputRef} keyboardHeight={keyboardHeight}
+                <SendBtn outerProps={props} Send={Send} inputText={inputText} inputHeight={inputHeight} inputRef={inputRef} keyboardHeight={keyboardHeight}
 
                   micBarWidth={micBarWidth}
-                  bgColor={bgColor}
+                  bgColor={bgColor}    
                   sendBtnWidth={sendBtnWidth}
                 />
               </>
@@ -975,7 +977,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
             if (!messages[0].image && !messages[0].audio && !messages[0].video) {
               if (messages[0].text.match(/^[\s]*$/g)) {
-
+                setInputText("")
 
                 return inputRef.current.blur()
 
@@ -983,7 +985,10 @@ export function ChatScreen({ navigation, route, ...props }) {
 
             }
 
-
+            // if(messages.currentMessage.text.match(/^[\s]*$/g)){
+            //   setInputText("")
+            //   return
+            // }
 
 
             const messages_ = messages.map(msg => { return { ...msg, createdTime: Date.parse(msg.createdAt), sender: userName, toPerson: item.name } })
@@ -1505,7 +1510,7 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
   )
 }
 
-function SendBtn({ outerProps, keyboardHeight, inputHeight, inputRef, micBarWidth, bgColor, sendBtnWidth, ...props }) {
+function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef, micBarWidth, bgColor, sendBtnWidth, ...props }) {
 
 
 
@@ -1514,8 +1519,8 @@ function SendBtn({ outerProps, keyboardHeight, inputHeight, inputRef, micBarWidt
 
     return {
       height: 60,
-      width: withTiming(sendBtnWidth.value, { duration: 200 }),
-      //width: sendBtnWidth.value,
+      // width: withTiming(sendBtnWidth.value, { duration: 200 }),
+      width: sendBtnWidth.value,
       backgroundColor: bgColor,
       display: "flex",
       alignItems: "center",
@@ -1603,7 +1608,7 @@ function MessageBlock({ Message, messages, inputRef, inputText, outerProps, inpu
   const blockHeightRef = useRef()
 
 
-  const enterCount = Math.min([...inputText.current].filter(c => c === "\n").length, 5);
+  const enterCount = Math.min([...inputText].filter(c => c === "\n").length, 5);
   // let extraHeight = [0, 15, 50, 50][enterCount]
   let extraHeight = [0, 15, 50, 85, 120, 120][enterCount]
 

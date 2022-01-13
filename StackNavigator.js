@@ -11,7 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RegScreen } from "./RegScreen";
 import { HomeScreen } from "./HomeScreen";
 import { ChatScreen } from "./ChatScreen";
-//import { ChatAllScreen } from "./ChatAllScreen";
+import { ChatAllScreen } from "./ChatAllScreen";
 
 import { ImageScreen } from "./ImageScreen";
 import * as FileSystem from 'expo-file-system';
@@ -23,6 +23,10 @@ import * as TaskManager from 'expo-task-manager';
 const Stack = createSharedElementStackNavigator();
 
 import { getStatusBarHeight } from 'react-native-status-bar-height';
+
+
+import { createFolder, deleteFolder } from "./config"
+
 
 
 export default function StackNavigator() {
@@ -69,7 +73,7 @@ export default function StackNavigator() {
       headerStyle: {
         height: getStatusBarHeight() > 24 ? 70 : 60,
         elevation: 1,
-        backgroundColor:"wheat"
+        backgroundColor: "wheat"
       },
 
 
@@ -85,7 +89,7 @@ export default function StackNavigator() {
     <>
 
       <Stack.Navigator
-     
+
 
         initialRouteName={initialRouter}
 
@@ -116,7 +120,7 @@ export default function StackNavigator() {
 
           // header={function (props) {     console.log(props)  return <Header {...props} /> }}
 
-          options={function ({ navigation, router }) {
+          options={function ({ navigation, route }) {
 
             return {
               headerShown: true,
@@ -136,28 +140,15 @@ export default function StackNavigator() {
 
 
 
-                // const infoAudio = await FileSystem.getInfoAsync(FileSystem.cacheDirectory + "Audio/")
-                // if (infoAudio.exists) {
-                //   FileSystem.readDirectoryAsync(FileSystem.cacheDirectory + "Audio/").then(data => {
-                //     console.log(data)
-                //     if (data) {
-                //       data.forEach(filename => {
-                //         FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/" + filename, { idempotent: true })
-                //       })
-                //     }
-                //   })
-                // }
+              
 
 
 
                 await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
                 await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
-                await FileSystem.deleteAsync(FileSystem.documentDirectory + "ImagePicker/", { idempotent: true })
+                await FileSystem.deleteAsync(FileSystem.cacheDirectory + "ImagePicker/", { idempotent: true })
                 await FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/", { idempotent: true })
 
-                FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
-                FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/")
-                FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "Audio/")
 
 
 
@@ -180,6 +171,45 @@ export default function StackNavigator() {
         <Stack.Screen name="Chat"
 
           component={ChatScreen}
+          options={function ({ navigation, route }) {
+            return {
+              // headerRight: function(props) {     return <Button onPress={() => { }} title={"hihi"} />    },
+              // headerShown:false, 
+              // header: function (props) {   return <></>; return <Header {...props} /> },
+              headerTintColor: 'green',  // back arrow color
+              headerTitle: function (props) { return <></> },
+              // headerBackTitle: "Aaaa", // only on ios
+              //   headerBackAccessibilityLabel="ee",
+              gestureEnabled: false,
+              headerTransparent: true,
+              headerRight: () => {
+                return <Button onPress={async function () {
+
+                  await deleteFolder(route.params.item.name)
+                  await createFolder(route.params.item.name)
+
+                  // await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/" + route.params.item.name, { idempotent: true })
+                  // await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/" + route.params.item.name, { idempotent: true })
+                  // await FileSystem.deleteAsync(FileSystem.cacheDirectory + "ImagePicker/" + route.params.item.name, { idempotent: true })
+                  // await FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/" + route.params.item.name, { idempotent: true })
+
+                  // FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/" + route.params.item.name, { intermediates: true })
+                  // FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/" + route.params.item.name, { intermediates: true })
+                  // FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "ImagePicker/" + route.params.item.name, { intermediates: true })
+                  // FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "Audio/" + route.params.item.name, { intermediates: true })
+
+
+                }} title="folder" />
+
+              },
+            }
+          }}
+        />
+
+
+        <Stack.Screen name="ChatAll"
+
+          component={ChatAllScreen}
           options={function ({ navigation, router }) {
             return {
               // headerRight: function(props) {     return <Button onPress={() => { }} title={"hihi"} />    },
@@ -187,7 +217,7 @@ export default function StackNavigator() {
               // header: function (props) {   return <></>; return <Header {...props} /> },
               headerTintColor: 'green',  // back arrow color
               headerTitle: function (props) { return <></> },
-              headerBackTitle: "Aaaa",
+
               //   headerBackAccessibilityLabel="ee",
               gestureEnabled: false,
               headerTransparent: true,
@@ -197,22 +227,28 @@ export default function StackNavigator() {
 
 
 
-                  await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
-                  await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
-                  await FileSystem.deleteAsync(FileSystem.documentDirectory + "ImagePicker/", { idempotent: true })
-                  await FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/", { idempotent: true })
+                  // await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
+                  // await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
+                  // await FileSystem.deleteAsync(FileSystem.documentDirectory + "ImagePicker/", { idempotent: true })
+                  // await FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/", { idempotent: true })
 
-                  FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
-                  FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/")
-                  FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "Audio/")
+                  // FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
+                  // FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/")
+                  // FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "Audio/")
 
 
-                }} title="folder" />
+                }} title="allchat" />
 
               },
             }
           }}
         />
+
+
+
+
+
+
         <Stack.Screen name="Image"
           component={ImageScreen}
           options={function ({ navigaion, router }) {

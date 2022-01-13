@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 
 import * as FileSystem from 'expo-file-system';
-import url from "./config";
+import url, { createFolder } from "./config";
 
 
 import ReAnimated, {
@@ -154,8 +154,12 @@ export function RegScreen({ navigation, route, ...props }) {
           // console.log(isNewName)
           if (isNewName) {
             avatarUri
-              ? regUserWithAvatar(value, avatarUri).then((response) => {
+              ? regUserWithAvatar(value, avatarUri).then( async (response) => {
+                await createFolder(value)
                 setForceDisable(false)
+               
+              
+               
                 setToken(response.headers["x-auth-token"])
                 //  setInitialRouter("Home")
                 //  setAvatarUri(`${url}/api/image/avatar/${value}`)
@@ -171,15 +175,16 @@ export function RegScreen({ navigation, route, ...props }) {
                   routes: [
                     {
                       name: 'Home',
-                      params: { item: { name: value, hasAavatar: false } },
+                      params: { item: { name: value, hasAvatar: true, localImage: avatarUri } },
                     },
                   ],
                 })
 
-
+               
 
               })
-              : regUser(value).then((response) => {
+              : regUser(value).then(async (response) => {
+                await createFolder(value)
                 setForceDisable(false)
                 setToken(response.headers["x-auth-token"])
                 //  setInitialRouter("Home")
@@ -188,16 +193,23 @@ export function RegScreen({ navigation, route, ...props }) {
 
                 setPeopleList([{ name: value, hasAvatar: false, key: Math.random() }])
 
+
+
+
                 //navigation.navigate('Home', { item: { name: value, hasAavatar: false } })
                 navigation.reset({
                   index: 0,
                   routes: [
                     {
                       name: 'Home',
-                      params: { item: { name: value, hasAavatar: false } },
+                      params: { item: { name: value, hasAvatar: false } },
                     },
                   ],
                 })
+
+
+
+
 
 
 

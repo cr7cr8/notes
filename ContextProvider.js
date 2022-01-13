@@ -45,7 +45,7 @@ import { getStatusBarHeight } from 'react-native-status-bar-height';
 
 
 import { GiftedChat, Bubble, InputToolbar, Avatar as AvatarIcon, Message, Time, MessageContainer, MessageText, SystemMessage, Day, Send, Composer, MessageImage } from 'react-native-gifted-chat'
-import { Video, AVPlaybackStatus } from 'expo-av';
+import { Video, AVPlaybackStatus, Audio } from 'expo-av';
 
 import Image from 'react-native-scalable-image';
 
@@ -61,7 +61,7 @@ import axios from "axios";
 import jwtDecode from 'jwt-decode';
 import { io } from "socket.io-client";
 
-
+import { Camera } from 'expo-camera';
 
 
 export const Context = createContext()
@@ -72,7 +72,8 @@ const list = [
 
 
 
-import url from "./config";
+import url, { createFolder } from "./config";
+
 
 const { compareAsc, format, formatDistanceToNow, } = require("date-fns");
 const { zhCN } = require('date-fns/locale');
@@ -132,39 +133,46 @@ export default function ContextProvider(props) {
 
   }, [token])
 
-  useEffect(async function () {
+  useEffect(function () {
+    axios.get(`${url}/api/user/fetchuserlist2`, { headers: { "x-auth-token": token } })
+      .then(response => {
 
 
-    const info = await FileSystem.getInfoAsync(FileSystem.documentDirectory + "MessageFolder/")
-
-    if (!info.exists) {
-      await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
-    }
-    else {
-      return info
-    }
-
-    const info2 = await FileSystem.getInfoAsync(FileSystem.documentDirectory + "UnreadFolder/")
-    if (!info2.exists) {
-      await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/")
-    }
-    else {
-      return info2
-    }
-
-    const info3 = await FileSystem.getInfoAsync(FileSystem.cacheDirectory + "Audio/")
-    if (!info3.exists) {
-      await FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "Audio/")
-    }
-    else {
-      return info3
-    }
+        FileSystem.getInfoAsync(FileSystem.documentDirectory + "ImagePicker/")
+          .then(({ exists }) => {
+            if (!exists) {
+              return FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "ImagePicker/", { intermediates: true })
+            }
+          })
+          .catch(err => console.log("ContextProvider.js ==>>", err))
 
 
-    //FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
+        response.data.forEach(name => {
+          createFolder(name)
+        })
 
+
+
+      })
 
   }, [])
+
+  useEffect(function () {
+    if (userName) { createFolder(userName) }
+  }, [userName])
+
+  useEffect(function () {
+
+    Audio.requestPermissionsAsync()
+    MediaLibrary.requestPermissionsAsync()
+    Notifications.requestPermissionsAsync()
+    Notifications.getPermissionsAsync()
+    Camera.requestCameraPermissionsAsync();
+  }, [])
+
+
+
+
 
 
 
@@ -275,7 +283,7 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
 
         FileSystem.getInfoAsync(folderUri)
           .then(info => {
-            if (!info.exists) { return FileSystem.makeDirectoryAsync(folderUri) }
+            if (!info.exists) { return FileSystem.makeDirectoryAsync(folderUri).catch(err => { console.log(">>>", err) }) }
             else { return info }
           })
           .then(() => {
@@ -285,7 +293,7 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
 
         FileSystem.getInfoAsync(folderUri2)
           .then(info => {
-            if (!info.exists) { return FileSystem.makeDirectoryAsync(folderUri2) }
+            if (!info.exists) { return FileSystem.makeDirectoryAsync(folderUri2).catch(err => { console.log(">>>", err) }) }
             else { return info }
           })
           .then(() => {
@@ -325,14 +333,28 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
   socket.on("updateList", function (msg) {
 
     axios.get(`${url}/api/user/fetchuserlist`, { headers: { "x-auth-token": token } }).then(response => {
-      setPeopleList(pre => { return response.data })
 
-      const obj = {}
-      response.data.forEach(people => {
-        obj[people] = null
+      const promiseArr = []
+
+      response.data.forEach(item => {
+        promiseArr.push(createFolder(item.name))
       })
 
-      setLatestMsgObj(pre => { return { ...obj, ...pre } })
+      Promise.all(promiseArr)
+        .then(function () {
+
+          setPeopleList(pre => { return response.data })
+
+          const obj = {}
+          response.data.forEach(people => {
+            obj[people] = null
+          })
+
+          setLatestMsgObj(pre => { return { ...obj, ...pre } })
+
+        })
+
+
     })
   })
 
@@ -353,7 +375,7 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
       FileSystem.getInfoAsync(folderUri)
         .then(info => {
           if (!info.exists) {
-            return FileSystem.makeDirectoryAsync(folderUri)
+            return FileSystem.makeDirectoryAsync(folderUri).catch(err => { console.log(">>", err) })
           }
           else {
             return info
@@ -393,13 +415,6 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
 
   })
 
-
-
-  // socket.on("helloFromServer", function (data) {
-  //   console.log("hello on client", data)
-  // })
-
-
   socket.on("notifyUser", function (sender, msgArr) {
     if ((socket.listeners("displayMessage" + sender).length === 0) || appState.current === "background" || appState.current === "inactive") {
       Notifications.scheduleNotificationAsync({
@@ -416,9 +431,6 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
       });
     }
   })
-
-
-
 
   socket.on("saveUnread", function (sender, msgArr) {
 
@@ -441,7 +453,7 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
           .then(info => {
 
             if (!info.exists) {
-              return FileSystem.makeDirectoryAsync(folderUri)
+              return FileSystem.makeDirectoryAsync(folderUri).catch(err => { console.log(">>>", err) })
             }
             else {
               return info
@@ -480,6 +492,19 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
 
 
   })
+
+
+  socket.on("writeAllUser", function (sender, msgArr) {
+
+
+
+
+  })
+
+
+
+
+
 
 
 

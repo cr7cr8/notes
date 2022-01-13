@@ -70,7 +70,7 @@ import {
 
 
 } from 'react-native-gifted-chat'
-import { Video, AVPlaybackStatus, Audio, ExponentAV } from 'expo-av';
+import { Video, AVPlaybackStatus, Audio } from 'expo-av';
 
 import Image from 'react-native-scalable-image';
 
@@ -116,7 +116,7 @@ let audioSound = new Audio.Sound();
 export function ChatScreen({ navigation, route, ...props }) {
 
 
-  const [isOverLay, setIsOverLay] = useState(false)
+
 
 
 
@@ -149,8 +149,8 @@ export function ChatScreen({ navigation, route, ...props }) {
   const scrollRef = useRef()
 
   const inputRef = useRef()
+  const [inputText, setInputText] = useState("")
 
-  const inputText = useRef("")
 
   const expandWidth = useSharedValue(50)
 
@@ -232,7 +232,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
 
-    const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
+     const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
     // const info = await FileSystem.getInfoAsync(folderUri)
 
     // // console.log(info)
@@ -349,6 +349,26 @@ export function ChatScreen({ navigation, route, ...props }) {
 
   const scrollY = useSharedValue(0)
 
+  const sendBtnStyle = useAnimatedStyle(() => {
+
+
+
+    return {
+      width: withTiming(expandWidth.value, { duration: 100 }),
+      // backgroundColor: "pink",
+      borderRadius: 0,
+      height: 50,
+      overflow: "hidden",
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "flex-start",
+      justifyContent: "flex-end",
+
+      //position:"absolute",
+      //right:8,
+    }
+
+  })
 
 
   const inputHeight = useSharedValue(0)
@@ -435,7 +455,9 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
 
-  const sendBtnWidth = useSharedValue(0)
+
+  const [micBarText, setMicBarText] = useState("hold to talking")
+
 
 
 
@@ -760,31 +782,27 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         keyboardShouldPersistTaps={"never"}
 
-        //     text={inputText}
+        text={inputText}
         onInputTextChanged={text => {
-          if (text === "") {
-            sendBtnWidth.value = 0
-          }
-          else {
-            sendBtnWidth.value = 60
-          }
-          inputText.current = text
 
-
+          setInputText(pre => {
+            return text
+          })
         }}
 
         minComposerHeight={60}
 
         messagesContainerStyle={{
 
-
+          //paddingBottom: paddingHeight,
           height: "100%",
 
-
+          //     height: height - titleBarHeight - BOTTOM_HEIGHT - keyboardHeight - inputHeight.value - 60,
+          //height: height - titleBarHeight - BOTTOM_HEIGHT - keyboardHeight - paddingHeight,
 
           height: height - titleBarHeight - BOTTOM_HEIGHT - 60,
-          // backgroundColor: "brown",
-
+          //   backgroundColor: "brown",
+          backgroundColor: "lightgrey",
           marginEnd: 0,
         }}
 
@@ -920,7 +938,7 @@ export function ChatScreen({ navigation, route, ...props }) {
                   disableComposer={false}
                   textInputProps={{
                     // multiline: true,
-                    numberOfLines: Math.min([...inputText.current].filter(c => c === "\n").length + 1, 5),
+                    numberOfLines: Math.min([...inputText].filter(c => c === "\n").length + 1, 5),
                     style: {
                       backgroundColor: "white", minHeight: 52, width: width - 120, paddingHorizontal: 8, fontSize: 20, lineHeight: 25,
 
@@ -954,14 +972,10 @@ export function ChatScreen({ navigation, route, ...props }) {
 
             return (
               <>
-
-
-
-                <SendBtn outerProps={props} Send={Send} inputHeight={inputHeight} inputRef={inputRef} keyboardHeight={keyboardHeight}
+                <SendBtn outerProps={props} Send={Send} inputText={inputText} inputHeight={inputHeight} inputRef={inputRef} keyboardHeight={keyboardHeight}
 
                   micBarWidth={micBarWidth}
                   bgColor={bgColor}
-                  sendBtnWidth={sendBtnWidth}
                 />
               </>
             )
@@ -975,7 +989,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
             if (!messages[0].image && !messages[0].audio && !messages[0].video) {
               if (messages[0].text.match(/^[\s]*$/g)) {
-
+                setInputText("")
 
                 return inputRef.current.blur()
 
@@ -983,7 +997,10 @@ export function ChatScreen({ navigation, route, ...props }) {
 
             }
 
-
+            // if(messages.currentMessage.text.match(/^[\s]*$/g)){
+            //   setInputText("")
+            //   return
+            // }
 
 
             const messages_ = messages.map(msg => { return { ...msg, createdTime: Date.parse(msg.createdAt), sender: userName, toPerson: item.name } })
@@ -1051,7 +1068,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
               <Icon
                 onPress={function () {
-                  canMoveDown.current = true; inputHeight.value = 0; pickImage(setMessages, userName, item, socket, latestChattingMsg, setIsOverLay)
+                  canMoveDown.current = true; inputHeight.value = 0; pickImage(setMessages, userName, item, socket, latestChattingMsg)
                 }}
                 name="image-outline"
                 type='ionicon'
@@ -1061,7 +1078,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
               <Icon
-                onPress={function () { canMoveDown.current = true; inputHeight.value = 0; takePhoto(setMessages, userName, item, socket, latestChattingMsg, setIsOverLay) }}
+                onPress={function () { canMoveDown.current = true; inputHeight.value = 0; takePhoto(setMessages, userName, item, socket, latestChattingMsg) }}
                 name="camera-outline"
                 type='ionicon'
                 color='#517fa4'
@@ -1154,10 +1171,7 @@ export function ChatScreen({ navigation, route, ...props }) {
         }
 
       />
-      <Overlay isVisible={isOverLay} fullScreen={true} overlayStyle={{ opacity: 0.5, display: "flex", justifyContent: "center", alignItems: "center" }}  >
-        <LinearProgress color="primary" value={1} variant={"indeterminate"} />
-        <Text>Processing...</Text>
-      </Overlay>
+
 
     </>
   )
@@ -1321,8 +1335,9 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
     }
     else {
 
-      FileSystem.getInfoAsync(currentMessage.audio).then(info => {
 
+      //  console.log(currentMessage.audio)
+      FileSystem.getInfoAsync(currentMessage.audio).then(info => {
         if (info.exists) {
 
           setDisabled(false)
@@ -1342,7 +1357,6 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
             .then(({ status }) => {
               if (status == 200) {
                 setDisabled(false)
-
 
                 axios.get(`${url}/api/audio/delete/${currentMessage.mongooseID}`)
 
@@ -1505,65 +1519,79 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
   )
 }
 
-function SendBtn({ outerProps, keyboardHeight, inputHeight, inputRef, micBarWidth, bgColor, sendBtnWidth, ...props }) {
+function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef, micBarWidth, bgColor, ...props }) {
 
 
+  const viewTranslateX = useDerivedValue(() => {
 
-  const sendBtnStyle = useAnimatedStyle(() => {
+    return inputText ? -60 : 0
+    // return -60
+  })
+
+
+  const viewStyle = useAnimatedStyle(() => {
 
 
     return {
       height: 60,
-      width: withTiming(sendBtnWidth.value, { duration: 200 }),
-      //width: sendBtnWidth.value,
+      width: 60,
       backgroundColor: bgColor,
       display: "flex",
       alignItems: "center",
-      justifyContent: "center",
+      justifyContent: "flex-start",
+
       flexDirection: "row",
-      overflow: "hidden",
+
+      transform: [{ translateX: viewTranslateX.value }],
+
+      //  overflow: "hidden"
 
     }
   })
 
 
+
+
   return (
-    <View style={{ height: 60, width: 60, backgroundColor: bgColor, display: "flex", flexDirection: "row" }}>
 
-      <View style={[sendBtnStyle]} >
-        <Send {...outerProps}
-          containerStyle={{
-            height: 60,
-            width: 60
-          }}
-        >
-          <Icon
-            name='send'
-            type='ionicon'
-            color='#517fa4'
-            size={40}
-            containerStyle={{
-              width: 60, height: 60,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          />
-        </Send>
-      </View>
+    <Send {...outerProps}
+
+      containerStyle={{
+        //    alignSelf: !inputText || inputText.indexOf("\n") === -1 ? "center" : "flex-end",
+        alignSelf: "center",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "row",
+        margin: 0,
+        padding: 0,
+        backgroundColor: bgColor,
+        width: 60,
+        height: 60,
+        overflow: "hidden",
+        // transform:[{translateX:50}],
+        // zIndex:100
+      }}
+    >
 
 
-      <View style={{ height: 60, width: 60, display: "flex", justifyContent: "center", alignItems: "center" }}>
+      <View style={[viewStyle]}>
+
+
         <Icon
           name='add-circle-outline'
           type='ionicon'
           color='#517fa4'
           size={50}
           containerStyle={{
-            width: 60, height: 60,
+            backgroundColor: '#517fa4', backgroundColor: bgColor, width: 60, height: 60,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            position: "absolute",
+            top: 0,
+            left: 0,
+
           }}
           onPress={function () {
 
@@ -1585,14 +1613,35 @@ function SendBtn({ outerProps, keyboardHeight, inputHeight, inputRef, micBarWidt
 
 
           }}
+
+
         />
+
+        <Icon
+          name='send'
+          type='ionicon'
+          color='#517fa4'
+          size={40}
+          containerStyle={{
+            backgroundColor: bgColor, width: 60, height: 60,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            position: "absolute",
+            top: 0,
+            left: 60,
+          }}
+        />
+
 
       </View>
 
-    </View>
+    </Send>
+
+
+
+
   )
-
-
 }
 
 function MessageBlock({ Message, messages, inputRef, inputText, outerProps, inputHeight, keyboardHeight, totalBlockHeight, ...props }) {
@@ -1603,7 +1652,7 @@ function MessageBlock({ Message, messages, inputRef, inputText, outerProps, inpu
   const blockHeightRef = useRef()
 
 
-  const enterCount = Math.min([...inputText.current].filter(c => c === "\n").length, 5);
+  const enterCount = Math.min([...inputText].filter(c => c === "\n").length, 5);
   // let extraHeight = [0, 15, 50, 50][enterCount]
   let extraHeight = [0, 15, 50, 85, 120, 120][enterCount]
 
@@ -1828,10 +1877,6 @@ function ImageBlock({ token, scrollRef, item, navigation, route, currentMessage,
   let imageWidth = currentMessage.imageWidth
   let imageHeight = currentMessage.imageHeight
 
-  // console.log(currentMessage.image)
-
-
-
   if (imageWidth && imageHeight && (imageWidth <= imageHeight)) {
     imageWidth = imageWidth * 200 / imageHeight
     imageHeight = 200
@@ -2046,8 +2091,7 @@ function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, i
 
 }
 
-async function pickImage(setMessages, userName, item, socket, latestChattingMsg, setIsOverLay) {
-  setIsOverLay(true)
+async function pickImage(setMessages, userName, item, socket, latestChattingMsg) {
   let result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
     allowsEditing: true,
@@ -2060,21 +2104,12 @@ async function pickImage(setMessages, userName, item, socket, latestChattingMsg,
 
   if ((!result.cancelled) && (result.uri)) {
 
-    //console.log(FileSystem.documentDirectory)
-    //console.log(result.uri)
+
     //  const _id = Math.random(),
 
-    const uri = result.uri
-    const imageName = uri.replace(/^.*[\\\/]/, '')
-    const imageFolder = uri.replace(imageName, "") + item.name + "/"
-    const imageUri = imageFolder + imageName
-
-
-
-
-    await FileSystem.moveAsync({ from: uri, to: imageUri })
-
     const time = Date.now()
+
+
     const imageMsg = {
       _id: time,
       text: '',
@@ -2082,7 +2117,7 @@ async function pickImage(setMessages, userName, item, socket, latestChattingMsg,
       createdTime: time,
       sender: userName,
       user: { _id: userName },
-      image: imageUri,//result.uri,
+      image: result.uri,
       imageWidth: result.width,     //"data:image/png;base64," + result.base64,
       imageHeight: result.height,
       toPerson: item.name,
@@ -2094,10 +2129,10 @@ async function pickImage(setMessages, userName, item, socket, latestChattingMsg,
     const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
     const fileUri = folderUri + item.name + "---" + imageMsg.createdTime
     FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...imageMsg, isLocal: true }))
-    setIsOverLay(false)
 
 
-    uploadImage({ localUri: imageUri, filename: time, sender: userName, toPerson: item.name, imageWidth: result.width, imageHeight: result.height })
+
+    uploadImage({ localUri: result.uri, filename: time, sender: userName, toPerson: item.name, imageWidth: result.width, imageHeight: result.height })
       .then(response => {
         return {
           ...imageMsg,
@@ -2113,13 +2148,9 @@ async function pickImage(setMessages, userName, item, socket, latestChattingMsg,
         //   latestChattingMsg(pre => { return { ...pre, [item.name]: "\u2b05 [image]" } })
       })
   }
-  else {
-    setIsOverLay(false)
-  }
 };
 
-async function takePhoto(setMessages, userName, item, socket, latestChattingMsg, setIsOverLay) {
-  setIsOverLay(true)
+async function takePhoto(setMessages, userName, item, socket, latestChattingMsg) {
   let result = await ImagePicker.launchCameraAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
     allowsEditing: true,
@@ -2131,16 +2162,6 @@ async function takePhoto(setMessages, userName, item, socket, latestChattingMsg,
 
 
   if ((!result.cancelled) && (result.uri)) {
-
-
-    const uri = result.uri
-    const imageName = uri.replace(/^.*[\\\/]/, '')
-    const imageFolder = uri.replace(imageName, "") + item.name + "/"
-    const imageUri = imageFolder + imageName
-
-    await FileSystem.moveAsync({ from: uri, to: imageUri })
-
-
     const time = Date.now()
 
     const imageMsg = {
@@ -2150,7 +2171,7 @@ async function takePhoto(setMessages, userName, item, socket, latestChattingMsg,
       createdTime: time,
       sender: userName,
       user: { _id: userName },
-      image: imageUri,//result.uri,     //"data:image/png;base64," + result.base64,
+      image: result.uri,     //"data:image/png;base64," + result.base64,
       imageWidth: result.width,     //"data:image/png;base64," + result.base64,
       imageHeight: result.height,
       toPerson: item.name,
@@ -2160,9 +2181,9 @@ async function takePhoto(setMessages, userName, item, socket, latestChattingMsg,
     const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
     const fileUri = folderUri + item.name + "---" + imageMsg.createdTime
     FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...imageMsg, isLocal: true }))
-    setIsOverLay(false)
 
-    uploadImage({ localUri: imageUri, filename: time, sender: userName, toPerson: item.name, imageWidth: result.width, imageHeight: result.height })
+
+    uploadImage({ localUri: result.uri, filename: time, sender: userName, toPerson: item.name, imageWidth: result.width, imageHeight: result.height })
       .then(response => {
         return {
           ...imageMsg,
@@ -2177,9 +2198,6 @@ async function takePhoto(setMessages, userName, item, socket, latestChattingMsg,
         //   latestChattingMsg(pre => { return { ...pre, [item.name]: "\u2b05 [image]" } })
       })
 
-  }
-  else {
-    setIsOverLay(false)
   }
 }
 
@@ -2280,162 +2298,151 @@ function startRecording({ messages, setMessages, userName, item, previousMessage
   //   }
   // })
 
-  // await Audio.setAudioModeAsync({
-  //   allowsRecordingIOS: true,
-  //   playsInSilentModeIOS: true,
-  // });
+
+  try {
+    //   console.log('Requesting permissions..');
 
 
+    // await Audio.setAudioModeAsync({
+    //   allowsRecordingIOS: true,
+    //   playsInSilentModeIOS: true,
+    // });
 
 
-  Audio.requestPermissionsAsync()
-    .then((info) => {
+    //   console.log('Starting recording..');
 
-      //  console.log("permissions", info)
+    Audio.requestPermissionsAsync()
+      .then((info) => {
 
-      if (info.granted) {
-        return recording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY)
-      }
-      else {
-        return Promise.reject("recording permissions denied")
-      }
+        //  console.log("permissions", info)
 
-    })
-    .then(info => {
+        if (info.granted) {
+          return recording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY)
+        }
+        else {
+          return Promise.reject("recording permissions denied")
+        }
 
-      // console.log("about to record", info)
+      })
+      .then(info => {
 
-      if (info.canRecord && (!info.isRecording)) {
-        return recording.startAsync()
-      }
-      else {
-        return Promise.reject("cannot start recording")
-      }
+        // console.log("about to record", info)
 
-    })
-    .then(info => {
-      return info
-    })
-    .catch(err => {
-      console.log("error in startRecording promise ==>")
-    })
+        if (info.canRecord && (!info.isRecording)) {
+          return recording.startAsync()
+        }
+        else {
+          return Promise.reject("cannot start recording")
+        }
 
+      })
+      .then(info => {
+        return info
+      })
+      .catch(err => {
+        console.log(err)
+      })
 
-
+  }
+  catch (err) {
+    console.log(err)
+  }
 }
 
 function stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice, socket, latestChattingMsg }) {
 
-  let uri = ""
-  let audioName = ""
-  let audioFolder = ""
-  let audioUri = ""
-  let durationMillis = ""
-  let time = ""
-  let audioMsg = ""
 
-  recording.getStatusAsync()
-    .then(info => {
+  try {
+    //   console.log('Stopping recording..');
 
-      //     console.log("about to stop Recording", info)
-      if (info.isRecording) {
+    recording.getStatusAsync()
+      .then(info => {
 
-        return recording.stopAndUnloadAsync()
-      }
-      else {
-
-        //     recording.stopAndUnloadAsync()
-        return Promise.reject(info)
-      }
-    })
-    .then(info => {
-      //     console.log("recording stopped", info)
-      if (info.isDoneRecording) {
-        durationMillis = info.durationMillis
-        uri = recording.getURI();
-
-        audioName = uri.replace(/^.*[\\\/]/, '')
-        audioFolder = uri.replace(audioName, "") + item.name + "/"
-        audioUri = audioFolder + audioName
-        recording = new Audio.Recording()
-
-        return FileSystem.moveAsync({ from: uri, to: audioUri })
-      }
-      else {
-        //   recording.stopAndUnloadAsync()
-        return Promise.reject(info)
-      }
-
-
-    })
-    .then(() => {
-
-      time = Date.now()
-      audioMsg = {
-        _id: time,
-        text: '',
-        createdAt: time,
-        createdTime: time,
-        user: { _id: userName },
-        sender: userName,
-        audio: audioUri,
-        durationMillis: durationMillis,
-        toPerson: item.name,
-      }
-
-      canMoveDown.current = true
-      setMessages(pre => {
-        if (pre.length >= 20) {
-          previousMessages.current = previousMessages.current.concat(pre.slice(0, pre.length - 10))
-          if (!shouldDisplayNotice && (previousMessages.current.length > 0)) { setShouldDisplayNotice(true) }
-          return GiftedChat.prepend(pre.slice(-10), { ...audioMsg, isLocal: true })
+        //     console.log("about to stop Recording", info)
+        if (info.isRecording) {
+          return recording.stopAndUnloadAsync()
         }
         else {
-          return GiftedChat.prepend(pre, { ...audioMsg, isLocal: true })
+          recording = new Audio.Recording()
+          return Promise.reject(info)
         }
       })
+      .then(info => {
+        //     console.log("recording stopped", info)
+        if (info.isDoneRecording) {
+          const durationMillis = info.durationMillis
+          const uri = recording.getURI(); 
+          
+          console.log(uri)   //todo need to move auido file into user folder
 
 
-      const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
-      const fileUri = folderUri + item.name + "---" + audioMsg.createdTime
-      FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...audioMsg, isLocal: true }))
-      latestChattingMsg.current = audioMsg
 
-      return uploadAudio({ localUri: audioUri, filename: audioName || Date.now() + ".m4a", sender: userName, toPerson: item.name, durationMillis })
+          recording = new Audio.Recording()
 
-    })
-    .then(response => {
-      //   console.log(ExponentAV)
-      socket.emit("sendMessage", {
-        sender: userName, toPerson: item.name,
-        msgArr: [{ ...audioMsg, sender: userName, mongooseID: response.data.mongooseID }]
+          const time = Date.now()
+          const audioMsg = {
+            _id: time,
+            text: '',
+            createdAt: time,
+            createdTime: time,
+            user: { _id: userName },
+            sender: userName,
+            audio: uri,
+            durationMillis: durationMillis,
+            toPerson: item.name,
+          }
+
+          canMoveDown.current = true
+          setMessages(pre => {
+            if (pre.length >= 20) {
+              previousMessages.current = previousMessages.current.concat(pre.slice(0, pre.length - 10))
+              if (!shouldDisplayNotice && (previousMessages.current.length > 0)) { setShouldDisplayNotice(true) }
+              return GiftedChat.prepend(pre.slice(-10), { ...audioMsg, isLocal: true })
+            }
+            else {
+              return GiftedChat.prepend(pre, { ...audioMsg, isLocal: true })
+            }
+          })
+
+          const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
+          const fileUri = folderUri + item.name + "---" + audioMsg.createdTime
+          FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...audioMsg, isLocal: true }))
+          latestChattingMsg.current = audioMsg
+          //    latestChattingMsg(pre => { return { ...pre, [item.name]: "\u2b05 [audio]" } })
+
+
+          const filename = uri.split("/").pop()
+          uploadAudio({ localUri: uri, filename: filename || Date.now() + ".m4a", sender: userName, toPerson: item.name, durationMillis })
+            .then(response => {
+              //  console.log(response.data)
+
+              socket.emit("sendMessage", {
+                sender: userName, toPerson: item.name,
+                msgArr: [{ ...audioMsg, sender: userName,/*audio: response.data.filename,*/ mongooseID: response.data.mongooseID }]
+              })
+
+            })
+
+
+        }
+        else {
+          recording = new Audio.Recording()
+          return Promise.reject(info)
+        }
+
+      })
+      .catch(err => {
+        console.log("cannot stop recording", err)
+        recording = new Audio.Recording()
       })
 
-      //console.log(recording._cleanupForUnloadedRecorder)
-
-    })
-    .catch(err => {
-      console.log("cannot stop recording")
-      // if (err.message.includes("Stop encountered an error: recording not stopped")) {
-      //   await ExponentAV.unloadAudioRecorder();
-      //   await recordRef.current._cleanupForUnloadedRecorder({ durationMillis: 0 } as any);
-      // } else {
-      //   await handleError(e, { userMessage: "An error occurred stopping the recording." });
-      // }
-
-      recording._cleanupForUnloadedRecorder({
-        canRecord: false,
-        durationMillis: 0,
-        isRecording: false,
-        isDoneRecording: false,
-      });
+  }
+  catch (err) {
+    //    console.error('error in stopRecording', err);
+    recording = new Audio.Recording()
 
 
-      recording = new Audio.Recording()
-    })
-
-
-
+  }
 
 }
 
@@ -2471,7 +2478,7 @@ function cancelRecording() {
         return recording.stopAndUnloadAsync()
       }
       else {
-        //recording = new Audio.Recording()
+        recording = new Audio.Recording()
         return Promise.reject(info)
       }
     })
@@ -2491,20 +2498,12 @@ function cancelRecording() {
 
       }
       else {
-        //  recording = new Audio.Recording()
+        recording = new Audio.Recording()
         return Promise.reject(info)
       }
     })
     .catch(err => {
-      console.log("cancel recording error")
-      recording._cleanupForUnloadedRecorder({
-        canRecord: false,
-        durationMillis: 0,
-        isRecording: false,
-        isDoneRecording: false,
-      });
-
-      recording = new Audio.Recording()
+      console.log("cancel error", err)
     })
 
 

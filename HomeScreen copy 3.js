@@ -1,3 +1,14 @@
+
+
+import DraggableFlatList, {
+  ScaleDecorator,
+  useOnCellActiveAnimation,
+  ShadowDecorator,
+
+} from "react-native-draggable-flatlist";
+
+
+
 import React, { useState, useRef, useEffect, useContext } from 'react';
 
 import { createSharedElementStackNavigator } from 'react-navigation-shared-element';
@@ -5,11 +16,7 @@ import { createStackNavigator, CardStyleInterpolators, TransitionPresets, Header
 
 import * as FileSystem from 'expo-file-system';
 import {
-  StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Pressable, TouchableHighlight, TouchableWithoutFeedback,
-
-
-  //ScrollView,
-  Vibration
+  StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Pressable, TouchableHighlight, TouchableWithoutFeedback, Vibration
 } from 'react-native';
 
 import ReAnimated, {
@@ -45,44 +52,21 @@ const { width, height } = Dimensions.get('screen');
 import { LinearGradient } from 'expo-linear-gradient';
 
 
-import url, { hexToRgbA, hexify, moveArr, uniqByKeepFirst } from "./config";
+import url, { hexToRgbA, hexify, moveArr, uniqByKeepFirst, ScaleView, ScaleAcitveView } from "./config";
 import { SharedElement } from 'react-navigation-shared-element';
 import { Context } from "./ContextProvider";
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/core';
-
-
-
+import { getStatusBarHeight } from "react-native-status-bar-height";
 
 
 export function HomeScreen({ navigation, route }) {
-  //console.log(route.params)
-  const { peopleList, setPeopleList, token, userName, initialRouter, setInitialRouter, unreadCountObj, setUnreadCountObj, chattingUser, setLatestMsgObj, latestChattingMsg } = useContext(Context)
 
 
-
-
-
-
-
-
-
-
-  const listRef1 = useRef()
-
-
-
-  const allPanelArr = useRef([])
-
-
-  const scrollY = useSharedValue(0)
-
-  const [refresh, setRefresh] = useState(true)
+  const { peopleList, setPeopleList, token, userName, initialRouter, setInitialRouter, unreadCountObj, setUnreadCountObj, chattingUser, setLatestMsgObj, latestChattingMsg }
+    = useContext(Context)
 
   useEffect(function () {
-
-    // setRefresh(pre => !pre);
-
     axios.get(`${url}/api/user/fetchuserlist`, { headers: { "x-auth-token": token } })
       .then(response => {
 
@@ -90,13 +74,19 @@ export function HomeScreen({ navigation, route }) {
           let arr = response.data //.filter(item => { return item.name !== userName })
           HomeScreen.sharedElements = null
 
+
+          // setPeopleList(pre => { return [...pre, ...arr.filter(item => { return item.name !== userName })] })
+
           setPeopleList(pre => {
             return uniqByKeepFirst([...pre, ...arr], function (item) { return item.name })
           })
           route.params && route.params.item.localImage && FileSystem.deleteAsync(route.params.item.localImage, { idempotent: true })
+
+
         }
         else if (initialRouter === "Home") {
           setPeopleList(pre => { return response.data })
+          //console.log(response.data)
         }
 
         return response.data
@@ -104,752 +94,355 @@ export function HomeScreen({ navigation, route }) {
 
   }, [])
 
-
-
-
-
-
-
   useEffect(function () {
-
-
 
     const promiseArr = []
     peopleList.forEach((people, index) => {
       const sender = people.name
       const folderUri = FileSystem.documentDirectory + "UnreadFolder/" + sender + "/"
-
-      FileSystem.getInfoAsync(folderUri)
-        .then(info => {
-          if (!info.exists) {
-            FileSystem.makeDirectoryAsync(folderUri)
-            promiseArr.push(Promise.resolve({ [sender]: 0 }))
-          }
-          else {
-            promiseArr.push(FileSystem.readDirectoryAsync(folderUri).then(unreadArr => {
-
-              return { [sender]: unreadArr.length }
-            }))
-          }
-        }).then(function () {
-
-
-          if (index === peopleList.length - 1) {
-            Promise.all(promiseArr).then(objArr => {
-
-
-              let obj = {}
-              objArr.forEach(o => {
-                obj = { ...obj, ...o }
-              })
-              //  console.log("++++++++++++ " + userName + "++++", obj)
-              setUnreadCountObj(obj)
-            })
-
-          }
-
-        })
-
+      promiseArr.push(FileSystem.readDirectoryAsync(folderUri).then(unreadArr => {
+        return { [sender]: unreadArr.length }
+      }))
     })
+
+    Promise.all(promiseArr).then(objArr => {
+      let obj = {}
+      objArr.forEach(o => {
+        obj = { ...obj, ...o }
+      })
+      setUnreadCountObj(obj)
+    })
+
+
+
+
 
   }, [peopleList])
 
 
 
-  return (
 
+  const renderItem = ({ item, drag, isActive, index }) => {
 
 
+    return (
+      <ItemComponent item={item} drag={drag} isActive={isActive} index={index} />
+    )
 
-    <ScrollView
-      //StickyHeaderComponent={() => { return <Text>aaa</Text> }}
-      // stickyHeaderIndices={[7]}
 
+  };
 
-      ref={listRef1}
+  const HoldItem = () => {
 
+    const frontStyle = useAnimatedStyle(() => {
 
-      contentContainerStyle={{
-        // width,  minHeight: height - 60,
-        justifyContent: 'flex-start',
-        flexGrow: 1,
-        backgroundColor: "wheat",
+      return {
+        height: 80, width,
+        backgroundColor: "transparent",
 
-      }}
-      onScroll={function (e) { scrollY.value = e.nativeEvent.contentOffset.y; }}
-    >
+        position: "absolute",
+        borderBottomWidth: 1,
+        borderBottomColor: "#DDD",
 
-      {peopleList.map((item, index) => {
-        return (
-          <SinglePanel
-            key={item.key}
-            item={item}
+        top: 0,
+        left: 0,
+        zIndex: 100,
 
+        display: "flex",
+        flexDirection: "row",
+        alignItem: "center"
 
-
-
-
-            listRef={listRef1}
-            allPanelArr={allPanelArr}
-
-
-            scrollY={scrollY}
-            index={index}
-            setPeopleList={setPeopleList}
-
-
-
-
-
-            navigation={navigation}
-            route={route}
-
-          />
-        )
-
-
-      })}
-
-
-
-    </ScrollView>
-
-
-
-
-
-
-
-
-
-
-  )
-
-
-
-
-}
-
-
-class SinglePanel extends React.Component {
-
-  constructor(props) {
-    super(props)
-
-    this.state = {
-
-      panelTransX: 0,
-      panelTransY: 0,
-
-
-      panelIndex: this.props.index,
-
-    }
-
-    this.hasAvatar = this.props.item.hasAvatar
-    this.name = this.props.item.name
-    this.description = this.props.item.description
-
-    this.panelKey = this.props.item.key
-
-
-    this.moveUpEnabled = false;
-    this.moveDownEnabled = false;
-
-  }
-
-  getPanelIndex = () => { return this.state.panelIndex }
-  setPanelIndex = (value) => { this.setState({ panelIndex: value }) }
-
-  moveUp = () => {
-
-    if (this.moveUpEnabled) {
-      this.moveUpEnabled = false;
-      this.moveDownEnabled = true;
-
-      this.setState((state) => { return { panelTransY: state.panelTransY - 80, } })
-    }
-  }
-
-  moveDown = () => {
-
-    if (this.moveDownEnabled) {
-      this.moveUpEnabled = true;
-      this.moveDownEnabled = false;
-      this.setState((state) => { return { panelTransY: state.panelTransY + 80, } })
-    }
-  }
-
-
-
-
-  componentDidMount() {
-    this.props.allPanelArr.current.push(this)
-  }
-  componentWillUnmount() {
-    this.props.allPanelArr.current = this.props.allPanelArr.current.filter(item => {
-      return item !== this
+      }
     })
 
-  }
 
+    const item = route.params && route.params.item
 
+    if (initialRouter === "Reg" && Boolean(route.params) && (Boolean(item)) && (peopleList.length === 0)) {
 
-  render() {
-    //  console.log("===", this.props.listRef)
-    return (
+      return <View style={[frontStyle]} >
 
-      <SinglePanel_
-        item={this.props.item}
+        <SharedElement id={item.name}  >
+          {item.hasAvatar
+            ? <Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
+              style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }} />
+            : <SvgUri style={{ margin: 10, }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+          }
+        </SharedElement>
 
-        setListRefEnabled={this.props.setListRefEnabled}
 
-        listRef={this.props.listRef}
-
-
-        scrollY={this.props.scrollY}
-
-        // bgColor={this.bgColor}
-        // panelIndex={this.panelIndex}
-
-        panelKey={this.panelKey}
-
-        getPanelIndex={this.getPanelIndex}
-        setPanelIndex={this.setPanelIndex}
-
-        panelTransX={this.state.panelTransX}
-        panelTransY={this.state.panelTransY}
-
-        allPanelArr={this.props.allPanelArr}
-
-        setPeopleList={this.props.setPeopleList}
-        self={this}
-
-
-
-
-        navigation={this.props.navigation}
-        route={this.props.route}
-
-
-      />
-
-
-    )
-  }
-
-}
-
-
-function SinglePanel_({ item, setListRefEnabled, listRef, scrollY,
-  //bgColor,
-
-  // panelIndex,
-  panelKey,
-  getPanelIndex,
-  setPanelIndex,
-
-  panelTransX,
-  panelTransY,
-  allPanelArr,
-
-  self,
-  setPeopleList,
-
-  navigation,
-  route,
-
-
-}) {
-
-
-
-  const { token, unreadCountObj, chattingUser } = useContext(Context)
-
-  const avatarString = multiavatar(item.name)
-
-
-
-  const transY = useDerivedValue(() => (withTiming(panelTransY)))
-
-
-
-  const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
-  //console.log(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
-
-  const zIndex = useSharedValue(0)
-
-  const frameStyle = useAnimatedStyle(() => {
-
-
-    return {
-      width,
-      height: 80,
-      zIndex: zIndex.value,
-      transform: [{ translateY: transY.value }],
-      position: "relative",
-    }
-
-
-  })
-
-
-
-  const coverTransX = useDerivedValue(() => (withTiming(panelTransX)))
-  const coverBgcolor = useSharedValue("white")
-  const coverOpacity = useSharedValue(1)
-
-  const coverPanelStyle = useAnimatedStyle(() => {
-    return {
-
-      width,
-      height: 80,
-
-      transform: [{ translateX: coverTransX.value }],
-      // opacity: interpolate(coverTransX.value, [0, width], [1, 0], Extrapolate.CLAMP),                         //coverOpacity.value,
-      // opacity:coverOpacity.value,
-
-      display: "flex",
-      justifyContent: "flex-start",
-      alignItems: "center",
-      flexDirection: "row",
-
-      borderBottomWidth: 1,
-      borderBottomColor: "#DDD",
-      //   position: "absolute",
-      backgroundColor: coverBgcolor.value,
-      // zIndex: 8,
-      // elevation:1,
-
-    }
-  })
-
-
-
-
-
-  const timeout = useRef(0)
-
-
-  function setCountingDown() {
-    timeout.current = setTimeout(() => {
-      coverTransX.value = withTiming(0)
-      backScale.value = withTiming(1)
-    }, 3000)
-
-    // console.log(timeout.current)
-
-  }
-
-  function clearCountingDown() {
-
-    timeout.current && clearTimeout(timeout.current)
-  }
-
-
-  const coverGesture = useAnimatedGestureHandler({
-
-    onStart: (event, obj) => {
-
-      runOnJS(settingMovePermission)()
-
-    },
-    onActive: (event, obj) => {
-
-
-      if ((event.translationX < -5) && (coverTransX.value !== 0 || Math.abs(event.translationY) < 3)) {
-        zIndex.value = 10
-        coverTransX.value = event.translationX
-
-      }
-
-
-      // if ((event.translationX > 0) && (coverTransX.value !== 0 || Math.abs(event.translationY) < 5)) {
-      //   zIndex.value = 10
-      //   coverTransX.value = event.translationX
-
-      // }
-
-
-
-
-
-      // else if ((event.translationX < -50) && (coverTransX.value === 0 || Math.abs(event.translationY) < 5)) {
-
-
-      //   runOnJS(scrollToNextPanel)()
-      // }
-
-
-    },
-    onEnd: (event, obj) => {
-
-      if (coverTransX.value <= -80) {
-
-        coverTransX.value = withTiming(-width)
-        runOnJS(setCountingDown)()
-
-      }
-      else {
-        coverTransX.value = withTiming(0)
-        zIndex.value = 0
-
-      }
-
-    },
-    onFail: (event, obj) => {
-
-      coverTransX.value = withTiming(0)
-
-    },
-    onCancel: (event, obj) => {
-
-      coverTransX.value = withTiming(0)
-
-    },
-    onFinish: (event, obj) => {
-
-    }
-
-  })
-
-
-
-  function show(a) {
-    "worklet"
-    console.log(a)
-  }
-
-  const enableAutoMoving = useSharedValue(false)
-  function scrollTo(initialScrollY, initialTranY, direction = "goUp") {
-
-    if (enableAutoMoving.value) {
-      listRef.current.scrollTo({ x: 0, y: direction === "goUp" ? (scrollY.value - 5) : (scrollY.value + 5), animated: false })
-      transY.value = initialTranY + (scrollY.value - initialScrollY)
-
-
-      setTimeout(() => {
-        scrollTo(initialScrollY, initialTranY, direction)
-      }, 0)
+        <NameText item={item} />
+      </View>
     }
     else {
-      transY.value = withTiming(Math.round(transY.value / 80) * 80)
-
-    }
-  }
-
-  function settingMovePermission() {
-
-
-    const panelIndex = getPanelIndex()
-    allPanelArr.current.forEach((panel) => {
-
-      const otherPanelIndex = panel.getPanelIndex()
-
-      if (otherPanelIndex < panelIndex) {
-        panel.moveUpEnabled = false;
-        panel.moveDownEnabled = true;
-      }
-      else if (otherPanelIndex > panelIndex) {
-        panel.moveUpEnabled = true;
-        panel.moveDownEnabled = false;
-      }
-    })
-
-  }
-
-
-  function checkingMovement() {
-
-    const panelIndex = getPanelIndex()
-
-
-    allPanelArr.current.forEach((panel) => {
-
-      const otherPanelIndex = panel.getPanelIndex()
-      if (otherPanelIndex === panelIndex) { return }
-      else if (transY.value <= ((otherPanelIndex - panelIndex) * 2 - ((otherPanelIndex - panelIndex) > 0 ? 1 : -1)) * 40) { panel.moveDown(); }
-      else { panel.moveUp() }
-    })
-  }
-
-
-  function reSortList() {
-
-    const panelIndex = getPanelIndex()
-    const from = panelIndex
-    const to = panelIndex + Math.min((allPanelArr.current.length - (panelIndex + 1)), Math.max(-panelIndex, Math.round(transY.value / 80)))
-
-    // if (from === to) { return setTimeout(() => { setPanEnabled(true) }, 0); }
-
-
-    allPanelArr.current = moveArr(allPanelArr.current, from, to)
-    const newList = []
-
-    allPanelArr.current.forEach((panel, index) => {
-      newList.push({ ...panel.props.item, name: panel.name, description: panel.description, key: Math.random(), hasAvatar: panel.hasAvatar })
-    })
-    allPanelArr.current = []
-
-    axios.post(`${url}/api/user/resortuserlist`, newList.map(item => item.name), { headers: { "x-auth-token": token } })
-
-
-    setPeopleList(newList)
-    //  setTimeout(() => { setPanEnabled(true) }, 0); // no need beackuse setPeopleList will  generate new panel painting
-
-  }
-
-
-  const backScale = useSharedValue(1)
-  const backPanelStyle = useAnimatedStyle(() => {
-    return {
-
-
-      width,
-      height: 80,
-      // elevation:1,
-
-      borderBottomWidth: 1,
-      borderBottomColor: "#DDD",
-      position: "absolute",
-      backgroundColor: bgColor,
-      //   zIndex: 5,
-
-      transform: [{ scale: backScale.value }],
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      flexDirection: "row",
-
-
-    }
-  })
-
-
-  const movingUpLine = 60 + 40
-  const movingDownLine = height - 80
-  const [panEnabled, setPanEnabled] = useState(true)
-
-
-
-  const backGesture = useAnimatedGestureHandler({
-
-
-    onStart: (event, obj) => {
-
-
-      obj.offsetY = transY.value
-      obj.preAbsY = event.absoluteY
-
-      zIndex.value = 10
-      backScale.value = withTiming(0.8)
-
-      runOnJS(settingMovePermission)()
-
-    },
-    onActive: (event, obj) => {
-      runOnJS(clearCountingDown)()
-
-      if (event.absoluteY <= movingUpLine) {
-        if (!enableAutoMoving.value) {
-          enableAutoMoving.value = true
-          runOnJS(scrollTo)(scrollY.value, transY.value, "goUp")
-        }
-
-      }
-      else if ((event.absoluteY > movingUpLine) && (event.absoluteY < movingDownLine)) {
-        enableAutoMoving.value = false
-
-        if (obj.preAbsY <= movingUpLine) {
-          obj.offsetY = transY.value - event.translationY
-        }
-        else if ((obj.preAbsY > movingUpLine) && (obj.preAbsY < movingDownLine)) {
-
-          transY.value = obj.offsetY + event.translationY
-        }
-        else if (obj.preAbsY >= movingDownLine) {
-
-          obj.offsetY = transY.value - event.translationY
-
-        }
-
-      }
-      else if (obj.preAbsY >= movingDownLine) {
-        if (!enableAutoMoving.value) {
-          enableAutoMoving.value = true
-          runOnJS(scrollTo)(scrollY.value, transY.value, "goDown")
-        }
-      }
-
-
-      runOnJS(checkingMovement)()
-      obj.preAbsY = event.absoluteY
-
-    },
-    onEnd: (event, obj) => {
-
-
-
-      enableAutoMoving.value = false
-      const v = Math.round(transY.value / 80) * 80
-      transY.value = withTiming(v)
-
-      coverTransX.value = withTiming(0)
-      backScale.value = withTiming(1)
-
-      zIndex.value = 0
-      runOnJS(setPanEnabled)(false)
-      runOnJS(reSortList)()
-
-
-      obj.preAbsY = event.absoluteY
-    },
-    onFail: (event, obj) => {
-
-    },
-    onCancel: (event, obj) => {
-
-    },
-    onFinish: (event, obj) => {
-
+      return <></>
     }
 
-  })
+
+  }
 
 
 
-  //console.log(item.localImage)
 
 
   return (
     <>
+      {/* <HoldItem /> */}
+      <DraggableFlatList
+        data={peopleList}
+        //  onDragEnd={({ data }) => setData(data)}
 
-      <View style={frameStyle} >
+        onDragEnd={function ({ data }) {
+
+          axios.post(`${url}/api/user/resortuserlist`, data.map(item => item.name), { headers: { "x-auth-token": token } })
+
+          setPeopleList(data)
+        }}
+
+
+        keyExtractor={(item) => item.name}
+        renderItem={renderItem}
+      />
+
+    </>
+  );
+}
+
+function ItemComponent({ isActive, drag, item, index, ...props }) {
+
+  const navigation = useNavigation()
+  const { peopleList, setPeopleList, token, userName, initialRouter, setInitialRouter, unreadCountObj, setUnreadCountObj, chattingUser, setLatestMsgObj, latestChattingMsg }
+    = useContext(Context)
+
+  const avatarString = multiavatar(item.name)
+  const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
+
+
+  const isRendered = useRef(false)
+
+
+  const baseColor = useSharedValue("white")
+
+
+  const baseScale = useDerivedValue(() => { return isActive ? 0.8 : 1 })
 
 
 
-        <PanGestureHandler maxPointers={1} onGestureEvent={backGesture} >
-          <View style={[backPanelStyle]}>
-            <Icon
-              //     containerStyle={{width:width/3}}
-              name="drag-horizontal"
-              type='material-community'
-              color='#517fa4'
-              size={60}
-            />
+
+  const baseTranslateX_ = useDerivedValue(() => {
+    const temp = (height - 60) / 80
+    const amountCanList = Number(temp.toFixed(0)) + 1
+
+    if ((initialRouter === "Reg") && (index === 0)) {
+      return 0
+    }
+    else if (isRendered.current) {
+      return 0
+    }
+    else if (index <= amountCanList) {
+      return width
+    }
+    else {
+      return 0
+    }
+  })
+
+  const baseTranslateX = useDerivedValue(() => {
+    return baseTranslateX_.value
+  })
+
+
+
+  const duration = useDerivedValue(() => {
+    const temp = (height - 60) / 80
+    const amountCanList = Number(temp.toFixed(0)) + 1
+
+    if ((initialRouter === "Reg") && (index === 0)) {
+      return 0
+    }
+    else if (isRendered.current) {
+      return 0
+    }
+    else if (index > amountCanList) {
+      return 0
+    }
+    else {
+      return (index % amountCanList) * 100
+    }
+
+
+
+  })
+
+
+
+
+
+  const baseStyle = useAnimatedStyle(() => {
+
+    return {
+      height: 80, width,
+      backgroundColor: baseColor.value,
+
+      borderBottomWidth: 1,
+      borderBottomColor: "#DDD",
+      transform: [
+        { scale: withTiming(baseScale.value) },
+        //  { translateX: withTiming(baseTranslateX.value, { duration: duration.value }) },
+        { translateX: withTiming(30, { duration: duration.value }) }
+      ],
+      // overflow:"hidden",
+
+    }
+  })
+
+  const backOpacity = useDerivedValue(() => { return isActive ? 1 : 0 })
+
+
+  const backViewStyle = useAnimatedStyle(() => {
+
+    return {
+      height: 80, width,
+      backgroundColor: bgColor,
+      ...isActive && { elevation: 5 },
+      position: "absolute",
+      borderBottomWidth: 1,
+      borderBottomColor: "#DDD",
+      flexDirection: "row",
+      alignItem: "center",
+      justifyContent: "flex-end",
+
+      top: 0,
+      left: 0,
+      zIndex: 50,
+
+      opacity: withTiming(backOpacity.value, { duration: 500 }),
+
+      //opacity: 1// withTiming(backOpacity.value, { duration: 500 }),
+    }
+  })
+
+
+
+
+  const frontStyle = useAnimatedStyle(() => {
+
+    return {
+      height: 80, width,
+      backgroundColor: "transparent",
+      ...isActive && { elevation: 10 },
+      position: "absolute",
+      borderBottomWidth: 1,
+      borderBottomColor: "#DDD",
+
+      top: 0,
+      left: 0,
+      zIndex: 100,
+
+      display: "flex",
+      flexDirection: "row",
+      alignItem: "center"
+
+    }
+  })
+
+
+
+  return (
+
+    <Pressable
+      onPress={function () {
+
+        if (item.name !== "AllUser") {
+          navigation.navigate('Chat', { item: item })
+        }
+        else if (item.name === "AllUser") {
+          navigation.navigate('ChatAll', { item: item })
+        }
+      }}
+
+      onPressIn={function () {
+        baseColor.value = bgColor
+      }}
+      onPressOut={function () {
+        baseColor.value = "white"
+      }}
+
+      onLongPress={drag}
+      disabled={isActive}
+    >
+
+
+
+      <View style={[baseStyle]} onLayout={function () {
+        baseTranslateX.value = 0
+      }}>
+
+        <View style={[backViewStyle]} >
+          <Icon
+            containerStyle={{ alignItem: "center", justifyContent: "center" }}
+            name="drag-vertical"
+            type='material-community'
+            color='#517fa4'
+            size={50}
+          />
+        </View>
+
+        <View style={[frontStyle]} >
+
+          <Badge
+            value={unreadCountObj[item.name] || 0}
+            status="error"
+            containerStyle={{
+              position: 'absolute', top: 10, left: 58, zIndex: 100,
+              transform: [{ scale: Boolean(unreadCountObj[item.name]) ? 1.2 : 0 }],
+              display: "flex", justifyContent: "center", alignItems: "center"
+            }}
+            badgeStyle={{
+              //     color: "blue",
+              //      position: 'absolute', top: 10, left: 60, zIndex: 100,
+              //      backgroundColor:"yellow",
+              // transform: [{ scale: 1.8 }],
+              display: "flex", justifyContent: "center", alignItems: "center"
+            }}
+            textStyle={{
+              transform: [{ translateY: -2 }],
+            }}
+          />
+
+          <SharedElement id={item.name}  >
             {item.hasAvatar
-              ? <Image source={{ uri: `${url}/api/image/avatar/${item.name}` }}
-                resizeMode="cover"
-                style={{ position: "absolute", right: 10, width: 60, height: 60, borderRadius: 1000 }} />
-              : <SvgUri style={{ position: "absolute", right: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+              ? <Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
+                style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }} />
+              : <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
             }
-            <View style={{ width: width / 3, position: "absolute", left: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Text style={{ fontSize: 20 }}>{item.name}</Text>
-            </View>
-          </View>
-        </PanGestureHandler>
+          </SharedElement>
 
 
-        <Pressable
+          <NameText item={item} />
+        </View>
 
-          onPressIn={function () {
-
-            coverBgcolor.value = bgColor
-
-          }}
-
-          onPress={function () {
-
-
-
-            if ((coverTransX.value === 0) && (self.props.item.name !== "AllUser")) {
-
-              chattingUser.current = self.props.item.name
-              navigation.navigate('Chat', { item: self.props.item })
-            }
-            // else if((coverTransX.value === 0) && (self.props.item.name === "AllUser")){
-            //   navigation.navigate('ChatAll', { item: self.props.item })
-            // }
-          }}
-
-          onPressOut={function () {
-            coverBgcolor.value = "white"
-          }}
-        >
-          <PanGestureHandler
-
-            enabled={panEnabled}
-            minPointers={1} shouldCancelWhenOutside={true} //simultaneousHandlers={[mainRef, listRef]}
-            simultaneousHandlers={[listRef]}
-
-
-            onGestureEvent={coverGesture} >
-
-
-
-            <View style={[coverPanelStyle]}   >
-              {/* <Pressable onPress={function () { console.log("dddsdsd") }}> <View > */}
-              <Badge
-                value={unreadCountObj[item.name] || 0}
-                status="error"
-                containerStyle={{
-                  position: 'absolute', top: 10, left: 58, zIndex: 100,
-                  transform: [{ scale: Boolean(unreadCountObj[item.name]) ? 1.2 : 0 }],
-                  display: "flex", justifyContent: "center", alignItems: "center"
-                }}
-                badgeStyle={{
-                  //     color: "blue",
-                  //      position: 'absolute', top: 10, left: 60, zIndex: 100,
-                  //      backgroundColor:"yellow",
-                  // transform: [{ scale: 1.8 }],
-                  display: "flex", justifyContent: "center", alignItems: "center"
-                }}
-                textStyle={{
-                  transform: [{ translateY: -2 }],
-                }}
-              />
-
-              <TouchableOpacity onPress={function () { console.log(Date.now()) }}>
-                <SharedElement id={item.name}  >
-                  {item.hasAvatar
-                    ? <Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}` }} resizeMode="cover" style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }} />
-                    : <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
-                  }
-
-                </SharedElement>
-              </TouchableOpacity>
-
-              <NameText item={item} />
-
-              {/* </View> </Pressable>*/}
-            </View>
-          </PanGestureHandler>
-        </Pressable>
 
       </View>
-      <Overlay isVisible={!panEnabled && allPanelArr.current.length > 7} fullScreen={true} overlayStyle={{ opacity: 0.5, display: "flex", justifyContent: "center", alignItems: "center" }}  >
-        <LinearProgress color="primary" value={1} variant={"indeterminate"} />
-        <Text>Processing...</Text>
-      </Overlay>
-    </>
-  )
+
+
+
+
+
+    </Pressable >
+
+  );
+
 
 
 }
 
-
-
-HomeScreen.sharedElements = (route, otherRoute, showing) => {
-
-  return route.params && route.params.item && route.params.item.name && [
-    { id: route.params.item.name, animation: "move", resize: "auto", align: "left", }, // ...messageArr,   // turn back image transition off
-  ]
-};
-
 function NameText({ item, ...props }) {
 
 
-  const { token, latestMsgObj, setLatestMsgObj, userName, latestChattingMsg } = useContext(Context)
+  const { token, latestMsgObj, setLatestMsgObj, userName, latestChattingMsg, initialRouter } = useContext(Context)
+
+
 
 
   const [textToShow, setTextToShow] = useState("")
@@ -904,8 +497,10 @@ function NameText({ item, ...props }) {
 
       const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
       const info = await FileSystem.getInfoAsync(folderUri)
+      console.log("==***==",info)
       if (!info.exists) {
-        await FileSystem.makeDirectoryAsync(folderUri);
+        console.log("==",info)
+        await FileSystem.makeDirectoryAsync(folderUri).catch(err => { console.log("==>", err) });
       }
       let lastName = ""
       FileSystem.readDirectoryAsync(folderUri).then(msgNameArr => {
@@ -916,7 +511,6 @@ function NameText({ item, ...props }) {
 
         if (lastName) {
           FileSystem.readAsStringAsync(folderUri + lastName).then(data => {
-
 
             // console.log(data)
             const obj = JSON.parse(data)
@@ -940,9 +534,6 @@ function NameText({ item, ...props }) {
           })
 
         }
-
-
-
       })
     }
 
@@ -950,13 +541,13 @@ function NameText({ item, ...props }) {
 
 
   return (
-    <View>
+    <View style={{ justifyContent: "center" }}>
       <Text style={{ fontSize: 20, }}>{item.name}</Text>
-      {Boolean(textToShow) && <Text style={{ fontSize: 18, color: "#666", lineHeight: 20, width: width - 100, overflow: "hidden" }} ellipsizeMode='tail' numberOfLines={1} >{textToShow}</Text>}
+      {Boolean(textToShow) && <Text style={{ fontSize: 18, color: "#666", lineHeight: 20, width: width - 100, overflow: "hidden" }} ellipsizeMode='tail' numberOfLines={1} >
+        {textToShow}
+      </Text>}
     </View>
   )
-
-
 
 }
 
@@ -966,3 +557,13 @@ function NameText({ item, ...props }) {
 
 
 
+
+
+
+HomeScreen.sharedElements = (route, otherRoute, showing) => {
+
+  //console.log(route)
+  return route.params && route.params.item && route.params.item.name && [
+    { id: route.params.item.name, animation: "move", resize: "auto", align: "left", }, // ...messageArr,   // turn back image transition off
+  ]
+};
