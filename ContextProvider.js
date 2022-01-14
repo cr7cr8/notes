@@ -273,59 +273,82 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
 
 
       msgArr.forEach((msg, index) => {
-        const sender = msg.sender
+        let sender = msg.toPerson === "AllUser" ? "AllUser" : msg.sender
 
-        const folderUri = FileSystem.documentDirectory + "MessageFolder/" + sender + "/"
-        const folderUri2 = FileSystem.documentDirectory + "UnreadFolder/" + sender + "/"
+        // const folderUri = FileSystem.documentDirectory + "MessageFolder/" + sender + "/"
+        // const folderUri2 = FileSystem.documentDirectory + "UnreadFolder/" + sender + "/"
 
         const fileUri = FileSystem.documentDirectory + "MessageFolder/" + sender + "/" + sender + "---" + msg.createdTime
         const fileUri2 = FileSystem.documentDirectory + "UnreadFolder/" + sender + "/" + sender + "---" + msg.createdTime
 
-        FileSystem.getInfoAsync(folderUri)
-          .then(info => {
-            if (!info.exists) { return FileSystem.makeDirectoryAsync(folderUri).catch(err => { console.log(">>>", err) }) }
-            else { return info }
-          })
-          .then(() => {
-            FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg))
-          })
+        // FileSystem.getInfoAsync(folderUri)
+        //   .then(info => {
+        //     if (!info.exists) { return FileSystem.makeDirectoryAsync(folderUri).catch(err => { console.log(">>>", err) }) }
+        //     else { return info }
+        //   })
+        //   .then(() => {
+        //     FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg))
+        //   })
+        if (msg.toPerson === "AllUser") {
+          FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg)).then(() => {
 
 
-        FileSystem.getInfoAsync(folderUri2)
-          .then(info => {
-            if (!info.exists) { return FileSystem.makeDirectoryAsync(folderUri2).catch(err => { console.log(">>>", err) }) }
-            else { return info }
-          })
-          .then(() => {
-            return FileSystem.writeAsStringAsync(fileUri2, JSON.stringify(msg))
-          })
-          .then(() => {
             setLatestMsgObj(pre => {
-
               let objText = ""
 
               if (msg.audio) {
-                objText = "[audio]"
+                objText = msg.sender + ": [audio]"
               }
               else if (msg.image) {
-                objText = "[image]"
+                objText = msg.sender + ": [image]"
               }
               else if (msg.text) {
-                objText = msg.text
+                objText = msg.sender + ": " + msg.text
               }
-
-              return { ...pre, [msg.sender]: objText }
+              return { ...pre, "AllUser": { content: objText, saidTime: msg.createdAt } }
             })
-
-          })
-          .then(() => {
 
             if (index === msgArr.length - 1) setPeopleList(pre => [...pre]) //causing recount unread in homepage
 
-
-
           })
+
+
+        }
+
+
+
+
+        else if (msg.toPerson !== "AllUser") {
+          FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg))
+            .then(() => {
+              FileSystem.writeAsStringAsync(fileUri2, JSON.stringify(msg))
+
+                .then(() => {
+
+
+                  setLatestMsgObj(pre => {
+                    let objText = ""
+
+                    if (msg.audio) {
+                      objText = "[audio]"
+                    }
+                    else if (msg.image) {
+                      objText = "[image]"
+                    }
+                    else if (msg.text) {
+                      objText = msg.text
+                    }
+                    return { ...pre, [sender]: { content: objText, saidTime: msg.createdAt } }
+                  })
+
+                  if (index === msgArr.length - 1) setPeopleList(pre => [...pre]) //causing recount unread in homepage
+
+                })
+            })
+        }
       })
+
+
     })
   })
 
@@ -404,7 +427,7 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
                 objText = msg.text
               }
 
-              return { ...pre, [msg.sender]: objText }
+              return { ...pre, [msg.sender]: { content: objText, saidTime: msg.createdAt } }
             })
           }
 
@@ -494,15 +517,58 @@ function assignListenning({ socket, token, setPeopleList, userName, appState, un
   })
 
 
-  socket.on("writeAllUser", function (sender, msgArr) {
+  socket.on("writeRoomMessage", function (sender, msgArr) {
 
+
+
+
+    const folderUri = FileSystem.documentDirectory + "MessageFolder/" + "AllUser" + "/"
+
+
+    msgArr.forEach(msg => {
+
+      //console.log(msg)
+
+      //console.log(msg.createdTime,"\n",Date.now())
+      const fileUri = folderUri + "AllUser" + "---" + msg.createdTime
+      FileSystem.writeAsStringAsync(fileUri, JSON.stringify(msg))
+        .then(() => {
+
+
+          if (socket.listeners("displayRoomMessage").length === 0) {
+            setLatestMsgObj(pre => {
+
+
+              let objText = ""
+
+              if (msg.audio) {
+                objText = msg.sender + ": " + "[audio]"
+              }
+              else if (msg.image) {
+                objText = msg.sender + ": " + "[image]"
+              }
+              else if (msg.text) {
+                objText = msg.sender + ": " + msg.text
+              }
+
+              //return { ...pre, "AllUser": objText }
+              return { ...pre, "AllUser": { content: objText, saidTime: msg.createdAt } }
+
+            })
+          }
+        })
+    })
 
 
 
   })
 
 
+  socket.on("deleteAudio", function (id) {
 
+    axios.get(`${url}/api/audio/delete/${id}`)
+
+  })
 
 
 

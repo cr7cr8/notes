@@ -216,10 +216,10 @@ export function createFolder(name) {
         })
         .catch(err => console.log("config.js ==>>", err)),
 
-      FileSystem.getInfoAsync(FileSystem.cacheDirectory + "Audio/" + name + "/")
+      FileSystem.getInfoAsync(FileSystem.documentDirectory + "Audio/" + name + "/")
         .then(({ exists }) => {
           if (!exists) {
-            return FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "Audio/" + name + "/", { intermediates: true })
+            return FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "Audio/" + name + "/", { intermediates: true })
           }
         })
         .catch(err => console.log("config.js ==>>", err)),
@@ -245,7 +245,7 @@ export function deleteFolder(name) {
       FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/" + name, { idempotent: true }),
       FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/" + name, { idempotent: true }),
       FileSystem.deleteAsync(FileSystem.cacheDirectory + "ImagePicker/" + name, { idempotent: true }),
-      FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/" + name, { idempotent: true }),
+      FileSystem.deleteAsync(FileSystem.documentDirectory + "Audio/" + name, { idempotent: true }),
 
     ]
   )

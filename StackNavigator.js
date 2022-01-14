@@ -147,7 +147,7 @@ export default function StackNavigator() {
                 await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
                 await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
                 await FileSystem.deleteAsync(FileSystem.cacheDirectory + "ImagePicker/", { idempotent: true })
-                await FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/", { idempotent: true })
+                await FileSystem.deleteAsync(FileSystem.documentDirectory + "Audio/", { idempotent: true })
 
 
 
@@ -188,16 +188,7 @@ export default function StackNavigator() {
                   await deleteFolder(route.params.item.name)
                   await createFolder(route.params.item.name)
 
-                  // await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/" + route.params.item.name, { idempotent: true })
-                  // await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/" + route.params.item.name, { idempotent: true })
-                  // await FileSystem.deleteAsync(FileSystem.cacheDirectory + "ImagePicker/" + route.params.item.name, { idempotent: true })
-                  // await FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/" + route.params.item.name, { idempotent: true })
-
-                  // FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/" + route.params.item.name, { intermediates: true })
-                  // FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/" + route.params.item.name, { intermediates: true })
-                  // FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "ImagePicker/" + route.params.item.name, { intermediates: true })
-                  // FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "Audio/" + route.params.item.name, { intermediates: true })
-
+            
 
                 }} title="folder" />
 
@@ -225,16 +216,10 @@ export default function StackNavigator() {
                 return <Button onPress={async function () {
 
 
+                  await deleteFolder("AllUser")
+                  await createFolder("AllUser")
 
-
-                  // await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
-                  // await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
-                  // await FileSystem.deleteAsync(FileSystem.documentDirectory + "ImagePicker/", { idempotent: true })
-                  // await FileSystem.deleteAsync(FileSystem.cacheDirectory + "Audio/", { idempotent: true })
-
-                  // FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "MessageFolder/")
-                  // FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "UnreadFolder/")
-                  // FileSystem.makeDirectoryAsync(FileSystem.cacheDirectory + "Audio/")
+                
 
 
                 }} title="allchat" />

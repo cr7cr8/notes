@@ -9,7 +9,8 @@ import {
 
   SafeAreaView,
   KeyboardAvoidingView,
-
+  BackHandler,
+  Alert
 } from 'react-native';
 
 import ReAnimated, {
@@ -69,7 +70,7 @@ import {
 
 
 } from 'react-native-gifted-chat'
-import { Video, AVPlaybackStatus, Audio } from 'expo-av';
+import { Video, AVPlaybackStatus, Audio, ExponentAV } from 'expo-av';
 
 import Image from 'react-native-scalable-image';
 
@@ -105,33 +106,20 @@ import { Path } from 'react-native-svg';
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 let recording = new Audio.Recording();
 let audioSound = new Audio.Sound();
 
 export function ChatAllScreen({ navigation, route, ...props }) {
 
 
+  const [isOverLay, setIsOverLay] = useState(false)
+
+
+
   const item = route.params.item
+  // let peopleList = route.params.peopleList
+
+
   //console.log(item)
   // console.log(Device.hasNotch())
 
@@ -149,7 +137,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
   const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
   const bgColor2 = hexify(hexToRgbA2(avatarString.match(/#[a-zA-z0-9]*/)[0]))
 
-  const { token, userName, socket, setSnackBarHeight, setSnackMsg, appState, unreadCountObj, setUnreadCountObj, latestMsgObj, setLatestMsgObj } = useContext(Context)
+  const { peopleList, token, userName, socket, setSnackBarHeight, setSnackMsg, appState, unreadCountObj, setUnreadCountObj, latestMsgObj, latestChattingMsg, setLatestMsgObj } = useContext(Context)
   const [shouldDisplayNotice, setShouldDisplayNotice] = useState(true)
   const canMoveDown = useRef(true)
 
@@ -160,8 +148,8 @@ export function ChatAllScreen({ navigation, route, ...props }) {
   const scrollRef = useRef()
 
   const inputRef = useRef()
-  const [inputText, setInputText] = useState("")
 
+  const inputText = useRef("")
 
   const expandWidth = useSharedValue(50)
 
@@ -172,27 +160,40 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
   const totalBlockHeight = useRef(0)
 
+
+
+
   //display message
   useEffect(function () {
 
-    socket.on("displayMessage" + item.name, function (msgArr) {
+    socket.on("displayRoomMessage", function (msgArr) {
 
       canMoveDown.current = true
       let msgArr_ = msgArr.map(msg => {
 
+
+
+        const sender = peopleList.find(people => { return people.name === msg.sender })
+        const avatarString = multiavatar(sender.name)
+        const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
+
+
+        latestChattingMsg.current = { ...msg, sender: "AllUser", text: sender.name + ": " + msg.text }
+
         return {
           ...msg,
+          bgColor,
           user: {
             _id: msg.sender + "---" + Math.random(),
             avatar: () => {
-              return item.hasAvatar
-                ? <ImageV source={{ uri: `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
+              return sender.hasAvatar
+                ? <ImageV source={{ uri: `${url}/api/image/avatar/${sender.name}` }} resizeMode="cover"
                   style={{
                     position: "relative",
 
                     width: 36, height: 36, borderRadius: 1000
                   }} />
-                : <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(item.name)} />
+                : <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(sender.name)} />
 
             }
           }
@@ -217,21 +218,15 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
           return msgArr_
         }
-
-
-
       })
-
-
-
 
     })
 
 
     return function () {
-      socket.off("displayMessage" + item.name)
+      socket.off("displayRoomMessage")
     }
-  }, [])
+  }, [peopleList])
 
   //initalizing message container
   useEffect(async function () {
@@ -239,13 +234,6 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
 
     const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
-    const info = await FileSystem.getInfoAsync(folderUri)
-
-    // console.log(info)
-    if (!info.exists) {
-      await FileSystem.makeDirectoryAsync(folderUri);
-    }
-
 
 
     FileSystem.readDirectoryAsync(folderUri).then(data => {
@@ -259,16 +247,25 @@ export function ChatAllScreen({ navigation, route, ...props }) {
           const msg = JSON.parse(content)
           const isLocal = Boolean(msg.isLocal)
 
+     
+          let sender = peopleList.find(people => { return people.name === msg.sender })
+          if (!sender) { sender = {}; sender.hasAvatar = false }
+
+
+          const avatarString = multiavatar(msg.sender)
+          const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
+
+          msg.bgColor = bgColor
 
           msg.user.avatar = () => {
-            return item.hasAvatar
-              ? <ImageV source={{ uri: `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
+            return sender.hasAvatar
+              ? <ImageV source={{ uri: `${url}/api/image/avatar/${msg.sender}` }} resizeMode="cover"
                 style={{
                   position: "relative",
 
                   width: 36, height: 36, borderRadius: 1000
                 }} />
-              : <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(isLocal ? userName : item.name, false)} />
+              : <SvgUri style={{ position: "relative", }} width={36} height={36} svgXmlData={multiavatar(isLocal ? userName : msg.sender, false)} />
 
           }
           msg.user._id = isLocal ? userName : msg.user._id + "---" + Math.random()
@@ -355,26 +352,6 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
   const scrollY = useSharedValue(0)
 
-  const sendBtnStyle = useAnimatedStyle(() => {
-
-
-
-    return {
-      width: withTiming(expandWidth.value, { duration: 100 }),
-      // backgroundColor: "pink",
-      borderRadius: 0,
-      height: 50,
-      overflow: "hidden",
-      display: "flex",
-      flexDirection: "row",
-      alignItems: "flex-start",
-      justifyContent: "flex-end",
-
-      //position:"absolute",
-      //right:8,
-    }
-
-  })
 
 
   const inputHeight = useSharedValue(0)
@@ -461,9 +438,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
 
 
-
-  const [micBarText, setMicBarText] = useState("hold to talking")
-
+  const sendBtnWidth = useSharedValue(0)
 
 
 
@@ -535,7 +510,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
   }
 
   function callStopRecording() {
-    stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice, socket, setLatestMsgObj })
+    stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice, socket, latestChattingMsg })
   }
 
   function callCancelRecording() {
@@ -577,6 +552,13 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
       {/* <View style={[bodyStyle]} > */}
       <GiftedChat
+
+        renderCustomView={function ({ currentMessage, ...props }) {
+
+          if (currentMessage.sender === userName) { return <></> }
+
+          return <Text style={{ color: "#A0A0A0", textAlign: "left", marginHorizontal: 8 }}>{currentMessage.sender}</Text>
+        }}
 
         listViewProps={{
           ref: (element) => { scrollRef.current = element },
@@ -641,7 +623,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
         infiniteScroll={true}
         onLoadEarlier={function (a) {
 
-          console.log(Date.now())
+      //    console.log(Date.now())
           //  alert(Date.now())
         }}
 
@@ -788,27 +770,31 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
         keyboardShouldPersistTaps={"never"}
 
-        text={inputText}
+        //     text={inputText}
         onInputTextChanged={text => {
+          if (text === "") {
+            sendBtnWidth.value = 0
+          }
+          else {
+            sendBtnWidth.value = 60
+          }
+          inputText.current = text
 
-          setInputText(pre => {
-            return text
-          })
+
         }}
 
         minComposerHeight={60}
 
         messagesContainerStyle={{
 
-          //paddingBottom: paddingHeight,
+
           height: "100%",
 
-          //     height: height - titleBarHeight - BOTTOM_HEIGHT - keyboardHeight - inputHeight.value - 60,
-          //height: height - titleBarHeight - BOTTOM_HEIGHT - keyboardHeight - paddingHeight,
+
 
           height: height - titleBarHeight - BOTTOM_HEIGHT - 60,
-          //   backgroundColor: "brown",
-          backgroundColor: "lightgrey",
+          // backgroundColor: "brown",
+
           marginEnd: 0,
         }}
 
@@ -847,7 +833,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
                   height: "100%",
 
                 }}
- 
+
               >
                 {props.children}
 
@@ -944,7 +930,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
                   disableComposer={false}
                   textInputProps={{
                     // multiline: true,
-                    numberOfLines: Math.min([...inputText].filter(c => c === "\n").length + 1, 5),
+                    numberOfLines: Math.min([...inputText.current].filter(c => c === "\n").length + 1, 5),
                     style: {
                       backgroundColor: "white", minHeight: 52, width: width - 120, paddingHorizontal: 8, fontSize: 20, lineHeight: 25,
 
@@ -978,10 +964,14 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
             return (
               <>
-                <SendBtn outerProps={props} Send={Send} inputText={inputText} inputHeight={inputHeight} inputRef={inputRef} keyboardHeight={keyboardHeight}
+
+
+
+                <SendBtn outerProps={props} Send={Send} inputHeight={inputHeight} inputRef={inputRef} keyboardHeight={keyboardHeight}
 
                   micBarWidth={micBarWidth}
                   bgColor={bgColor}
+                  sendBtnWidth={sendBtnWidth}
                 />
               </>
             )
@@ -995,7 +985,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
             if (!messages[0].image && !messages[0].audio && !messages[0].video) {
               if (messages[0].text.match(/^[\s]*$/g)) {
-                setInputText("")
+
 
                 return inputRef.current.blur()
 
@@ -1003,14 +993,11 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
             }
 
-            // if(messages.currentMessage.text.match(/^[\s]*$/g)){
-            //   setInputText("")
-            //   return
-            // }
 
 
-            const messages_ = messages.map(msg => { return { ...msg, createdTime: Date.parse(msg.createdAt), sender: userName } })
-            if (userName !== item.name) { socket.emit("sendToAll",  { sender: userName, toPerson: item.name, msgArr: messages_ }) }
+
+            const messages_ = messages.map(msg => { return { ...msg, createdTime: Date.parse(msg.createdAt), sender: userName, toPerson: item.name } })
+            if (userName !== item.name) { socket.emit("sendToAll", { sender: userName, toPerson: item.name, msgArr: messages_ }) }
 
 
             canMoveDown.current = true
@@ -1026,28 +1013,19 @@ export function ChatAllScreen({ navigation, route, ...props }) {
               }
 
             })
- 
 
 
 
-            // const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
 
-            // FileSystem.getInfoAsync(folderUri)
-            //   .then(info => {
-            //     if (!info.exists) {
-            //       return FileSystem.makeDirectoryAsync(folderUri)
-            //     }
-            //     else {
-            //       return info
-            //     }
-            //   })
-            //   .then(() => {
+            const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
 
-            //     messages_.forEach(msg => {
-            //       const fileUri = folderUri + item.name + "---" + msg.createdTime
-            //       FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...msg, isLocal: true }))
-            //    //   setLatestMsgObj(pre => { return { ...pre, [item.name]: "\u2b05 " + msg.text } })
-            //     })
+
+            messages_.forEach(msg => {
+              const fileUri = folderUri + item.name + "---" + msg.createdTime
+              FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...msg, isLocal: true }))
+              latestChattingMsg.current = msg
+              // latestChattingMsg(pre => { return { ...pre, [item.name]: "\u2b05 " + msg.text } }) // causing slow down
+            })
             //   })
 
 
@@ -1068,7 +1046,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
               <Icon
                 onPress={function () {
-                  canMoveDown.current = true; inputHeight.value = 0; pickImage(setMessages, userName, item, socket, setLatestMsgObj)
+                  canMoveDown.current = true; inputHeight.value = 0; pickImage(setMessages, userName, item, socket, latestChattingMsg, setIsOverLay)
                 }}
                 name="image-outline"
                 type='ionicon'
@@ -1078,7 +1056,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
 
               <Icon
-                onPress={function () { canMoveDown.current = true; inputHeight.value = 0; takePhoto(setMessages, userName, item, socket, setLatestMsgObj) }}
+                onPress={function () { canMoveDown.current = true; inputHeight.value = 0; takePhoto(setMessages, userName, item, socket, latestChattingMsg, setIsOverLay) }}
                 name="camera-outline"
                 type='ionicon'
                 color='#517fa4'
@@ -1113,9 +1091,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
         renderMessageAudio={function (message) {
 
-          //const currentMessage = message.currentMessage
-
-          //   console.log(currentMessage.audio)
+        
 
 
           return <AudioMessage
@@ -1171,7 +1147,10 @@ export function ChatAllScreen({ navigation, route, ...props }) {
         }
 
       />
-
+      <Overlay isVisible={isOverLay} fullScreen={true} overlayStyle={{ opacity: 0.5, display: "flex", justifyContent: "center", alignItems: "center" }}  >
+        <LinearProgress color="primary" value={1} variant={"indeterminate"} />
+        <Text>Processing...</Text>
+      </Overlay>
 
     </>
   )
@@ -1222,6 +1201,7 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
 
 
   const currentMessage = message.currentMessage
+  const audioUri = FileSystem.documentDirectory + "Audio/" + item.name + "/" + currentMessage.audioName
 
   //const audioMsg = useRef()
 
@@ -1279,7 +1259,7 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
           isPlaying.value = info.isPlaying
         });
 
-        audioSound.loadAsync({ uri: currentMessage.audio }, { shouldPlay: true }, true);
+        audioSound.loadAsync({ uri: audioUri }, { shouldPlay: true }, true);
       }
       else {
 
@@ -1291,7 +1271,7 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
             isPlaying.value = info.isPlaying
           });
 
-          audioSound.loadAsync({ uri: currentMessage.audio }, { shouldPlay: true }, true);
+          audioSound.loadAsync({ uri: audioUri }, { shouldPlay: true }, true);
 
         })
       }
@@ -1335,30 +1315,30 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
     }
     else {
 
+      FileSystem.getInfoAsync(audioUri).then(info => {
 
-      //  console.log(currentMessage.audio)
-      FileSystem.getInfoAsync(currentMessage.audio).then(info => {
         if (info.exists) {
 
           setDisabled(false)
         }
         else {
           const uri = `${url}/api/audio/download/${currentMessage.mongooseID}`
-          const fileUri = currentMessage.audio
+      
 
           const downloadResumable = FileSystem.createDownloadResumable(
-            uri, fileUri, { headers: { "x-auth-token": token } },
+            uri, audioUri, { headers: { "x-auth-token": token } },
             function ({ totalBytesExpectedToWrite, totalBytesWritten }) {
               //  console.log(totalBytesWritten + " / " + totalBytesExpectedToWrite)
             }
           );
 
-          downloadResumable.downloadAsync(uri, fileUri, { headers: { "x-auth-token": token } })
+          downloadResumable.downloadAsync(uri, audioUri, { headers: { "x-auth-token": token } })
             .then(({ status }) => {
               if (status == 200) {
                 setDisabled(false)
 
-                axios.get(`${url}/api/audio/delete/${currentMessage.mongooseID}`)
+
+             //   axios.get(`${url}/api/audio/delete/${currentMessage.mongooseID}`)
 
               }
               else {
@@ -1519,83 +1499,72 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
   )
 }
 
-function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef, micBarWidth, bgColor, ...props }) {
+function SendBtn({ outerProps, keyboardHeight, inputHeight, inputRef, micBarWidth, bgColor, sendBtnWidth, ...props }) {
 
 
-  const viewTranslateX = useDerivedValue(() => {
 
-    return inputText ? -60 : 0
-
-  })
-
-
-  const viewStyle = useAnimatedStyle(() => {
+  const sendBtnStyle = useAnimatedStyle(() => {
 
 
     return {
       height: 60,
-      width: 60,
+      width: withTiming(sendBtnWidth.value, { duration: 200 }),
+      //width: sendBtnWidth.value,
       backgroundColor: bgColor,
       display: "flex",
       alignItems: "center",
-      justifyContent: "flex-start",
-
+      justifyContent: "center",
       flexDirection: "row",
-
-      transform: [{ translateX: viewTranslateX.value }],
-
-      //  overflow: "hidden"
+      overflow: "hidden",
 
     }
   })
 
 
-
   return (
+    <View style={{ height: 60, width: 60, backgroundColor: bgColor, display: "flex", flexDirection: "row" }}>
 
-    <Send {...outerProps}
-      containerStyle={{
-        //    alignSelf: !inputText || inputText.indexOf("\n") === -1 ? "center" : "flex-end",
-        alignSelf: "center",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "row",
-        margin: 0,
-        padding: 0,
-        backgroundColor: bgColor,
-        width: 60,
-        height: 60,
-        overflow: "hidden",
-        // transform:[{translateX:50}],
-        // zIndex:100
-      }}
-    >
+      <View style={[sendBtnStyle]} >
+        <Send {...outerProps}
+          containerStyle={{
+            height: 60,
+            width: 60
+          }}
+        >
+          <Icon
+            name='send'
+            type='ionicon'
+            color='#517fa4'
+            size={40}
+            containerStyle={{
+              width: 60, height: 60,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          />
+        </Send>
+      </View>
 
 
-      <View style={[viewStyle]}>
-
+      <View style={{ height: 60, width: 60, display: "flex", justifyContent: "center", alignItems: "center" }}>
         <Icon
           name='add-circle-outline'
           type='ionicon'
           color='#517fa4'
           size={50}
           containerStyle={{
-            backgroundColor: '#517fa4', backgroundColor: bgColor, width: 60, height: 60,
+            width: 60, height: 60,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            position: "absolute",
-            top: 0,
-            left: 0,
-
           }}
           onPress={function () {
 
             if (inputHeight.value === 0 && keyboardHeight === 0) {
               inputHeight.value = 60
               micBarWidth.value = 0
-              // inputRef.current.blur()
+              inputRef.current.blur()
             }
             else if (inputHeight.value !== 0 && keyboardHeight === 0) {
               inputHeight.value = 0
@@ -1612,37 +1581,12 @@ function SendBtn({ outerProps, keyboardHeight, inputText, inputHeight, inputRef,
           }}
         />
 
-
-
-
-
-
-
-        <Icon
-          name='send'
-          type='ionicon'
-          color='#517fa4'
-          size={50}
-          containerStyle={{
-            backgroundColor: bgColor, width: 60, height: 60,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            position: "absolute",
-            top: 0,
-            left: 60,
-          }}
-        />
-
-
       </View>
 
-    </Send>
-
-
-
-
+    </View>
   )
+
+
 }
 
 function MessageBlock({ Message, messages, inputRef, inputText, outerProps, inputHeight, keyboardHeight, totalBlockHeight, ...props }) {
@@ -1653,7 +1597,7 @@ function MessageBlock({ Message, messages, inputRef, inputText, outerProps, inpu
   const blockHeightRef = useRef()
 
 
-  const enterCount = Math.min([...inputText].filter(c => c === "\n").length, 5);
+  const enterCount = Math.min([...inputText.current].filter(c => c === "\n").length, 5);
   // let extraHeight = [0, 15, 50, 50][enterCount]
   let extraHeight = [0, 15, 50, 85, 120, 120][enterCount]
 
@@ -1826,7 +1770,7 @@ function BubbleBlock({ token, item, bgColor, setMessages, canMoveDown, ...props 
           wrapperStyle={{
 
             left: {
-              backgroundColor: bgColor,
+              backgroundColor: currentMessage.bgColor,
               justifyContent: 'flex-start',
               overflow: "hidden",
 
@@ -1877,6 +1821,10 @@ function ImageBlock({ token, scrollRef, item, navigation, route, currentMessage,
 
   let imageWidth = currentMessage.imageWidth
   let imageHeight = currentMessage.imageHeight
+
+  // console.log(currentMessage.image)
+
+
 
   if (imageWidth && imageHeight && (imageWidth <= imageHeight)) {
     imageWidth = imageWidth * 200 / imageHeight
@@ -2017,9 +1965,10 @@ function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, i
               downloadFromLocal(currentMessage.image, setSnackMsg, setSnackBarHeight)
             }
             else if (isAudio) {
+              const audioUri = FileSystem.documentDirectory + "Audio/" + item.name + "/" + currentMessage.audioName
 
 
-              downloadFromLocal(currentMessage.audio, setSnackMsg, setSnackBarHeight)
+              downloadFromLocal(audioUri, setSnackMsg, setSnackBarHeight)
 
 
             }
@@ -2075,7 +2024,8 @@ function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, i
                 const fileUri = folderUri + item.name + "---" + currentMessage.createdTime
                 FileSystem.deleteAsync(fileUri, { idempotent: true })
 
-                FileSystem.deleteAsync(currentMessage.audio, { idempotent: true })
+                const audioUri = FileSystem.documentDirectory + "Audio/" + item.name + "/" + currentMessage.audioName
+                FileSystem.deleteAsync(audioUri, { idempotent: true })
               }, 800);
             }
 
@@ -2092,7 +2042,8 @@ function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, i
 
 }
 
-async function pickImage(setMessages, userName, item, socket, setLatestMsgObj) {
+async function pickImage(setMessages, userName, item, socket, latestChattingMsg, setIsOverLay) {
+  setIsOverLay(true)
   let result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
     allowsEditing: true,
@@ -2105,22 +2056,32 @@ async function pickImage(setMessages, userName, item, socket, setLatestMsgObj) {
 
   if ((!result.cancelled) && (result.uri)) {
 
-
+    //console.log(FileSystem.documentDirectory)
+    //console.log(result.uri)
     //  const _id = Math.random(),
 
+    const uri = result.uri
+    const imageName = uri.replace(/^.*[\\\/]/, '')
+    const imageFolder = uri.replace(imageName, "") + item.name + "/"
+    const imageUri = imageFolder + imageName
+
+
+
+
+    await FileSystem.moveAsync({ from: uri, to: imageUri })
+
     const time = Date.now()
-
-
     const imageMsg = {
       _id: time,
       text: '',
-      createdAt: time,
+      createdAt: new Date(),
       createdTime: time,
-
+      sender: userName,
       user: { _id: userName },
-      image: result.uri,
+      image: imageUri,//result.uri,
       imageWidth: result.width,     //"data:image/png;base64," + result.base64,
-      imageHeight: result.height
+      imageHeight: result.height,
+      toPerson: item.name,
     }
 
 
@@ -2129,10 +2090,10 @@ async function pickImage(setMessages, userName, item, socket, setLatestMsgObj) {
     const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
     const fileUri = folderUri + item.name + "---" + imageMsg.createdTime
     FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...imageMsg, isLocal: true }))
+    setIsOverLay(false)
 
 
-
-    uploadImage({ localUri: result.uri, filename: time, sender: userName, toPerson: item.name, imageWidth: result.width, imageHeight: result.height })
+    uploadImage({ localUri: imageUri, filename: time, sender: userName, toPerson: item.name, imageWidth: result.width, imageHeight: result.height })
       .then(response => {
         return {
           ...imageMsg,
@@ -2142,13 +2103,19 @@ async function pickImage(setMessages, userName, item, socket, setLatestMsgObj) {
         }
 
       }).then(data => {
-        socket.emit("sendMessage", { sender: userName, toPerson: item.name, msgArr: [data] })
-        setLatestMsgObj(pre => { return { ...pre, [item.name]: "\u2b05 [image]" } })
+        socket.emit("sendToAll", { sender: userName, toPerson: item.name, msgArr: [data] })
+        latestChattingMsg.current = imageMsg
+
+        //   latestChattingMsg(pre => { return { ...pre, [item.name]: "\u2b05 [image]" } })
       })
+  }
+  else {
+    setIsOverLay(false)
   }
 };
 
-async function takePhoto(setMessages, userName, item, socket, setLatestMsgObj) {
+async function takePhoto(setMessages, userName, item, socket, latestChattingMsg, setIsOverLay) {
+  setIsOverLay(true)
   let result = await ImagePicker.launchCameraAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
     allowsEditing: true,
@@ -2160,27 +2127,38 @@ async function takePhoto(setMessages, userName, item, socket, setLatestMsgObj) {
 
 
   if ((!result.cancelled) && (result.uri)) {
+
+
+    const uri = result.uri
+    const imageName = uri.replace(/^.*[\\\/]/, '')
+    const imageFolder = uri.replace(imageName, "") + item.name + "/"
+    const imageUri = imageFolder + imageName
+
+    await FileSystem.moveAsync({ from: uri, to: imageUri })
+
+
     const time = Date.now()
 
     const imageMsg = {
       _id: time,
       text: '',
-      createdAt: time,
+      createdAt: new Date(),
       createdTime: time,
-
+      sender: userName,
       user: { _id: userName },
-      image: result.uri,     //"data:image/png;base64," + result.base64,
+      image: imageUri,//result.uri,     //"data:image/png;base64," + result.base64,
       imageWidth: result.width,     //"data:image/png;base64," + result.base64,
-      imageHeight: result.height
+      imageHeight: result.height,
+      toPerson: item.name,
     }
 
     setMessages(pre => { return [...pre, { ...imageMsg, isLocal: true }] })
     const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
     const fileUri = folderUri + item.name + "---" + imageMsg.createdTime
     FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...imageMsg, isLocal: true }))
+    setIsOverLay(false)
 
-
-    uploadImage({ localUri: result.uri, filename: time, sender: userName, toPerson: item.name, imageWidth: result.width, imageHeight: result.height })
+    uploadImage({ localUri: imageUri, filename: time, sender: userName, toPerson: item.name, imageWidth: result.width, imageHeight: result.height })
       .then(response => {
         return {
           ...imageMsg,
@@ -2190,10 +2168,14 @@ async function takePhoto(setMessages, userName, item, socket, setLatestMsgObj) {
         }
 
       }).then(data => {
-        socket.emit("sendMessage", { sender: userName, toPerson: item.name, msgArr: [data] })
-        setLatestMsgObj(pre => { return { ...pre, [item.name]: "\u2b05 [image]" } })
+        socket.emit("sendToAll", { sender: userName, toPerson: item.name, msgArr: [data] })
+        latestChattingMsg.current = imageMsg
+        //   latestChattingMsg(pre => { return { ...pre, [item.name]: "\u2b05 [image]" } })
       })
 
+  }
+  else {
+    setIsOverLay(false)
   }
 }
 
@@ -2294,146 +2276,166 @@ function startRecording({ messages, setMessages, userName, item, previousMessage
   //   }
   // })
 
-
-  try {
-    //   console.log('Requesting permissions..');
-
-
-    // await Audio.setAudioModeAsync({
-    //   allowsRecordingIOS: true,
-    //   playsInSilentModeIOS: true,
-    // });
+  // await Audio.setAudioModeAsync({
+  //   allowsRecordingIOS: true,
+  //   playsInSilentModeIOS: true,
+  // });
 
 
-    //   console.log('Starting recording..');
 
-    Audio.requestPermissionsAsync()
-      .then((info) => {
 
-        //  console.log("permissions", info)
+  Audio.requestPermissionsAsync()
+    .then((info) => {
 
-        if (info.granted) {
-          return recording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY)
-        }
-        else {
-          return Promise.reject("recording permissions denied")
-        }
+      //  console.log("permissions", info)
 
-      })
-      .then(info => {
+      if (info.granted) {
+        return recording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY)
+      }
+      else {
+        return Promise.reject("recording permissions denied")
+      }
 
-        // console.log("about to record", info)
+    })
+    .then(info => {
 
-        if (info.canRecord && (!info.isRecording)) {
-          return recording.startAsync()
-        }
-        else {
-          return Promise.reject("cannot start recording")
-        }
+      // console.log("about to record", info)
 
-      })
-      .then(info => {
-        return info
-      })
-      .catch(err => {
-        console.log(err)
-      })
+      if (info.canRecord && (!info.isRecording)) {
+        return recording.startAsync()
+      }
+      else {
+        return Promise.reject("cannot start recording")
+      }
 
-  }
-  catch (err) {
-    console.log(err)
-  }
+    })
+    .then(info => {
+      return info
+    })
+    .catch(err => {
+      console.log("error in startRecording promise ==>")
+    })
+
+
+
 }
 
-function stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice, socket, setLatestMsgObj }) {
+function stopRecording({ messages, setMessages, userName, item, previousMessages, canMoveDown, shouldDisplayNotice, setShouldDisplayNotice, socket, latestChattingMsg }) {
+
+  let uri = ""
+  let audioName = ""
+  let audioFolder = ""
+  let audioUri = ""
+  let durationMillis = ""
+  let time = ""
+  let audioMsg = ""
+
+  recording.getStatusAsync()
+    .then(info => {
+
+      //     console.log("about to stop Recording", info)
+      if (info.isRecording) {
+
+        return recording.stopAndUnloadAsync()
+      }
+      else {
+
+        //     recording.stopAndUnloadAsync()
+        return Promise.reject(info)
+      }
+    })
+    .then(info => {
+      //     console.log("recording stopped", info)
+      if (info.isDoneRecording) {
+        durationMillis = info.durationMillis
+        uri = recording.getURI();
+
+        audioName = uri.replace(/^.*[\\\/]/, '')
+        audioFolder = FileSystem.documentDirectory + "Audio/" + item.name + "/"
+        audioUri = audioFolder + audioName
+        
 
 
-  try {
-    //   console.log('Stopping recording..');
-
-    recording.getStatusAsync()
-      .then(info => {
-
-        //     console.log("about to stop Recording", info)
-        if (info.isRecording) {
-          return recording.stopAndUnloadAsync()
-        }
-        else {
-          recording = new Audio.Recording()
-          return Promise.reject(info)
-        }
-      })
-      .then(info => {
-        //     console.log("recording stopped", info)
-        if (info.isDoneRecording) {
-          const durationMillis = info.durationMillis
-          const uri = recording.getURI();
-
-
-
-          recording = new Audio.Recording()
-
-          const time = Date.now()
-          const audioMsg = {
-            _id: time,
-            text: '',
-            createdAt: time,
-            createdTime: time,
-            user: { _id: userName },
-            audio: uri,
-            durationMillis: durationMillis,
-          }
-
-          canMoveDown.current = true
-          setMessages(pre => {
-            if (pre.length >= 20) {
-              previousMessages.current = previousMessages.current.concat(pre.slice(0, pre.length - 10))
-              if (!shouldDisplayNotice && (previousMessages.current.length > 0)) { setShouldDisplayNotice(true) }
-              return GiftedChat.prepend(pre.slice(-10), { ...audioMsg, isLocal: true })
-            }
-            else {
-              return GiftedChat.prepend(pre, { ...audioMsg, isLocal: true })
-            }
-          })
-
-          const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
-          const fileUri = folderUri + item.name + "---" + audioMsg.createdTime
-          FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...audioMsg, isLocal: true }))
-          setLatestMsgObj(pre => { return { ...pre, [item.name]: "\u2b05 [audio]" } })
-
-
-          const filename = uri.split("/").pop()
-          uploadAudio({ localUri: uri, filename: filename || Date.now() + ".m4a", sender: userName, toPerson: item.name, durationMillis })
-            .then(response => {
-              //  console.log(response.data)
-
-              socket.emit("sendMessage", {
-                sender: userName, toPerson: item.name,
-                msgArr: [{ ...audioMsg, sender: userName,/*audio: response.data.filename,*/ mongooseID: response.data.mongooseID }]
-              })
-
-            })
-
-
-        }
-        else {
-          recording = new Audio.Recording()
-          return Promise.reject(info)
-        }
-
-      })
-      .catch(err => {
-        console.log("cannot stop recording", err)
         recording = new Audio.Recording()
+
+        return FileSystem.moveAsync({ from: uri, to: audioUri })
+      }
+      else {
+        //   recording.stopAndUnloadAsync()
+        return Promise.reject(info)
+      }
+
+
+    })
+    .then(() => {
+
+      time = Date.now()
+      audioMsg = {
+        _id: time,
+        text: '',
+        createdAt: new Date(),
+        createdTime: time,
+        user: { _id: userName },
+        sender: userName,
+        audio: audioUri,
+        audioName:audioName,
+        durationMillis: durationMillis,
+        toPerson: item.name,
+      }
+
+      canMoveDown.current = true
+      setMessages(pre => {
+        if (pre.length >= 20) {
+          previousMessages.current = previousMessages.current.concat(pre.slice(0, pre.length - 10))
+          if (!shouldDisplayNotice && (previousMessages.current.length > 0)) { setShouldDisplayNotice(true) }
+          return GiftedChat.prepend(pre.slice(-10), { ...audioMsg, isLocal: true })
+        }
+        else {
+          return GiftedChat.prepend(pre, { ...audioMsg, isLocal: true })
+        }
       })
 
-  }
-  catch (err) {
-    //    console.error('error in stopRecording', err);
-    recording = new Audio.Recording()
+
+      const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
+      const fileUri = folderUri + item.name + "---" + audioMsg.createdTime
+      FileSystem.writeAsStringAsync(fileUri, JSON.stringify({ ...audioMsg, isLocal: true }))
+      latestChattingMsg.current = audioMsg
+
+      return uploadAudio({ localUri: audioUri, filename: audioName || Date.now() + ".m4a", sender: userName, toPerson: item.name, durationMillis })
+
+    })
+    .then(response => {
+      //   console.log(ExponentAV)
+      socket.emit("sendToAll", {
+        sender: userName, toPerson: item.name,
+        msgArr: [{ ...audioMsg, sender: userName, mongooseID: response.data.mongooseID }]
+      })
+
+      //console.log(recording._cleanupForUnloadedRecorder)
+
+    })
+    .catch(err => {
+      console.log("cannot stop recording")
+      // if (err.message.includes("Stop encountered an error: recording not stopped")) {
+      //   await ExponentAV.unloadAudioRecorder();
+      //   await recordRef.current._cleanupForUnloadedRecorder({ durationMillis: 0 } as any);
+      // } else {
+      //   await handleError(e, { userMessage: "An error occurred stopping the recording." });
+      // }
+
+      recording._cleanupForUnloadedRecorder({
+        canRecord: false,
+        durationMillis: 0,
+        isRecording: false,
+        isDoneRecording: false,
+      });
 
 
-  }
+      recording = new Audio.Recording()
+    })
+
+
+
 
 }
 
@@ -2469,7 +2471,7 @@ function cancelRecording() {
         return recording.stopAndUnloadAsync()
       }
       else {
-        recording = new Audio.Recording()
+        //recording = new Audio.Recording()
         return Promise.reject(info)
       }
     })
@@ -2489,12 +2491,20 @@ function cancelRecording() {
 
       }
       else {
-        recording = new Audio.Recording()
+        //  recording = new Audio.Recording()
         return Promise.reject(info)
       }
     })
     .catch(err => {
-      console.log("cancel error", err)
+      console.log("cancel recording error")
+      recording._cleanupForUnloadedRecorder({
+        canRecord: false,
+        durationMillis: 0,
+        isRecording: false,
+        isDoneRecording: false,
+      });
+
+      recording = new Audio.Recording()
     })
 
 

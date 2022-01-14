@@ -8,6 +8,9 @@ import DraggableFlatList, {
 
 import React, { useState, useRef, useEffect, useContext } from 'react';
 
+const { compareAsc, format, formatDistanceToNow, } = require("date-fns");
+const { zhCN } = require('date-fns/locale');
+
 import { createSharedElementStackNavigator } from 'react-navigation-shared-element';
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
 
@@ -287,7 +290,7 @@ function ItemComponent({ isActive, drag, item, index, ...props }) {
         { scale: withTiming(baseScale.value) },
 
         //{ translateX: withTiming(baseTranslateX.value, { duration: duration.value }) },
-            { translateX: withTiming(30, { duration: duration.value }) }
+        { translateX: withTiming(5, { duration: duration.value }) }
       ],
       // overflow:"hidden",
 
@@ -324,7 +327,7 @@ function ItemComponent({ isActive, drag, item, index, ...props }) {
       left: 0,
       zIndex: 50,
 
-    
+
       opacity: withTiming(backOpacity.value, { duration: 500 }),
     }
   })
@@ -364,7 +367,7 @@ function ItemComponent({ isActive, drag, item, index, ...props }) {
           navigation.navigate('Chat', { item: item })
         }
         else if (item.name === "AllUser") {
-          navigation.navigate('ChatAll', { item: item })
+          navigation.navigate('ChatAll', { item: item, peopleList: peopleList })
         }
       }}
 
@@ -446,6 +449,7 @@ function NameText({ item, ...props }) {
 
 
   const [textToShow, setTextToShow] = useState("")
+  const [textDate, setTextDate] = useState("")
 
   const navigation = useNavigation()
 
@@ -470,7 +474,23 @@ function NameText({ item, ...props }) {
 
       if ((sender === item.name) && (textToShow !== objText)) {
 
-        setTextToShow(objText)
+    //    setTextToShow(objText)
+
+
+
+
+        // const aaa = ((Date.now() - Date.parse(obj.createdAt)) >= 1000 * 60 * 60 * 24)
+        //   ? new Date(obj.createdAt).toLocaleString().substring(4, 10)
+        //   : new Date(obj.createdAt).toLocaleString().substring(11, 16)
+
+    //    setTextDate(" " + aaa)
+        setLatestMsgObj(pre => {
+
+          return { ...pre, [sender]: { content: objText, saidTime:obj.createdAt  } }
+  
+        })
+        latestChattingMsg.current=""
+
       }
 
     }
@@ -484,8 +504,30 @@ function NameText({ item, ...props }) {
 
   useEffect(function () {
 
-    if ((latestMsgObj[item.name]) && (latestMsgObj[item.name] !== textToShow)) {
-      setTextToShow(latestMsgObj[item.name])
+    //if ((latestMsgObj[item.name]) && (latestMsgObj[item.name] !== textToShow)) {
+    if ((latestMsgObj[item.name])) {
+
+     
+
+
+      setTextToShow(latestMsgObj[item.name].content)
+
+      const saidTime = Date.parse(latestMsgObj[item.name].saidTime)
+
+
+
+      const aaa = ((Date.now() - saidTime) >= (1000 * 60 * 60 * 24))
+        ? new Date(saidTime).toLocaleString().substring(4, 10)
+        : new Date(saidTime).toLocaleString().substring(11, 16)
+
+
+
+      setTextDate(" " + aaa)
+
+      
+
+
+
     }
 
   }, [latestMsgObj])
@@ -520,8 +562,21 @@ function NameText({ item, ...props }) {
               objText = obj.text
             }
 
-            if (obj.sender === userName) { objText = "\u2b05 " + objText }
+            if (obj.sender === userName) { objText = "\u2b05 " + objText; }
+            else if (item.name === "AllUser") {
+              objText = obj.sender + ": " + objText;
+            }
+
             setTextToShow(objText)
+       
+
+            const aaa = ((Date.now() - Date.parse(obj.createdAt)) >= (1000 * 60 * 60 * 24))
+              ? new Date(obj.createdAt).toLocaleString().substring(4, 10)
+              : new Date(obj.createdAt).toLocaleString().substring(11, 16)
+
+            setTextDate(" " + aaa)
+
+            //setTextDate(" "+formatDistanceToNow(new Date(obj.createdAt)).replace("about","").replace( " hours","h").replace(" minutes","m"))
           })
 
         }
@@ -533,7 +588,12 @@ function NameText({ item, ...props }) {
 
   return (
     <View style={{ justifyContent: "center" }}>
-      <Text style={{ fontSize: 20, }}>{item.name}</Text>
+
+      <View style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <Text style={{ fontSize: 20, }}>{item.name}</Text>
+        <Text style={{ fontSize: 15, color: "#a0a0a0" }}>{textDate}</Text>
+      </View>
+
       {Boolean(textToShow) && <Text style={{ fontSize: 18, color: "#666", lineHeight: 20, width: width - 100, overflow: "hidden" }} ellipsizeMode='tail' numberOfLines={1} >
         {textToShow}
       </Text>}

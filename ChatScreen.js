@@ -613,7 +613,7 @@ export function ChatScreen({ navigation, route, ...props }) {
         infiniteScroll={true}
         onLoadEarlier={function (a) {
 
-          console.log(Date.now())
+          //  console.log(Date.now())
           //  alert(Date.now())
         }}
 
@@ -1096,9 +1096,6 @@ export function ChatScreen({ navigation, route, ...props }) {
 
         renderMessageAudio={function (message) {
 
-          //const currentMessage = message.currentMessage
-
-          //   console.log(currentMessage.audio)
 
 
           return <AudioMessage
@@ -1201,6 +1198,9 @@ export function ChatScreen({ navigation, route, ...props }) {
 function AudioMessage({ message, item, userName, token, setMessages, canMoveDown, isText, isImage, isAudio, bgColor, bgColor2, ...props }) {
 
 
+
+
+
   const viewRef = useAnimatedRef()
   const [visible, setVisible] = useState(false)
   const [top, setTop] = useState(60)
@@ -1208,6 +1208,8 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
 
 
   const currentMessage = message.currentMessage
+  const audioUri = FileSystem.documentDirectory + "Audio/" + item.name + "/" + currentMessage.audioName
+
 
   //const audioMsg = useRef()
 
@@ -1256,6 +1258,9 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
   const loadAudio = useCallback(function () {
 
 
+
+
+
     audioSound.getStatusAsync().then(info => {
       if (!info.isLoaded) {
 
@@ -1265,7 +1270,7 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
           isPlaying.value = info.isPlaying
         });
 
-        audioSound.loadAsync({ uri: currentMessage.audio }, { shouldPlay: true }, true);
+        audioSound.loadAsync({ uri: audioUri }, { shouldPlay: true }, true);
       }
       else {
 
@@ -1277,7 +1282,7 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
             isPlaying.value = info.isPlaying
           });
 
-          audioSound.loadAsync({ uri: currentMessage.audio }, { shouldPlay: true }, true);
+          audioSound.loadAsync({ uri: audioUri }, { shouldPlay: true }, true);
 
         })
       }
@@ -1321,7 +1326,7 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
     }
     else {
 
-      FileSystem.getInfoAsync(currentMessage.audio).then(info => {
+      FileSystem.getInfoAsync(audioUri).then(info => {
 
         if (info.exists) {
 
@@ -1329,16 +1334,15 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
         }
         else {
           const uri = `${url}/api/audio/download/${currentMessage.mongooseID}`
-          const fileUri = currentMessage.audio
 
           const downloadResumable = FileSystem.createDownloadResumable(
-            uri, fileUri, { headers: { "x-auth-token": token } },
+            uri, audioUri, { headers: { "x-auth-token": token } },
             function ({ totalBytesExpectedToWrite, totalBytesWritten }) {
               //  console.log(totalBytesWritten + " / " + totalBytesExpectedToWrite)
             }
           );
 
-          downloadResumable.downloadAsync(uri, fileUri, { headers: { "x-auth-token": token } })
+          downloadResumable.downloadAsync(uri, audioUri, { headers: { "x-auth-token": token } })
             .then(({ status }) => {
               if (status == 200) {
                 setDisabled(false)
@@ -1971,9 +1975,9 @@ function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, i
               downloadFromLocal(currentMessage.image, setSnackMsg, setSnackBarHeight)
             }
             else if (isAudio) {
+              const audioUri = FileSystem.documentDirectory + "Audio/" + item.name + "/" + currentMessage.audioName
 
-
-              downloadFromLocal(currentMessage.audio, setSnackMsg, setSnackBarHeight)
+              downloadFromLocal(audioUri, setSnackMsg, setSnackBarHeight)
 
 
             }
@@ -2029,7 +2033,8 @@ function OverlayCompo({ token, visible, top, left, setVisible, currentMessage, i
                 const fileUri = folderUri + item.name + "---" + currentMessage.createdTime
                 FileSystem.deleteAsync(fileUri, { idempotent: true })
 
-                FileSystem.deleteAsync(currentMessage.audio, { idempotent: true })
+                const audioUri = FileSystem.documentDirectory + "Audio/" + item.name + "/" + currentMessage.audioName
+                FileSystem.deleteAsync(audioUri, { idempotent: true })
               }, 800);
             }
 
@@ -2078,7 +2083,7 @@ async function pickImage(setMessages, userName, item, socket, latestChattingMsg,
     const imageMsg = {
       _id: time,
       text: '',
-      createdAt: time,
+      createdAt: new Date(),
       createdTime: time,
       sender: userName,
       user: { _id: userName },
@@ -2146,7 +2151,7 @@ async function takePhoto(setMessages, userName, item, socket, latestChattingMsg,
     const imageMsg = {
       _id: time,
       text: '',
-      createdAt: time,
+      createdAt: new Date(),
       createdTime: time,
       sender: userName,
       user: { _id: userName },
@@ -2355,8 +2360,9 @@ function stopRecording({ messages, setMessages, userName, item, previousMessages
         uri = recording.getURI();
 
         audioName = uri.replace(/^.*[\\\/]/, '')
-        audioFolder = uri.replace(audioName, "") + item.name + "/"
+        audioFolder = FileSystem.documentDirectory + "Audio/" + item.name + "/"
         audioUri = audioFolder + audioName
+        
         recording = new Audio.Recording()
 
         return FileSystem.moveAsync({ from: uri, to: audioUri })
@@ -2374,11 +2380,14 @@ function stopRecording({ messages, setMessages, userName, item, previousMessages
       audioMsg = {
         _id: time,
         text: '',
-        createdAt: time,
+        createdAt: new Date(),
         createdTime: time,
         user: { _id: userName },
         sender: userName,
         audio: audioUri,
+        audioName: audioName,
+
+
         durationMillis: durationMillis,
         toPerson: item.name,
       }
