@@ -34,7 +34,9 @@ import * as FileSystem from 'expo-file-system';
 
 
 
-const url = "http://192.168.0.100";
+//const url = "http://192.168.0.100";
+const url = "https://noteschat.herokuapp.com";
+
 
 export default url
 
