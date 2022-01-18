@@ -1,5 +1,4 @@
 
-
 import DraggableFlatList, {
   ScaleDecorator,
   useOnCellActiveAnimation,
@@ -7,9 +6,10 @@ import DraggableFlatList, {
 
 } from "react-native-draggable-flatlist";
 
-
-
 import React, { useState, useRef, useEffect, useContext } from 'react';
+
+const { compareAsc, format, formatDistanceToNow, } = require("date-fns");
+const { zhCN } = require('date-fns/locale');
 
 import { createSharedElementStackNavigator } from 'react-navigation-shared-element';
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
@@ -57,31 +57,23 @@ import { SharedElement } from 'react-navigation-shared-element';
 import { Context } from "./ContextProvider";
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/core';
-
-
-
-
-
-
-
-
-
-
-
-
-
+import { getStatusBarHeight } from "react-native-status-bar-height";
 
 
 export function HomeScreen({ navigation, route }) {
 
 
-  const { peopleList, setPeopleList, token, userName, initialRouter, setInitialRouter, unreadCountObj, setUnreadCountObj, chattingUser, setLatestMsgObj, latestChattingMsg }
+  const { peopleList, setPeopleList, token, userName, initialRouter, setInitialRouter, unreadCountObj, setUnreadCountObj,
+
+    randomStr,
+    chattingUser, setLatestMsgObj, latestChattingMsg }
     = useContext(Context)
 
+
+  console.log(randomStr)
+
+
   useEffect(function () {
-
-    // setRefresh(pre => !pre);
-
     axios.get(`${url}/api/user/fetchuserlist`, { headers: { "x-auth-token": token } })
       .then(response => {
 
@@ -89,10 +81,15 @@ export function HomeScreen({ navigation, route }) {
           let arr = response.data //.filter(item => { return item.name !== userName })
           HomeScreen.sharedElements = null
 
+
+          // setPeopleList(pre => { return [...pre, ...arr.filter(item => { return item.name !== userName })] })
+
           setPeopleList(pre => {
             return uniqByKeepFirst([...pre, ...arr], function (item) { return item.name })
           })
           route.params && route.params.item.localImage && FileSystem.deleteAsync(route.params.item.localImage, { idempotent: true })
+
+
         }
         else if (initialRouter === "Home") {
           setPeopleList(pre => { return response.data })
@@ -106,47 +103,29 @@ export function HomeScreen({ navigation, route }) {
 
   useEffect(function () {
 
-
-
     const promiseArr = []
     peopleList.forEach((people, index) => {
       const sender = people.name
       const folderUri = FileSystem.documentDirectory + "UnreadFolder/" + sender + "/"
-
-      FileSystem.getInfoAsync(folderUri)
-        .then(info => {
-          if (!info.exists) {
-            FileSystem.makeDirectoryAsync(folderUri)
-            promiseArr.push(Promise.resolve({ [sender]: 0 }))
-          }
-          else {
-            promiseArr.push(FileSystem.readDirectoryAsync(folderUri).then(unreadArr => {
-
-              return { [sender]: unreadArr.length }
-            }))
-          }
-        }).then(function () {
-
-
-          if (index === peopleList.length - 1) {
-            Promise.all(promiseArr).then(objArr => {
-
-
-              let obj = {}
-              objArr.forEach(o => {
-                obj = { ...obj, ...o }
-              })
-              //  console.log("++++++++++++ " + userName + "++++", obj)
-              setUnreadCountObj(obj)
-            })
-
-          }
-
-        })
-
+      promiseArr.push(FileSystem.readDirectoryAsync(folderUri).then(unreadArr => {
+        return { [sender]: unreadArr.length }
+      }))
     })
 
+    Promise.all(promiseArr).then(objArr => {
+      let obj = {}
+      objArr.forEach(o => {
+        obj = { ...obj, ...o }
+      })
+      setUnreadCountObj(obj)
+    })
+
+
+
+
+
   }, [peopleList])
+
 
 
 
@@ -154,30 +133,85 @@ export function HomeScreen({ navigation, route }) {
 
 
     return (
-
       <ItemComponent item={item} drag={drag} isActive={isActive} index={index} />
-
     )
 
 
   };
 
+  const HoldItem = () => {
+
+    const frontStyle = useAnimatedStyle(() => {
+
+      return {
+        height: 80, width,
+        backgroundColor: "transparent",
+
+        position: "absolute",
+        borderBottomWidth: 1,
+        borderBottomColor: "#DDD",
+
+        top: 0,
+        left: 0,
+        zIndex: 100,
+
+        display: "flex",
+        flexDirection: "row",
+        alignItem: "center"
+
+      }
+    })
+
+
+    const item = route.params && route.params.item
+
+    if (initialRouter === "Reg" && Boolean(route.params) && (Boolean(item)) && (peopleList.length === 0)) {
+
+      return <View style={[frontStyle]} >
+
+        <SharedElement id={item.name}  >
+          {item.hasAvatar
+            ? <Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}?${randomStr}`, cache: "reload" }} resizeMode="cover"
+              style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }} />
+            : <SvgUri style={{ margin: 10, }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+          }
+        </SharedElement>
+
+
+        <NameText item={item} />
+      </View>
+    }
+    else {
+      return <></>
+    }
+
+
+  }
+
+
+
+
+
   return (
-    <DraggableFlatList
-      data={peopleList}
-      //  onDragEnd={({ data }) => setData(data)}
+    <>
+      {/* <HoldItem /> */}
+      <DraggableFlatList
+        data={peopleList}
+        //  onDragEnd={({ data }) => setData(data)}
 
-      onDragEnd={function ({ data }) {
+        onDragEnd={function ({ data }) {
 
-        axios.post(`${url}/api/user/resortuserlist`, data.map(item => item.name), { headers: { "x-auth-token": token } })
+          axios.post(`${url}/api/user/resortuserlist`, data.map(item => item.name), { headers: { "x-auth-token": token } })
 
-        setPeopleList(data)
-      }}
+          setPeopleList(data)
+        }}
 
 
-      keyExtractor={(item) => item.name}
-      renderItem={renderItem}
-    />
+        keyExtractor={(item) => item.name}
+        renderItem={renderItem}
+      />
+
+    </>
   );
 }
 
@@ -191,34 +225,63 @@ function ItemComponent({ isActive, drag, item, index, ...props }) {
   const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
 
 
+  const isRendered = useRef(false)
+
 
   const baseColor = useSharedValue("white")
-  const baseScale_ = useSharedValue(index === 0 ? 1 : 0)
-  const baseScale = useDerivedValue(() => {
-    return isActive ? 0.8 : baseScale_.value
-  })
 
-  const isRendered = useRef(false)
-  const duration = useDerivedValue(() => {
 
-    if (isRendered.current) {
-      return 200
+  const baseScale = useDerivedValue(() => { return isActive ? 0.8 : 1 })
+
+
+
+
+  const baseTranslateX_ = useDerivedValue(() => {
+    const temp = (height - 60) / 80
+    const amountCanList = Number(temp.toFixed(0)) + 1
+
+    if ((initialRouter === "Reg") && (index === 0)) {
+      return 0
     }
-    else if ((!isActive)) {
-      return Math.min(150 + index * 50, 500)
+    else if (isRendered.current) {
+      return 0
+    }
+    else if (index <= amountCanList) {
+      return width
     }
     else {
-      return 200
+      return 0
     }
+  })
+
+  const baseTranslateX = useDerivedValue(() => {
+    return baseTranslateX_.value
+  })
+
+
+
+  const duration = useDerivedValue(() => {
+    const temp = (height - 60) / 80
+    const amountCanList = Number(temp.toFixed(0)) + 1
+
+    if ((initialRouter === "Reg") && (index === 0)) {
+      return 0
+    }
+    else if (isRendered.current) {
+      return 0
+    }
+    else if (index > amountCanList) {
+      return 0
+    }
+    else {
+      return (index % amountCanList) * 100
+    }
+
+
 
   })
 
-  useEffect(function () {
-    if (isActive) {
-      isRendered.current = true
-    }
 
-  }, [isActive])
 
 
 
@@ -230,15 +293,28 @@ function ItemComponent({ isActive, drag, item, index, ...props }) {
 
       borderBottomWidth: 1,
       borderBottomColor: "#DDD",
-      transform: [{
-        scale: withTiming(baseScale.value, { duration: duration.value })
-      }],
+      transform: [
+        { scale: withTiming(baseScale.value) },
+
+        //{ translateX: withTiming(baseTranslateX.value, { duration: duration.value }) },
+        { translateX: withTiming(5, { duration: duration.value }) }
+      ],
       // overflow:"hidden",
 
     }
   })
 
-  const backOpacity = useDerivedValue(() => { return isActive ? 1 : 0 })
+  const backOpacity = useDerivedValue(() => {
+
+    // if (isActive) { return 1 }
+    // else {
+    //   return withTiming(interpolate(baseTranslateX.value, [width, 0], [1, 0]))
+    // }
+
+    return isActive ? 1 : 0
+
+
+  })
 
 
   const backViewStyle = useAnimatedStyle(() => {
@@ -258,9 +334,8 @@ function ItemComponent({ isActive, drag, item, index, ...props }) {
       left: 0,
       zIndex: 50,
 
-      opacity: withTiming(backOpacity.value, { duration: 500 }),
 
-      //opacity: 1// withTiming(backOpacity.value, { duration: 500 }),
+      opacity: withTiming(backOpacity.value, { duration: 500 }),
     }
   })
 
@@ -285,8 +360,6 @@ function ItemComponent({ isActive, drag, item, index, ...props }) {
       flexDirection: "row",
       alignItem: "center"
 
-
-
     }
   })
 
@@ -301,7 +374,7 @@ function ItemComponent({ isActive, drag, item, index, ...props }) {
           navigation.navigate('Chat', { item: item })
         }
         else if (item.name === "AllUser") {
-          navigation.navigate('ChatAll', { item: item })
+          navigation.navigate('ChatAll', { item: item, peopleList: peopleList })
         }
       }}
 
@@ -319,7 +392,8 @@ function ItemComponent({ isActive, drag, item, index, ...props }) {
 
 
       <View style={[baseStyle]} onLayout={function () {
-        baseScale_.value = 1
+        baseTranslateX.value = 0
+
       }}>
 
         <View style={[backViewStyle]} >
@@ -354,25 +428,44 @@ function ItemComponent({ isActive, drag, item, index, ...props }) {
             }}
           />
 
-          <SharedElement id={item.name}  >
-            {item.hasAvatar
-              ? <Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
-                style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }} />
-              : <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+
+
+          <Pressable
+            onPress={function () {
+              navigation.navigate('Profile', { item: item })
+            }}
+            onPressIn={function () {
+              baseColor.value = bgColor
+            }}
+            onPressOut={function () {
+              baseColor.value = "white"
+            }}
+
+          >
+            {item.name !== "AllUser" && <SharedElement id={item.name}  >
+              {item.hasAvatar
+                ? <Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
+                  style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }}
+
+
+                />
+                : <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+              }
+            </SharedElement>}
+
+            {item.name === "AllUser" &&
+
+              < Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
+                style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }}
+              />
+
+
             }
-          </SharedElement>
 
-
+          </Pressable>
           <NameText item={item} />
         </View>
-
-
       </View>
-
-
-
-
-
     </Pressable >
 
   );
@@ -384,10 +477,13 @@ function ItemComponent({ isActive, drag, item, index, ...props }) {
 function NameText({ item, ...props }) {
 
 
-  const { token, latestMsgObj, setLatestMsgObj, userName, latestChattingMsg } = useContext(Context)
+  const { token, latestMsgObj, setLatestMsgObj, userName, latestChattingMsg, initialRouter } = useContext(Context)
+
+
 
 
   const [textToShow, setTextToShow] = useState("")
+  const [textDate, setTextDate] = useState("")
 
   const navigation = useNavigation()
 
@@ -412,7 +508,23 @@ function NameText({ item, ...props }) {
 
       if ((sender === item.name) && (textToShow !== objText)) {
 
-        setTextToShow(objText)
+        //    setTextToShow(objText)
+
+
+
+
+        // const aaa = ((Date.now() - Date.parse(obj.createdAt)) >= 1000 * 60 * 60 * 24)
+        //   ? new Date(obj.createdAt).toLocaleString().substring(4, 10)
+        //   : new Date(obj.createdAt).toLocaleString().substring(11, 16)
+
+        //    setTextDate(" " + aaa)
+        setLatestMsgObj(pre => {
+
+          return { ...pre, [sender]: { content: objText, saidTime: obj.createdAt } }
+
+        })
+        latestChattingMsg.current = ""
+
       }
 
     }
@@ -426,8 +538,30 @@ function NameText({ item, ...props }) {
 
   useEffect(function () {
 
-    if ((latestMsgObj[item.name]) && (latestMsgObj[item.name] !== textToShow)) {
-      setTextToShow(latestMsgObj[item.name])
+    //if ((latestMsgObj[item.name]) && (latestMsgObj[item.name] !== textToShow)) {
+    if ((latestMsgObj[item.name])) {
+
+
+
+
+      setTextToShow(latestMsgObj[item.name].content)
+
+      const saidTime = Date.parse(latestMsgObj[item.name].saidTime)
+
+
+
+      const aaa = ((Date.now() - saidTime) >= (1000 * 60 * 60 * 24))
+        ? new Date(saidTime).toLocaleString().substring(4, 10)
+        : new Date(saidTime).toLocaleString().substring(11, 16)
+
+
+
+      setTextDate(" " + aaa)
+
+
+
+
+
     }
 
   }, [latestMsgObj])
@@ -438,13 +572,9 @@ function NameText({ item, ...props }) {
     if (!latestMsgObj[item.name]) {
 
       const folderUri = FileSystem.documentDirectory + "MessageFolder/" + item.name + "/"
-      const info = await FileSystem.getInfoAsync(folderUri)
-      if (!info.exists) {
-        await FileSystem.makeDirectoryAsync(folderUri);
-      }
+
       let lastName = ""
       FileSystem.readDirectoryAsync(folderUri).then(msgNameArr => {
-
 
         msgNameArr.sort()
         lastName = msgNameArr.pop()
@@ -452,7 +582,6 @@ function NameText({ item, ...props }) {
         if (lastName) {
           FileSystem.readAsStringAsync(folderUri + lastName).then(data => {
 
-            // console.log(data)
             const obj = JSON.parse(data)
 
             let objText = ""
@@ -467,10 +596,21 @@ function NameText({ item, ...props }) {
               objText = obj.text
             }
 
-            if (obj.sender === userName) { objText = "\u2b05 " + objText }
+            if (obj.sender === userName) { objText = "\u2b05 " + objText; }
+            else if (item.name === "AllUser") {
+              objText = obj.sender + ": " + objText;
+            }
+
             setTextToShow(objText)
 
-            //     Boolean(objText) && setLatestMsgObj(pre => { return { ...pre, [item.name]: objText } })
+
+            const aaa = ((Date.now() - Date.parse(obj.createdAt)) >= (1000 * 60 * 60 * 24))
+              ? new Date(obj.createdAt).toLocaleString().substring(4, 10)
+              : new Date(obj.createdAt).toLocaleString().substring(11, 16)
+
+            setTextDate(" " + aaa)
+
+            //setTextDate(" "+formatDistanceToNow(new Date(obj.createdAt)).replace("about","").replace( " hours","h").replace(" minutes","m"))
           })
 
         }
@@ -482,7 +622,12 @@ function NameText({ item, ...props }) {
 
   return (
     <View style={{ justifyContent: "center" }}>
-      <Text style={{ fontSize: 20, }}>{item.name}</Text>
+
+      <View style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <Text style={{ fontSize: 20, }}>{item.name}</Text>
+        <Text style={{ fontSize: 15, color: "#a0a0a0" }}>{textDate}</Text>
+      </View>
+
       {Boolean(textToShow) && <Text style={{ fontSize: 18, color: "#666", lineHeight: 20, width: width - 100, overflow: "hidden" }} ellipsizeMode='tail' numberOfLines={1} >
         {textToShow}
       </Text>}
@@ -502,6 +647,7 @@ function NameText({ item, ...props }) {
 
 HomeScreen.sharedElements = (route, otherRoute, showing) => {
 
+  //console.log(route)
   return route.params && route.params.item && route.params.item.name && [
     { id: route.params.item.name, animation: "move", resize: "auto", align: "left", }, // ...messageArr,   // turn back image transition off
   ]

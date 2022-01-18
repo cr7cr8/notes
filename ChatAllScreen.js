@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useContext, useCallback, useMemo } from 'react';
 
 import { createSharedElementStackNavigator } from 'react-navigation-shared-element';
 import { createStackNavigator, CardStyleInterpolators, TransitionPresets, HeaderTitle } from '@react-navigation/stack';
@@ -115,8 +115,41 @@ export function ChatAllScreen({ navigation, route, ...props }) {
   const [isOverLay, setIsOverLay] = useState(false)
 
 
+  const { peopleList, token, userName, socket, setSnackBarHeight, setSnackMsg, appState, unreadCountObj, setUnreadCountObj, latestMsgObj, latestChattingMsg,
 
-  const item = route.params.item
+
+    setLatestMsgObj } = useContext(Context)
+
+
+
+
+  useMemo(function () {
+
+    ChatAllScreen.sharedElements = (route, otherRoute, showing) => {
+
+
+
+      return peopleList.map(people => {
+        return {
+          id: people.name,
+          animation: "move", resize: "auto", align: "left",
+        }
+
+      })
+
+    }
+
+  }, [peopleList])
+
+
+
+
+
+
+
+
+  const item = peopleList.find(people => { return people.name === route.params.item.name })
+  // const item = route.params.item
   // let peopleList = route.params.peopleList
 
 
@@ -137,7 +170,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
   const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
   const bgColor2 = hexify(hexToRgbA2(avatarString.match(/#[a-zA-z0-9]*/)[0]))
 
-  const { peopleList, token, userName, socket, setSnackBarHeight, setSnackMsg, appState, unreadCountObj, setUnreadCountObj, latestMsgObj, latestChattingMsg, setLatestMsgObj } = useContext(Context)
+
   const [shouldDisplayNotice, setShouldDisplayNotice] = useState(true)
   const canMoveDown = useRef(true)
 
@@ -187,7 +220,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
             _id: msg.sender + "---" + Math.random(),
             avatar: () => {
               return sender.hasAvatar
-                ? <ImageV source={{ uri: `${url}/api/image/avatar/${sender.name}` }} resizeMode="cover"
+                ? <ImageV source={{ uri: `${url}/api/image/avatar/${sender.name}?${sender.randomStr}` }} resizeMode="cover"
                   style={{
                     position: "relative",
 
@@ -247,7 +280,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
           const msg = JSON.parse(content)
           const isLocal = Boolean(msg.isLocal)
 
-     
+
           let sender = peopleList.find(people => { return people.name === msg.sender })
           if (!sender) { sender = {}; sender.hasAvatar = false }
 
@@ -259,7 +292,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
           msg.user.avatar = () => {
             return sender.hasAvatar
-              ? <ImageV source={{ uri: `${url}/api/image/avatar/${msg.sender}` }} resizeMode="cover"
+              ? <ImageV source={{ uri: `${url}/api/image/avatar/${msg.sender}?${sender.randomStr}` }} resizeMode="cover"
                 style={{
                   position: "relative",
 
@@ -526,13 +559,35 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
     <>
 
-      <View style={{
-        alignItems: "center", justifyContent: "center", flexDirection: "row", backgroundColor: bgColor, padding: 0, elevation: 1, position: "relative",
-        height: titleBarHeight,
 
-      }}>
+      <Pressable
+        onPress={function () {
 
-        <SharedElement id={item.name} style={{ transform: [{ scale: 0.56 }], alignItems: "center", justifyContent: "center", }}   >
+
+
+          navigation.navigate('Profile', {
+            item: { name: item.name, hasAvatar: item.hasAvatar },
+            imagePos: 0,
+
+            messages: [
+              { image: `${url}/api/image/avatar/${item.name}?${item.randomStr}`, width: 60, height: 60, }
+
+            ],
+          })
+
+
+
+        }}
+      >
+
+
+        <View style={{
+          alignItems: "center", justifyContent: "center", flexDirection: "row", backgroundColor: bgColor, padding: 0, elevation: 1, position: "relative",
+          height: titleBarHeight,
+
+        }}>
+
+          {/* <SharedElement id={item.name} style={{ transform: [{ scale: 0.56 }],alignItems: "center", justifyContent: "center", }}   >
           {item.hasAvatar
             ? <ImageV source={{ uri: `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
               style={{
@@ -542,10 +597,34 @@ export function ChatAllScreen({ navigation, route, ...props }) {
               }} />
             : <SvgUri style={{ position: "relative", top: getStatusBarHeight() }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
           }
-        </SharedElement>
+        </SharedElement> */}
 
-        <Text style={{ position: "relative", fontSize: 20, top: getStatusBarHeight() / 2 }}>{item.name}</Text>
-      </View >
+          {peopleList.map(people => {
+
+            return (
+              <SharedElement
+                key={people.name}
+                id={people.name} style={{ transform: [{ scale: 0 }], position: "absolute", alignItems: "center", justifyContent: "center", }}   >
+                {people.hasAvatar
+                  ? <ImageV source={{ uri: `${url}/api/image/avatar/${people.name}/${people.randomStr}` }} resizeMode="cover"
+                    style={{
+                      position: "relative",
+                      top: getStatusBarHeight(),
+                      width: 60, height: 60, borderRadius: 1000
+                    }} />
+                  : <SvgUri style={{ position: "relative", top: getStatusBarHeight() }} width={60} height={60} svgXmlData={multiavatar(people.name)} />
+                }
+              </SharedElement>
+            )
+          })}
+
+
+
+
+
+          <Text style={{ position: "relative", fontSize: 20, top: getStatusBarHeight() / 2 }}>{item.name}</Text>
+        </View >
+      </Pressable>
 
 
 
@@ -623,7 +702,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
         infiniteScroll={true}
         onLoadEarlier={function (a) {
 
-      //    console.log(Date.now())
+          //    console.log(Date.now())
           //  alert(Date.now())
         }}
 
@@ -728,10 +807,44 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
 
         showUserAvatar={false}
+
+
+
+
+
+        onPressAvatar={function ({ currentMessage, ...props }) {
+
+          const avatarName = props._id.replace(/---.*/, "")
+
+          const people = peopleList.find(people => { return people.name === avatarName })
+
+          //     console.log(people.hasAvatar)
+
+          navigation.navigate('Profile', {
+            item: { name: people.name, hasAvatar: people.hasAvatar },
+            imagePos: 0,
+            messages: [
+              people.hasAvatar
+                ? { image: `${url}/api/image/avatar/${people.name}?${people.randomStr}`, width: 60, height: 60, }
+                : { image: "", isSvg: true }
+            ],
+            setMessages: "",
+          })
+
+          // navigation.navigate('Image', {
+          //   item: { name: route.params.item.name, hasAvatar: route.params.item.hasAvatar },
+          //   imagePos: imageMessageArr.findIndex(item => { return item._id === currentMessage._id }),
+          //   messages: imageMessageArr,
+          //   // setMessages,
+          // })
+
+
+
+
+        }}
         renderAvatar={function (props) {
 
           return (
-
 
 
             <AvatarIcon {...props}
@@ -1091,7 +1204,7 @@ export function ChatAllScreen({ navigation, route, ...props }) {
 
         renderMessageAudio={function (message) {
 
-        
+
 
 
           return <AudioMessage
@@ -1323,7 +1436,7 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
         }
         else {
           const uri = `${url}/api/audio/download/${currentMessage.mongooseID}`
-      
+
 
           const downloadResumable = FileSystem.createDownloadResumable(
             uri, audioUri, { headers: { "x-auth-token": token } },
@@ -1338,7 +1451,7 @@ function AudioMessage({ message, item, userName, token, setMessages, canMoveDown
                 setDisabled(false)
 
 
-             //   axios.get(`${url}/api/audio/delete/${currentMessage.mongooseID}`)
+                //   axios.get(`${url}/api/audio/delete/${currentMessage.mongooseID}`)
 
               }
               else {
@@ -2353,7 +2466,7 @@ function stopRecording({ messages, setMessages, userName, item, previousMessages
         audioName = uri.replace(/^.*[\\\/]/, '')
         audioFolder = FileSystem.documentDirectory + "Audio/" + item.name + "/"
         audioUri = audioFolder + audioName
-        
+
 
 
         recording = new Audio.Recording()
@@ -2378,7 +2491,7 @@ function stopRecording({ messages, setMessages, userName, item, previousMessages
         user: { _id: userName },
         sender: userName,
         audio: audioUri,
-        audioName:audioName,
+        audioName: audioName,
         durationMillis: durationMillis,
         toPerson: item.name,
       }
@@ -2512,18 +2625,20 @@ function cancelRecording() {
 }
 
 
-ChatAllScreen.sharedElements = (route, otherRoute, showing) => {
+// ChatAllScreen.sharedElements = (route, otherRoute, showing) => {
 
-  let messageArr = []
-  if (otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.messages) {
-    messageArr = otherRoute.route.params.messages.map(item => {
-      return { id: item._id, animation: "move", resize: "auto", align: "left" }
-    })
+//   console.log(route)
 
-  }
+//   let messageArr = []
+//   if (otherRoute && otherRoute.route && otherRoute.route.params && otherRoute.route.params.messages) {
+//     messageArr = otherRoute.route.params.messages.map(item => {
+//       return { id: item._id, animation: "move", resize: "auto", align: "left" }
+//     })
 
-  return [
-    { id: route.params.item.name, animation: "move", resize: "auto", align: "left", },
-    // ...messageArr,   // turn back shared image transition off
-  ]
-};
+//   }
+
+//   return [
+//     { id: route.params.item.name, animation: "move", resize: "auto", align: "left", },
+//     // ...messageArr,   // turn back shared image transition off
+//   ]
+// };

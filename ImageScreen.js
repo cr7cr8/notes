@@ -74,7 +74,11 @@ import * as ImagePicker from 'expo-image-picker';
 
 export function ImageScreen({ navigation, route, }) {
 
-  const item = route.params.item
+  const { peopleList } = useContext(Context)
+
+  const item = peopleList.find(people => { return people.name === route.params.item.name })
+
+  const avatarName = route.params.item.name
 
   const avatarString = multiavatar(item.name)
 
@@ -90,11 +94,11 @@ export function ImageScreen({ navigation, route, }) {
   return (
     <>
 
-      <View style={{  height: 0, backgroundColor: "yellow" }}>
+      <View style={{ height: 0, backgroundColor: "yellow" }}>
         <SharedElement id={item.name} style={{ transform: [{ scale: 0 }], borderRadius: 1000 }}   >
           {/* <SvgUri style={{ position: "relative", top: getStatusBarHeight() }} width={60} height={60} svgXmlData={avatarString} /> */}
           {item.hasAvatar
-            ? <Image source={{ uri: `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
+            ? <Image source={{ uri: `${url}/api/image/avatar/${item.name}?${item.randomStr}` }} resizeMode="cover"
               style={{
                 position: "relative",
                 top: getStatusBarHeight(),
@@ -135,9 +139,17 @@ export function ImageScreen({ navigation, route, }) {
             <ViewTransformer maxScale={2.5}
 
               arrLength={arr.length}
-              onLongPress={function () { Vibration.vibrate(50); setOverLayOn(true) }}
+              onLongPress={function () {
+                Vibration.vibrate(50);
 
-              key={item._id}
+                if (!item.isSvg) { setOverLayOn(true) }
+                else { alert("svg image downloading not supported") }
+
+
+
+              }}
+
+              key={item._id || index}
               onTransformStart={function () { }}
               onTransformGestureReleased={function ({ scale, translateX, translateY }) {
 
@@ -151,7 +163,13 @@ export function ImageScreen({ navigation, route, }) {
             >
 
               <SharedElement id={item._id}>
-                <Image source={{ uri: item.image, headers: { token: "hihihi" } }} resizeMode="contain" style={{ width, height }} />
+                {item.image
+                  ? <Image source={{ uri: item.image, headers: { token: "hihihi" } }} resizeMode="contain" style={{ width, height }} />
+                  : <SvgUri style={{ position: "relative", /*top: getStatusBarHeight() */ }} width={width} height={height} svgXmlData={multiavatar(avatarName)} />
+                }
+
+
+
               </SharedElement>
 
             </ViewTransformer>

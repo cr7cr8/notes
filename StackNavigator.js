@@ -12,6 +12,7 @@ import { RegScreen } from "./RegScreen";
 import { HomeScreen } from "./HomeScreen";
 import { ChatScreen } from "./ChatScreen";
 import { ChatAllScreen } from "./ChatAllScreen";
+import { ProfileScreen } from "./ProfileScreen";
 
 import { ImageScreen } from "./ImageScreen";
 import * as FileSystem from 'expo-file-system';
@@ -25,8 +26,8 @@ const Stack = createSharedElementStackNavigator();
 import { getStatusBarHeight } from 'react-native-status-bar-height';
 
 
-import { createFolder, deleteFolder } from "./config"
-
+import { createFolder, deleteFolder, hexToRgbA, hexify, } from "./config"
+import multiavatar from '@multiavatar/multiavatar';
 
 
 export default function StackNavigator() {
@@ -34,6 +35,12 @@ export default function StackNavigator() {
 
 
   const { token, setToken, notiToken, setNotiToken, userName, initialRouter, appState, peopleList } = useContext(Context)
+
+
+
+  const avatarString = multiavatar(userName||" ")
+  const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
+
 
   const navigation = useNavigation()
   useEffect(function () {
@@ -73,7 +80,7 @@ export default function StackNavigator() {
       headerStyle: {
         height: getStatusBarHeight() > 24 ? 70 : 60,
         elevation: 1,
-        backgroundColor: "wheat"
+        backgroundColor: bgColor
       },
 
 
@@ -140,7 +147,7 @@ export default function StackNavigator() {
 
 
 
-              
+
 
 
 
@@ -188,7 +195,7 @@ export default function StackNavigator() {
                   await deleteFolder(route.params.item.name)
                   await createFolder(route.params.item.name)
 
-            
+
 
                 }} title="folder" />
 
@@ -201,7 +208,7 @@ export default function StackNavigator() {
         <Stack.Screen name="ChatAll"
 
           component={ChatAllScreen}
-          options={function ({ navigation, router }) {
+          options={function ({ navigation, route }) {
             return {
               // headerRight: function(props) {     return <Button onPress={() => { }} title={"hihi"} />    },
               // headerShown:false, 
@@ -219,7 +226,7 @@ export default function StackNavigator() {
                   await deleteFolder("AllUser")
                   await createFolder("AllUser")
 
-                
+
 
 
                 }} title="allchat" />
@@ -229,23 +236,49 @@ export default function StackNavigator() {
           }}
         />
 
+        <Stack.Screen name="Profile"
+          component={ProfileScreen}
+          options={function ({ navigaion, route }) {
 
-
-
-
-
-        <Stack.Screen name="Image"
-          component={ImageScreen}
-          options={function ({ navigaion, router }) {
+            const avatarString = multiavatar(route.params.item.name)
+            const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
 
             return {
               headerShown: true,
-              headerTitle: function (props) { return <></> },
-              headerTintColor: 'transparent',
-              headerTransparent: true,
+
+              headerStyle: {
+                height: getStatusBarHeight() > 24 ? 70 : 60,
+                elevation: 0,
+                backgroundColor: bgColor
+              },
+
+
+              header: (props) => <Header {...props} />,
+              headerTitle:  function (props) { return <Text style={{fontSize:20}}>{route.params.item.name}</Text> },
+        //      headerTintColor: 'transparent',
+       //       headerTransparent: true,
 
             }
           }}
+        />
+
+
+
+
+        < Stack.Screen name="Image"
+          component={ImageScreen}
+          options={
+            function ({ navigaion, route }) {
+
+              return {
+                headerShown: true,
+                headerTitle: function (props) { return <></> },
+                headerTintColor: 'transparent',
+                headerTransparent: true,
+
+              }
+            }
+          }
 
         />
 

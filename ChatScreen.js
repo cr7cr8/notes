@@ -110,17 +110,66 @@ import { Path } from 'react-native-svg';
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 let recording = new Audio.Recording();
 let audioSound = new Audio.Sound();
 
 export function ChatScreen({ navigation, route, ...props }) {
 
 
+
+
   const [isOverLay, setIsOverLay] = useState(false)
 
+  const { token, userName, socket, setSnackBarHeight, setSnackMsg, appState, unreadCountObj, setUnreadCountObj, latestMsgObj,
+    peopleList,
+  
+    latestChattingMsg, setLatestMsgObj } = useContext(Context)
 
 
-  const item = route.params.item
+
+
+  const item = peopleList.find(people => { return people.name === route.params.item.name })
+
+
   //console.log(item)
   // console.log(Device.hasNotch())
 
@@ -138,7 +187,7 @@ export function ChatScreen({ navigation, route, ...props }) {
   const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
   const bgColor2 = hexify(hexToRgbA2(avatarString.match(/#[a-zA-z0-9]*/)[0]))
 
-  const { token, userName, socket, setSnackBarHeight, setSnackMsg, appState, unreadCountObj, setUnreadCountObj, latestMsgObj, latestChattingMsg, setLatestMsgObj } = useContext(Context)
+
   const [shouldDisplayNotice, setShouldDisplayNotice] = useState(true)
   const canMoveDown = useRef(true)
 
@@ -180,7 +229,7 @@ export function ChatScreen({ navigation, route, ...props }) {
             _id: msg.sender + "---" + Math.random(),
             avatar: () => {
               return item.hasAvatar
-                ? <ImageV source={{ uri: `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
+                ? <ImageV source={{ uri: `${url}/api/image/avatar/${item.name}?${item.randomStr}` }} resizeMode="cover"
                   style={{
                     position: "relative",
 
@@ -256,7 +305,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
           msg.user.avatar = () => {
             return item.hasAvatar
-              ? <ImageV source={{ uri: `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
+              ? <ImageV source={{ uri: `${url}/api/image/avatar/${item.name}?${item.randomStr}` }} resizeMode="cover"
                 style={{
                   position: "relative",
 
@@ -519,32 +568,103 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return (
 
     <>
 
-      <View style={{
-        alignItems: "center", justifyContent: "center", flexDirection: "row", backgroundColor: bgColor, padding: 0, elevation: 1, position: "relative",
-        height: titleBarHeight,
 
-      }}>
-
-        <SharedElement id={item.name} style={{ transform: [{ scale: 0.56 }], alignItems: "center", justifyContent: "center", }}   >
-          {item.hasAvatar
-            ? <ImageV source={{ uri: `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
-              style={{
-                position: "relative",
-                top: getStatusBarHeight(),
-                width: 60, height: 60, borderRadius: 1000
-              }} />
-            : <SvgUri style={{ position: "relative", top: getStatusBarHeight() }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
-          }
-        </SharedElement>
-
-        <Text style={{ position: "relative", fontSize: 20, top: getStatusBarHeight() / 2 }}>{item.name}</Text>
-      </View >
+      <Pressable
+        onPress={function () {
 
 
+
+          navigation.navigate('Profile', {
+            item: { name: item.name, hasAvatar: item.hasAvatar },
+            imagePos: 0,
+
+
+            messages: [
+              item.hasAvatar
+                ? { image: `${url}/api/image/avatar/${item.name}?${item.randomStr}`, width: 60, height: 60, }
+                : { image: "", isSvg: true }
+            ],
+          })
+
+
+
+        }}
+      >
+
+        <View style={{
+          alignItems: "center", justifyContent: "center", flexDirection: "row", backgroundColor: bgColor, padding: 0, elevation: 1, position: "relative",
+          height: titleBarHeight,
+
+        }}>
+
+
+          <SharedElement id={item.name} style={{ transform: [{ scale: 0.56 }], alignItems: "center", justifyContent: "center", }}   >
+            {item.hasAvatar
+              ? <ImageV source={{ uri: `${url}/api/image/avatar/${item.name}?${item.randomStr}` }} resizeMode="cover"
+                style={{
+                  position: "relative",
+                  top: getStatusBarHeight(),
+                  width: 60, height: 60, borderRadius: 1000
+                }} />
+              : <SvgUri style={{ position: "relative", top: getStatusBarHeight() }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+            }
+          </SharedElement>
+
+
+          <Text style={{ position: "relative", fontSize: 20, top: getStatusBarHeight() / 2 }}>{item.name}</Text>
+        </View >
+
+      </Pressable>
 
 
       {/* <View style={[bodyStyle]} > */}
@@ -718,6 +838,27 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
         showUserAvatar={false}
+
+        onPressAvatar={function ({ currentMessage, ...props }) {
+
+          const avatarName = props._id.replace(/---.*/, "")
+
+          navigation.navigate('Profile', {
+            item: { name: avatarName, hasAvatar: item.hasAvatar },
+            imagePos: 0,
+
+            messages: [
+              item.hasAvatar
+                ? { image: `${url}/api/image/avatar/${item.name}?${item.randomStr}`, width: 60, height: 60, }
+                : { image: "", isSvg: true }
+            ],
+
+
+            setMessages: "",
+          })
+
+        }}
+
         renderAvatar={function (props) {
 
           return (
@@ -725,6 +866,9 @@ export function ChatScreen({ navigation, route, ...props }) {
 
 
             <AvatarIcon {...props}
+
+
+
               containerStyle={{
                 left: {
                   marginRight: 0,
@@ -2362,7 +2506,7 @@ function stopRecording({ messages, setMessages, userName, item, previousMessages
         audioName = uri.replace(/^.*[\\\/]/, '')
         audioFolder = FileSystem.documentDirectory + "Audio/" + item.name + "/"
         audioUri = audioFolder + audioName
-        
+
         recording = new Audio.Recording()
 
         return FileSystem.moveAsync({ from: uri, to: audioUri })

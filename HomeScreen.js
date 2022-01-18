@@ -6,7 +6,7 @@ import DraggableFlatList, {
 
 } from "react-native-draggable-flatlist";
 
-import React, { useState, useRef, useEffect, useContext } from 'react';
+import React, { useState, useRef, useEffect, useContext, useMemo } from 'react';
 
 const { compareAsc, format, formatDistanceToNow, } = require("date-fns");
 const { zhCN } = require('date-fns/locale');
@@ -63,8 +63,26 @@ import { getStatusBarHeight } from "react-native-status-bar-height";
 export function HomeScreen({ navigation, route }) {
 
 
-  const { peopleList, setPeopleList, token, userName, initialRouter, setInitialRouter, unreadCountObj, setUnreadCountObj, chattingUser, setLatestMsgObj, latestChattingMsg }
+  const { peopleList, setPeopleList, token, userName, initialRouter, setInitialRouter, unreadCountObj, setUnreadCountObj,
+
+    chattingUser, setLatestMsgObj, latestChattingMsg }
     = useContext(Context)
+
+
+  // useMemo(function () {
+  //   HomeScreen.sharedElements = (route, otherRoute, showing) => {
+  //     return peopleList.map(people => {
+  //       return {
+  //         id: people.name,
+  //         animation: "move", resize: "auto", align: "left",
+  //       }
+  //     })
+  //   }
+  // })
+
+
+
+
 
   useEffect(function () {
     axios.get(`${url}/api/user/fetchuserlist`, { headers: { "x-auth-token": token } })
@@ -132,56 +150,6 @@ export function HomeScreen({ navigation, route }) {
 
   };
 
-  const HoldItem = () => {
-
-    const frontStyle = useAnimatedStyle(() => {
-
-      return {
-        height: 80, width,
-        backgroundColor: "transparent",
-
-        position: "absolute",
-        borderBottomWidth: 1,
-        borderBottomColor: "#DDD",
-
-        top: 0,
-        left: 0,
-        zIndex: 100,
-
-        display: "flex",
-        flexDirection: "row",
-        alignItem: "center"
-
-      }
-    })
-
-
-    const item = route.params && route.params.item
-
-    if (initialRouter === "Reg" && Boolean(route.params) && (Boolean(item)) && (peopleList.length === 0)) {
-
-      return <View style={[frontStyle]} >
-
-        <SharedElement id={item.name}  >
-          {item.hasAvatar
-            ? <Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
-              style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }} />
-            : <SvgUri style={{ margin: 10, }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
-          }
-        </SharedElement>
-
-
-        <NameText item={item} />
-      </View>
-    }
-    else {
-      return <></>
-    }
-
-
-  }
-
-
 
 
 
@@ -211,8 +179,10 @@ export function HomeScreen({ navigation, route }) {
 function ItemComponent({ isActive, drag, item, index, ...props }) {
 
   const navigation = useNavigation()
-  const { peopleList, setPeopleList, token, userName, initialRouter, setInitialRouter, unreadCountObj, setUnreadCountObj, chattingUser, setLatestMsgObj, latestChattingMsg }
+  const { peopleList, randomStr, setPeopleList, token, userName, initialRouter, setInitialRouter, unreadCountObj, setUnreadCountObj, chattingUser, setLatestMsgObj, latestChattingMsg }
     = useContext(Context)
+
+
 
   const avatarString = multiavatar(item.name)
   const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
@@ -421,14 +391,41 @@ function ItemComponent({ isActive, drag, item, index, ...props }) {
             }}
           />
 
-          <SharedElement id={item.name}  >
-            {item.hasAvatar
-              ? <Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}` }} resizeMode="cover"
-                style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }} />
-              : <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
-            }
-          </SharedElement>
 
+
+          <Pressable
+            onPress={function () {
+              navigation.navigate('Profile', { item: item })
+            }}
+            onPressIn={function () {
+              baseColor.value = bgColor
+            }}
+            onPressOut={function () {
+              baseColor.value = "white"
+            }}
+
+          >
+            {item.name !== "AllUser" && <SharedElement id={item.name}  >
+              {item.hasAvatar
+                ? <Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}?${item.randomStr}` }} resizeMode="cover"
+                  style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }}
+
+
+                />
+                : <SvgUri style={{ margin: 10 }} width={60} height={60} svgXmlData={multiavatar(item.name)} />
+              }
+            </SharedElement>}
+
+            {item.name === "AllUser" &&
+
+              < Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}?${item.randomStr}` }} resizeMode="cover"
+                style={{ margin: 10, width: 60, height: 60, borderRadius: 1000 }}
+              />
+
+
+            }
+
+          </Pressable>
           <NameText item={item} />
         </View>
       </View>
@@ -474,7 +471,7 @@ function NameText({ item, ...props }) {
 
       if ((sender === item.name) && (textToShow !== objText)) {
 
-    //    setTextToShow(objText)
+        //    setTextToShow(objText)
 
 
 
@@ -483,13 +480,13 @@ function NameText({ item, ...props }) {
         //   ? new Date(obj.createdAt).toLocaleString().substring(4, 10)
         //   : new Date(obj.createdAt).toLocaleString().substring(11, 16)
 
-    //    setTextDate(" " + aaa)
+        //    setTextDate(" " + aaa)
         setLatestMsgObj(pre => {
 
-          return { ...pre, [sender]: { content: objText, saidTime:obj.createdAt  } }
-  
+          return { ...pre, [sender]: { content: objText, saidTime: obj.createdAt } }
+
         })
-        latestChattingMsg.current=""
+        latestChattingMsg.current = ""
 
       }
 
@@ -507,7 +504,7 @@ function NameText({ item, ...props }) {
     //if ((latestMsgObj[item.name]) && (latestMsgObj[item.name] !== textToShow)) {
     if ((latestMsgObj[item.name])) {
 
-     
+
 
 
       setTextToShow(latestMsgObj[item.name].content)
@@ -524,7 +521,7 @@ function NameText({ item, ...props }) {
 
       setTextDate(" " + aaa)
 
-      
+
 
 
 
@@ -568,7 +565,7 @@ function NameText({ item, ...props }) {
             }
 
             setTextToShow(objText)
-       
+
 
             const aaa = ((Date.now() - Date.parse(obj.createdAt)) >= (1000 * 60 * 60 * 24))
               ? new Date(obj.createdAt).toLocaleString().substring(4, 10)
@@ -613,7 +610,7 @@ function NameText({ item, ...props }) {
 
 HomeScreen.sharedElements = (route, otherRoute, showing) => {
 
-  //console.log(route)
+ // console.log("====+++",route)
   return route.params && route.params.item && route.params.item.name && [
     { id: route.params.item.name, animation: "move", resize: "auto", align: "left", }, // ...messageArr,   // turn back image transition off
   ]

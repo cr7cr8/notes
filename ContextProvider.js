@@ -86,6 +86,8 @@ export default function ContextProvider(props) {
   const [peopleList, setPeopleList] = useState(list)
   const [latestMsgObj, setLatestMsgObj] = useState({})
 
+
+
   const [unreadCountObj, setUnreadCountObj] = useState({})
 
 
@@ -110,7 +112,7 @@ export default function ContextProvider(props) {
   const chattingUser = useRef("")
   const latestChattingMsg = useRef("")
 
-
+ 
 
   useEffect(function () {
 
@@ -210,6 +212,8 @@ export default function ContextProvider(props) {
 
     initialRouter,
     setInitialRouter,
+
+  
 
   }}>
     {props.children}
