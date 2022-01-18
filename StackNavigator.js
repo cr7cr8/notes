@@ -38,7 +38,7 @@ export default function StackNavigator() {
 
 
 
-  const avatarString = multiavatar(userName||" ")
+  const avatarString = multiavatar(userName || " ")
   const bgColor = hexify(hexToRgbA(avatarString.match(/#[a-zA-z0-9]*/)[0]))
 
 
@@ -136,32 +136,28 @@ export default function StackNavigator() {
               header: (props) => <Header {...props} />,
 
               //  headerLeft: () => null,
-              headerRight: () => (<Button onPress={async () => {
+              // headerRight: () => (
+              //   <Button
+              //     title={userName}
+              //     onPress={async () => {
 
-                AsyncStorage.removeItem("token").then(function () {
-                  setToken(null)
-                })
-                AsyncStorage.removeItem("notiToken").then(function () {
-                  setNotiToken(null)
-                })
+              //       AsyncStorage.removeItem("token").then(function () {
+              //         setToken(null)
+              //       })
+              //       AsyncStorage.removeItem("notiToken").then(function () {
+              //         setNotiToken(null)
+              //       })
 
+              //       await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
+              //       await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
+              //       await FileSystem.deleteAsync(FileSystem.cacheDirectory + "ImagePicker/", { idempotent: true })
+              //       await FileSystem.deleteAsync(FileSystem.documentDirectory + "Audio/", { idempotent: true })
 
-
-
-
-
-
-                await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
-                await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
-                await FileSystem.deleteAsync(FileSystem.cacheDirectory + "ImagePicker/", { idempotent: true })
-                await FileSystem.deleteAsync(FileSystem.documentDirectory + "Audio/", { idempotent: true })
-
-
-
-
-
-
-              }} title={userName} />), // color="#fff" 
+              //     }}
+              //   />
+              // ), 
+              
+              // color="#fff" 
 
               headerBackTitle: "Aaaa",
 
@@ -189,17 +185,17 @@ export default function StackNavigator() {
               //   headerBackAccessibilityLabel="ee",
               gestureEnabled: false,
               headerTransparent: true,
-              headerRight: () => {
-                return <Button onPress={async function () {
+              // headerRight: () => {
+              //   return <Button onPress={async function () {
 
-                  await deleteFolder(route.params.item.name)
-                  await createFolder(route.params.item.name)
+              //     await deleteFolder(route.params.item.name)
+              //     await createFolder(route.params.item.name)
 
 
 
-                }} title="folder" />
+              //   }} title="folder" />
 
-              },
+              // },
             }
           }}
         />
@@ -219,19 +215,19 @@ export default function StackNavigator() {
               //   headerBackAccessibilityLabel="ee",
               gestureEnabled: false,
               headerTransparent: true,
-              headerRight: () => {
-                return <Button onPress={async function () {
+              // headerRight: () => {
+              //   return <Button onPress={async function () {
 
 
-                  await deleteFolder("AllUser")
-                  await createFolder("AllUser")
+              //     await deleteFolder("AllUser")
+              //     await createFolder("AllUser")
 
 
 
 
-                }} title="allchat" />
+              //   }} title="allchat" />
 
-              },
+              // },
             }
           }}
         />
@@ -254,9 +250,9 @@ export default function StackNavigator() {
 
 
               header: (props) => <Header {...props} />,
-              headerTitle:  function (props) { return <Text style={{fontSize:20}}>{route.params.item.name}</Text> },
-        //      headerTintColor: 'transparent',
-       //       headerTransparent: true,
+              headerTitle: function (props) { return <Text style={{ fontSize: 20 }}>{route.params.item.name}</Text> },
+              //      headerTintColor: 'transparent',
+              //       headerTransparent: true,
 
             }
           }}

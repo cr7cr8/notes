@@ -69,20 +69,7 @@ export function HomeScreen({ navigation, route }) {
     = useContext(Context)
 
 
-  // useMemo(function () {
-  //   HomeScreen.sharedElements = (route, otherRoute, showing) => {
-  //     return peopleList.map(people => {
-  //       return {
-  //         id: people.name,
-  //         animation: "move", resize: "auto", align: "left",
-  //       }
-  //     })
-  //   }
-  // })
-
-
-
-
+  
 
   useEffect(function () {
     axios.get(`${url}/api/user/fetchuserlist`, { headers: { "x-auth-token": token } })
@@ -259,8 +246,8 @@ function ItemComponent({ isActive, drag, item, index, ...props }) {
       transform: [
         { scale: withTiming(baseScale.value) },
 
-        //{ translateX: withTiming(baseTranslateX.value, { duration: duration.value }) },
-        { translateX: withTiming(5, { duration: duration.value }) }
+        { translateX: withTiming(baseTranslateX.value, { duration: duration.value }) },
+        //{ translateX: withTiming(5, { duration: duration.value }) }
       ],
       // overflow:"hidden",
 
