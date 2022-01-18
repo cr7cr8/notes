@@ -161,7 +161,7 @@ export function ChatScreen({ navigation, route, ...props }) {
 
   const { token, userName, socket, setSnackBarHeight, setSnackMsg, appState, unreadCountObj, setUnreadCountObj, latestMsgObj,
     peopleList,
-  
+
     latestChattingMsg, setLatestMsgObj } = useContext(Context)
 
 
@@ -1140,10 +1140,14 @@ export function ChatScreen({ navigation, route, ...props }) {
               if (pre.length >= 20) {
                 previousMessages.current = previousMessages.current.concat(pre.slice(0, pre.length - 10))
                 if (!shouldDisplayNotice && (previousMessages.current.length > 0)) { setShouldDisplayNotice(true) }
-                return GiftedChat.prepend(pre.slice(-10), messages_.map(msg => ({ ...msg, pending: true, sent: true, received: true })))
+                  return GiftedChat.prepend(pre.slice(-10), messages_.map(msg => ({ ...msg, pending: true, sent: true, received: true })))
+
+                //return GiftedChat.prepend(pre.slice(-10), messages_.map(msg => ({ ...msg, })))
               }
               else {
-                return GiftedChat.prepend(pre, messages_.map(msg => ({ ...msg, pending: true, sent: true, received: true })))
+                  return GiftedChat.prepend(pre, messages_.map(msg => ({ ...msg, pending: true, sent: true, received: true })))
+                //return GiftedChat.prepend(pre, messages_.map(msg => ({ ...msg, })))
+
               }
 
             })
