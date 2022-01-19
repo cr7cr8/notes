@@ -29,6 +29,10 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "notification": {
+      "icon": "./images/favicon.png",
+      "androidMode": "default"
     }
   }
 }
