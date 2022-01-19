@@ -136,27 +136,27 @@ export default function StackNavigator() {
               header: (props) => <Header {...props} />,
 
               //  headerLeft: () => null,
-              // headerRight: () => (
-              //   <Button
-              //     title={userName}
-              //     onPress={async () => {
+              headerRight: () => (
+                <Button
+                  title={userName}
+                  onPress={async () => {
 
-              //       AsyncStorage.removeItem("token").then(function () {
-              //         setToken(null)
-              //       })
-              //       AsyncStorage.removeItem("notiToken").then(function () {
-              //         setNotiToken(null)
-              //       })
+                    AsyncStorage.removeItem("token").then(function () {
+                      setToken(null)
+                    })
+                    AsyncStorage.removeItem("notiToken").then(function () {
+                      setNotiToken(null)
+                    })
 
-              //       await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
-              //       await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
-              //       await FileSystem.deleteAsync(FileSystem.cacheDirectory + "ImagePicker/", { idempotent: true })
-              //       await FileSystem.deleteAsync(FileSystem.documentDirectory + "Audio/", { idempotent: true })
+                    await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
+                    await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
+                    await FileSystem.deleteAsync(FileSystem.cacheDirectory + "ImagePicker/", { idempotent: true })
+                    await FileSystem.deleteAsync(FileSystem.documentDirectory + "Audio/", { idempotent: true })
 
-              //     }}
-              //   />
-              // ), 
-              
+                  }}
+                />
+              ),
+
               // color="#fff" 
 
               headerBackTitle: "Aaaa",
