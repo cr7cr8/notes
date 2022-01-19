@@ -139,7 +139,6 @@ export default function ContextProvider(props) {
     axios.get(`${url}/api/user/fetchuserlist2`, { headers: { "x-auth-token": token } })
       .then(response => {
 
-
         FileSystem.getInfoAsync(FileSystem.documentDirectory + "ImagePicker/")
           .then(({ exists }) => {
             if (!exists) {
@@ -147,14 +146,10 @@ export default function ContextProvider(props) {
             }
           })
           .catch(err => console.log("ContextProvider.js ==>>", err))
-
-
+          
         response.data.forEach(name => {
           createFolder(name)
         })
-
-
-
       })
 
   }, [])

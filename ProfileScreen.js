@@ -6,7 +6,7 @@ const { zhCN } = require('date-fns/locale');
 
 import {
   StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Pressable, TouchableHighlight, TouchableWithoutFeedback,
-  Vibration, TextInput, Alert, Keyboard,
+  Vibration, TextInput, Alert, Keyboard, AsyncStorage,
 } from 'react-native';
 
 import ReAnimated, {
@@ -69,7 +69,7 @@ import { CommonActions } from '@react-navigation/native';
 
 export function ProfileScreen({ navigation, route }) {
 
-  const { token, userName, setSnackMsg, setSnackBarHeight, peopleList, setPeopleList, } = useContext(Context)
+  const { token, userName, setSnackMsg, setSnackBarHeight, peopleList, setPeopleList, socket, setToken } = useContext(Context)
 
 
   const [isOverLay, setIsOverLay] = useState(false)
@@ -173,19 +173,6 @@ export function ProfileScreen({ navigation, route }) {
 
   })
 
-
-
-
-
-
-
-
-
-
-
-
-
-
   const btnElevation = useSharedValue(3)
   const deleteBtnStyle = useAnimatedStyle(() => {
 
@@ -206,38 +193,38 @@ export function ProfileScreen({ navigation, route }) {
 
   })
 
-
   const [numberOfFiles, setNumberOfFiles] = useState(0)
   const btnMessage = `Hold to delete ${numberOfFiles} messages`
   useEffect(function () {
-
-    const name = item.name
-
     axios.get(`${url}/api/user/getdescription/${item.name}`, { headers: { "x-auth-token": token } }).then(response => {
-
       // console.log(response.data)
       setDescription(response.data)
-
     })
-
 
     // FileSystem.getInfoAsync(FileSystem.documentDirectory + "MessageFolder/" + name + "/")
     // .then((obj) => {
     // console.log(obj)
     // })
-
-
-
-
-
   }, [])
-
-
-
-
-
-
   const alertMessage = `Sure to delete ${item.name}'s messages ?`
+
+  const deleteAccountStyle = useAnimatedStyle(() => {
+
+    return {
+      elevation: withTiming(btnElevation.value),
+      position: "absolute", bottom: 80, alignSelf: "center",
+      width: width - 30,
+      height: 50,
+      backgroundColor: bgColor,
+
+    }
+
+  })
+
+
+
+
+
 
 
 
@@ -297,31 +284,80 @@ export function ProfileScreen({ navigation, route }) {
 
 
           }}
-
-
-
         />
         }
 
-        <Pressable onPress={function () {
+        <TouchableOpacity
+          {...isSelf && {
+            onLongPress: function () {
+
+              Alert.alert("Confirm", "Sure to close the Account",
+                [{
+                  text: "Cancel",
+                  onPress: () => { },
+                  style: "cancel"
+                },
+                {
+                  text: "YES",
+                  onPress: async () => {
+
+                    socket.close()
+
+                    await FileSystem.deleteAsync(FileSystem.documentDirectory + "MessageFolder/", { idempotent: true })
+                    await FileSystem.deleteAsync(FileSystem.documentDirectory + "UnreadFolder/", { idempotent: true })
+                    await FileSystem.deleteAsync(FileSystem.cacheDirectory + "ImagePicker/", { idempotent: true })
+                    await FileSystem.deleteAsync(FileSystem.documentDirectory + "Audio/", { idempotent: true })
+
+                    axios.get(`${url}/api/user/fetchuserlist2`, { headers: { "x-auth-token": token } })
+                      .then(response => {
+
+                        FileSystem.getInfoAsync(FileSystem.documentDirectory + "ImagePicker/")
+                          .then(({ exists }) => {
+                            if (!exists) {
+                              return FileSystem.makeDirectoryAsync(FileSystem.documentDirectory + "ImagePicker/", { intermediates: true })
+                            }
+                          })
+                          .catch(err => console.log("ContextProvider.js ==>>", err))
+
+                        response.data.forEach(name => {
+                          createFolder(name)
+                        })
+
+                        setToken(null)
+                        navigation.reset({
+                          index: 0,
+                          routes: [
+                            {
+                              name: 'Reg',
+                              params: null,
+                            },
+                          ],
+                        })
+
+                      })
+                    //BackHandler.exitApp()
+                  }
+
+                }]);
+              return true
+            }
+          }}
 
 
+          onPress={function () {
 
-          navigation.navigate('Image', {
-            item: { name: item.name, hasAvatar: item.hasAvatar },
-            imagePos: 0,
+            navigation.navigate('Image', {
+              item: { name: item.name, hasAvatar: item.hasAvatar },
+              imagePos: 0,
+              messages: [
+                item.hasAvatar
+                  ? { image: `${url}/api/image/avatar/${item.name}?${item.randomStr}`, width: 60, height: 60, }
+                  : { image: "", isSvg: true }
+              ],
+              setMessages: "",
+            })
 
-            messages: [
-              item.hasAvatar
-                ? { image: `${url}/api/image/avatar/${item.name}?${item.randomStr}`, width: 60, height: 60, }
-                : { image: "", isSvg: true }
-            ],
-
-
-            setMessages: "",
-          })
-
-        }}>
+          }}>
 
 
           {item.name !== "AllUser" && <SharedElement id={item.name} style={{ transform: [{ scale: 1 }], alignItems: "center", justifyContent: "center", }}   >
@@ -337,15 +373,11 @@ export function ProfileScreen({ navigation, route }) {
           </SharedElement>
           }
           {item.name === "AllUser" &&
-
-            < Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}?${item.randomStr}` }} resizeMode="cover"
+            <Image source={{ uri: item.localImage || `${url}/api/image/avatar/${item.name}?${item.randomStr}` }} resizeMode="cover"
               style={{ width: 100, height: 100, borderRadius: 1000 }}
             />
-
-
           }
-
-        </Pressable>
+        </TouchableOpacity>
 
 
         {isSelf && <Button title=""
@@ -558,14 +590,7 @@ export function ProfileScreen({ navigation, route }) {
           color: bgColor2,
         }}
         onPress={function () {
-
-
-
-
           inputHeight.value = inputHeight.value === 0 ? 180 : 0
-
-
-
         }}
 
       />
@@ -666,6 +691,8 @@ export function ProfileScreen({ navigation, route }) {
         />
       </View>
       }
+
+
 
 
       {isSelf && <Overlay isVisible={isOverLay} fullScreen={true} overlayStyle={{ opacity: 0.5, display: "flex", justifyContent: "center", alignItems: "center" }}  >
@@ -808,9 +835,7 @@ async function takePhoto({ item, setAvatar, token, setPeopleList, setIsOverLay }
 
         item.hasAvatar = true
 
-
         setAvatar(localUri)
-
 
         setPeopleList(pre => {
 
@@ -823,8 +848,6 @@ async function takePhoto({ item, setAvatar, token, setPeopleList, setIsOverLay }
           })
 
         })
-
-
 
         setIsOverLay(false)
         return response
