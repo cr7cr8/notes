@@ -35,6 +35,16 @@
       "icon": "./assets/favicon2.png",
       "androidMode": "default",
       "color": "#660000"
-    }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/favicon2.png",
+          "color": "#ff231f",
+          "mode": "production"
+        }
+      ]
+    ]
   }
 }
