@@ -69,7 +69,7 @@ export function HomeScreen({ navigation, route }) {
     = useContext(Context)
 
 
-  
+
 
   useEffect(function () {
     axios.get(`${url}/api/user/fetchuserlist`, { headers: { "x-auth-token": token } })
@@ -342,6 +342,7 @@ function ItemComponent({ isActive, drag, item, index, ...props }) {
 
 
       <View style={[baseStyle]} onLayout={function () {
+        isRendered.current = true
         baseTranslateX.value = 0
 
       }}>
@@ -594,7 +595,7 @@ function NameText({ item, ...props }) {
 
 HomeScreen.sharedElements = (route, otherRoute, showing) => {
 
- // console.log("====+++",route)
+  // console.log("====+++",route)
   return route.params && route.params.item && route.params.item.name && [
     { id: route.params.item.name, animation: "move", resize: "auto", align: "left", }, // ...messageArr,   // turn back image transition off
   ]
