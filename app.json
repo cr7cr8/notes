@@ -21,7 +21,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ff0300"
+        "backgroundColor": "transparent"
       },
       "useNextNotificationsApi": true,
       "icon": "./assets/favicon2.png",
