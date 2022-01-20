@@ -21,7 +21,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#F5DEB3"
+        "backgroundColor": "#f5deb3"
       },
       "useNextNotificationsApi": true,
       "icon": "./assets/favicon2.png",
@@ -34,7 +34,7 @@
     "notification": {
       "icon": "./assets/favicon2.png",
       "androidMode": "default",
-      "color": "#74c278"
+      "color": "#336677"
     },
     "plugins": [
       [
