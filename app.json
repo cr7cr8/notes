@@ -18,6 +18,7 @@
     "ios": {
       "supportsTablet": true
     },
+    "icon": "./assets/icon.png",
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -32,7 +33,7 @@
       "favicon": "./assets/favicon.png"
     },
     "notification": {
-      "icon": "./images/favicon.png",
+      "icon": "./assets/favicon2.png",
       "androidMode": "default"
     }
   }

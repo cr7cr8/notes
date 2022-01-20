@@ -6,8 +6,9 @@ const { zhCN } = require('date-fns/locale');
 
 import {
   StyleSheet, Dimensions, TouchableOpacity, TouchableNativeFeedback, Pressable, TouchableHighlight, TouchableWithoutFeedback,
-  Vibration, TextInput, Alert, Keyboard, AsyncStorage,
+  Vibration, TextInput, Alert, Keyboard
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import ReAnimated, {
   useAnimatedStyle, useSharedValue, useDerivedValue,
@@ -324,6 +325,9 @@ export function ProfileScreen({ navigation, route }) {
                         })
 
                         setToken(null)
+                        AsyncStorage.removeItem("token").then(function () {
+                          setToken(null)
+                        })
                         navigation.reset({
                           index: 0,
                           routes: [
