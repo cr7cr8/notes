@@ -34,7 +34,7 @@
     "notification": {
       "icon": "./assets/favicon2.png",
       "androidMode": "default",
-      "color": "#660000"
+      "color": "#74c278"
     },
     "plugins": [
       [
