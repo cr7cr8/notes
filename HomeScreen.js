@@ -460,9 +460,6 @@ function NameText({ item, ...props }) {
 
         //    setTextToShow(objText)
 
-
-
-
         // const aaa = ((Date.now() - Date.parse(obj.createdAt)) >= 1000 * 60 * 60 * 24)
         //   ? new Date(obj.createdAt).toLocaleString().substring(4, 10)
         //   : new Date(obj.createdAt).toLocaleString().substring(11, 16)
